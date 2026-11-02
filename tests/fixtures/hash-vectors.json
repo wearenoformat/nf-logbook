@@ -1,0 +1,280 @@
+{
+    "description": "Noformat Logger canonical JSON and hash chain test vectors (CONTRACT §4). Shared by the PHP plugin and the TypeScript port.",
+    "algorithm": {
+        "canonical_json": "object keys sorted by byte order (UTF-8), recursively; lists keep order; empty arrays and empty objects both encode as []; strings as JSON with unescaped \"/\" , unescaped non-ASCII and unescaped U+2028/U+2029 (identical to JavaScript JSON.stringify); integers in decimal; true/false/null; no whitespace; floats never occur (the producer stores them as strings)",
+        "payload": "the contract-shaped event without the fields id, hash, prev_hash, count, site, producer",
+        "hash": "lowercase hex sha256( prev_hash + canonical_json(payload) ), prev_hash as 64 hex ASCII chars",
+        "genesis_prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+        "verification": "for each event in id order: prev_hash must equal the previous event hash, and hash must equal the recomputation"
+    },
+    "canonicalization": [
+        {
+            "name": "keys_sorted_recursively",
+            "input": {
+                "b": 1,
+                "a": {
+                    "d": true,
+                    "c": null
+                }
+            },
+            "canonical": "{\"a\":{\"c\":null,\"d\":true},\"b\":1}"
+        },
+        {
+            "name": "list_order_kept",
+            "input": [
+                3,
+                1,
+                2
+            ],
+            "canonical": "[3,1,2]"
+        },
+        {
+            "name": "empty_array_and_object",
+            "input": {
+                "list": [],
+                "object": {}
+            },
+            "note": "both encode as []",
+            "canonical": "{\"list\":[],\"object\":[]}"
+        },
+        {
+            "name": "unicode_and_slashes_unescaped",
+            "input": {
+                "s": "Grüße / ½ — 日本 😀"
+            },
+            "canonical": "{\"s\":\"Grüße / ½ — 日本 😀\"}"
+        },
+        {
+            "name": "escapes",
+            "input": {
+                "s": "quote\" backslash\\ tab\t nl\n cr\r ctrl\u0001 del"
+            },
+            "canonical": "{\"s\":\"quote\\\" backslash\\\\ tab\\t nl\\n cr\\r ctrl\\u0001 del\"}"
+        },
+        {
+            "name": "line_terminators_unescaped",
+            "input": {
+                "s": "a\u2028b\u2029c"
+            },
+            "canonical": "{\"s\":\"a\u2028b\u2029c\"}"
+        },
+        {
+            "name": "numeric_string_keys_sorted_as_strings",
+            "input": {
+                "10": "x",
+                "9": "y",
+                "a": "z"
+            },
+            "canonical": "{\"10\":\"x\",\"9\":\"y\",\"a\":\"z\"}"
+        },
+        {
+            "name": "scalars",
+            "input": {
+                "t": true,
+                "f": false,
+                "n": null,
+                "i": -42,
+                "big": 9007199254740991
+            },
+            "canonical": "{\"big\":9007199254740991,\"f\":false,\"i\":-42,\"n\":null,\"t\":true}"
+        },
+        {
+            "name": "byte_order_sort",
+            "input": {
+                "B": 1,
+                "a": 2,
+                "_": 3,
+                "Z": 4,
+                "é": 5
+            },
+            "canonical": "{\"B\":1,\"Z\":4,\"_\":3,\"a\":2,\"é\":5}"
+        }
+    ],
+    "chain": [
+        {
+            "id": 1,
+            "occurred_at": "2026-10-28T14:03:11.482Z",
+            "severity": "notice",
+            "category": "content",
+            "action": "post.updated",
+            "summary": "Post #1 updated",
+            "object": {
+                "type": "post",
+                "id": "11",
+                "subtype": "page",
+                "label_hash": null
+            },
+            "actor": {
+                "type": "user",
+                "id": "3",
+                "role": "administrator"
+            },
+            "request": {
+                "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "source": "admin",
+                "route": "/wp-admin/post.php",
+                "method": "POST",
+                "ip_hash": "99999999999999999999999999999999",
+                "ua_hash": "00000000000000000000000000000000"
+            },
+            "changes": [
+                {
+                    "field": "post_status",
+                    "old": "draft",
+                    "new": "publish"
+                }
+            ],
+            "context": {
+                "revision_id": 100
+            },
+            "fingerprint": null,
+            "count": 1,
+            "site": {
+                "id": "1",
+                "url": "https://example.com"
+            },
+            "producer": {
+                "name": "wp-noformat-logger",
+                "version": "0.1.0",
+                "schema": 1
+            },
+            "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+            "hash": "4c7fd6e456d82045bb6f5a44f3856bd9cce642ff2f3409dd8f29525c282839e3",
+            "canonical_payload": "{\"action\":\"post.updated\",\"actor\":{\"id\":\"3\",\"role\":\"administrator\",\"type\":\"user\"},\"category\":\"content\",\"changes\":[{\"field\":\"post_status\",\"new\":\"publish\",\"old\":\"draft\"}],\"context\":{\"revision_id\":100},\"fingerprint\":null,\"object\":{\"id\":\"11\",\"label_hash\":null,\"subtype\":\"page\",\"type\":\"post\"},\"occurred_at\":\"2026-10-28T14:03:11.482Z\",\"request\":{\"id\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"ip_hash\":\"99999999999999999999999999999999\",\"method\":\"POST\",\"route\":\"/wp-admin/post.php\",\"source\":\"admin\",\"ua_hash\":\"00000000000000000000000000000000\"},\"severity\":\"notice\",\"summary\":\"Post #1 updated\"}"
+        },
+        {
+            "id": 2,
+            "occurred_at": "2026-10-28T14:03:12.482Z",
+            "severity": "critical",
+            "category": "content",
+            "action": "post.status_changed",
+            "summary": "Post #2 updated",
+            "object": {
+                "type": "post",
+                "id": "12",
+                "subtype": "page",
+                "label_hash": null
+            },
+            "actor": {
+                "type": "user",
+                "id": "3",
+                "role": "administrator"
+            },
+            "request": {
+                "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "source": "admin",
+                "route": "/wp-admin/post.php",
+                "method": "POST",
+                "ip_hash": "99999999999999999999999999999999",
+                "ua_hash": "00000000000000000000000000000000"
+            },
+            "changes": [],
+            "context": [],
+            "fingerprint": null,
+            "count": 1,
+            "site": {
+                "id": "1",
+                "url": "https://example.com"
+            },
+            "producer": {
+                "name": "wp-noformat-logger",
+                "version": "0.1.0",
+                "schema": 1
+            },
+            "prev_hash": "4c7fd6e456d82045bb6f5a44f3856bd9cce642ff2f3409dd8f29525c282839e3",
+            "hash": "123c17b7a146399391d9bbfbcb5d6d356286260131654d09a952e6696956e698",
+            "canonical_payload": "{\"action\":\"post.status_changed\",\"actor\":{\"id\":\"3\",\"role\":\"administrator\",\"type\":\"user\"},\"category\":\"content\",\"changes\":[],\"context\":[],\"fingerprint\":null,\"object\":{\"id\":\"12\",\"label_hash\":null,\"subtype\":\"page\",\"type\":\"post\"},\"occurred_at\":\"2026-10-28T14:03:12.482Z\",\"request\":{\"id\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"ip_hash\":\"99999999999999999999999999999999\",\"method\":\"POST\",\"route\":\"/wp-admin/post.php\",\"source\":\"admin\",\"ua_hash\":\"00000000000000000000000000000000\"},\"severity\":\"critical\",\"summary\":\"Post #2 updated\"}"
+        },
+        {
+            "id": 3,
+            "occurred_at": "2026-10-28T14:03:13.482Z",
+            "severity": "notice",
+            "category": "content",
+            "action": "option.updated",
+            "summary": "Post #3 updated",
+            "object": {
+                "type": "option",
+                "id": "admin_email",
+                "subtype": null,
+                "label_hash": null
+            },
+            "actor": {
+                "type": "user",
+                "id": "3",
+                "role": "administrator"
+            },
+            "request": {
+                "id": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "source": "admin",
+                "route": "/wp-admin/post.php",
+                "method": "POST",
+                "ip_hash": "99999999999999999999999999999999",
+                "ua_hash": "00000000000000000000000000000000"
+            },
+            "changes": [
+                {
+                    "field": "admin_email",
+                    "old": {
+                        "redacted": true,
+                        "sha256_8": "1a2b3c4d"
+                    },
+                    "new": {
+                        "redacted": true,
+                        "sha256_8": "5e6f7a8b"
+                    }
+                }
+            ],
+            "context": {
+                "revision_id": 102
+            },
+            "fingerprint": null,
+            "count": 7,
+            "site": {
+                "id": "1",
+                "url": "https://example.com"
+            },
+            "producer": {
+                "name": "wp-noformat-logger",
+                "version": "0.1.0",
+                "schema": 1
+            },
+            "prev_hash": "123c17b7a146399391d9bbfbcb5d6d356286260131654d09a952e6696956e698",
+            "hash": "06e0c5fc720869757ab10384e0ef1a414769f6238aad1c9fd75b0eebdee6cd84",
+            "canonical_payload": "{\"action\":\"option.updated\",\"actor\":{\"id\":\"3\",\"role\":\"administrator\",\"type\":\"user\"},\"category\":\"content\",\"changes\":[{\"field\":\"admin_email\",\"new\":{\"redacted\":true,\"sha256_8\":\"5e6f7a8b\"},\"old\":{\"redacted\":true,\"sha256_8\":\"1a2b3c4d\"}}],\"context\":{\"revision_id\":102},\"fingerprint\":null,\"object\":{\"id\":\"admin_email\",\"label_hash\":null,\"subtype\":null,\"type\":\"option\"},\"occurred_at\":\"2026-10-28T14:03:13.482Z\",\"request\":{\"id\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"ip_hash\":\"99999999999999999999999999999999\",\"method\":\"POST\",\"route\":\"/wp-admin/post.php\",\"source\":\"admin\",\"ua_hash\":\"00000000000000000000000000000000\"},\"severity\":\"notice\",\"summary\":\"Post #3 updated\"}"
+        }
+    ],
+    "tampered": [
+        {
+            "name": "summary_edited",
+            "description": "chain[1].summary changed to \"edited\" breaks event 2",
+            "mutate": {
+                "index": 1,
+                "field": "summary",
+                "value": "edited"
+            },
+            "expected_break": {
+                "id": 2,
+                "reason": "hash_mismatch"
+            }
+        },
+        {
+            "name": "row_deleted",
+            "description": "removing chain[1] breaks the link at event 3",
+            "delete_index": 1,
+            "expected_break": {
+                "id": 3,
+                "reason": "prev_hash_mismatch"
+            }
+        },
+        {
+            "name": "count_is_mutable",
+            "description": "changing count does not break the chain",
+            "mutate": {
+                "index": 0,
+                "field": "count",
+                "value": 500
+            },
+            "expected_break": null
+        }
+    ]
+}

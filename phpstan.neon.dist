@@ -1,0 +1,23 @@
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon
+
+parameters:
+    level: 6
+    phpVersion: 80100
+    # Defensive runtime checks against what PHPDoc promises are intended in a plugin that must never fatal.
+    treatPhpDocTypesAsCertain: false
+    paths:
+        - noformat-logger.php
+        - uninstall.php
+        - mu-loader
+        - src
+    excludePaths:
+        - vendor (?)
+        - .local (?)
+    bootstrapFiles:
+        - tests/phpstan-bootstrap.php
+    scanFiles:
+        - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
+    dynamicConstantNames:
+        - NOFORMAT_LOGGER_ALLOW_HTTP
+        - WP_CLI

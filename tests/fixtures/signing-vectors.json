@@ -1,0 +1,192 @@
+{
+    "description": "Noformat Logger request signing v1 test vectors (CONTRACT §3). Shared by the PHP plugin and the TypeScript port.",
+    "algorithm": {
+        "headers": {
+            "X-NF-Key": "key id",
+            "X-NF-Timestamp": "unix seconds",
+            "X-NF-Nonce": "32 lowercase hex chars",
+            "X-NF-Signature": "v1=<lowercase hex HMAC-SHA256(secret, string_to_sign)>"
+        },
+        "string_to_sign": "\"v1\" \\n METHOD \\n PATH \\n CANONICAL_QUERY \\n TIMESTAMP \\n NONCE \\n sha256_hex(BODY)",
+        "hmac_key": "the secret string itself (UTF-8 bytes of the base64url text), not its decoded bytes",
+        "path": "request path without host and query; for the ?rest_route= form use \"/wp-json\" + rest_route",
+        "canonical_query": "split on &, split each pair at the first =, replace + with space, percent-decode, drop rest_route, re-encode key and value with RFC 3986 (rawurlencode), sort by encoded key then encoded value (byte order), join k=v with &",
+        "max_skew_seconds": 300,
+        "nonce_window_seconds": 600
+    },
+    "key_id": "nfk_7Hs9Qk2LmP4xT8vZ",
+    "secret": "q3J8xV2mN5bL9cT1wR7yU4iO0pA6sD3fG8hJ2kL5zX1",
+    "vectors": [
+        {
+            "name": "events_basic",
+            "description": "Query parameters are sorted by key.",
+            "method": "GET",
+            "url": "https://example.com/wp-json/noformat-logger/v1/events?limit=10&after=5",
+            "signing_path": "/wp-json/noformat-logger/v1/events",
+            "raw_query": "limit=10&after=5",
+            "timestamp": 1761660191,
+            "nonce": "0123456789abcdef0123456789abcdef",
+            "body": "",
+            "expected": {
+                "canonical_query": "after=5&limit=10",
+                "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "string_to_sign": "v1\nGET\n/wp-json/noformat-logger/v1/events\nafter=5&limit=10\n1761660191\n0123456789abcdef0123456789abcdef\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "signature": "v1=846f1081d7ee76e6ea70c4c0e2231bf4549c8ac2402ef32a3d48ff8db5421c7c"
+            }
+        },
+        {
+            "name": "manifest_no_query",
+            "description": "Empty canonical query; body hash is sha256 of the empty string.",
+            "method": "GET",
+            "url": "https://example.com/wp-json/noformat-logger/v1/manifest",
+            "signing_path": "/wp-json/noformat-logger/v1/manifest",
+            "raw_query": "",
+            "timestamp": 1761660200,
+            "nonce": "fedcba9876543210fedcba9876543210",
+            "body": "",
+            "expected": {
+                "canonical_query": "",
+                "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "string_to_sign": "v1\nGET\n/wp-json/noformat-logger/v1/manifest\n\n1761660200\nfedcba9876543210fedcba9876543210\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "signature": "v1=6a33f2b70ee0f7466d2bb0e676272c07686ad18cb08e96b13d7d444cc4d6ed3a"
+            }
+        },
+        {
+            "name": "rest_route_form",
+            "description": "The ?rest_route= form signs \"/wp-json\" + route; rest_route is excluded from the canonical query.",
+            "method": "GET",
+            "url": "https://example.com/?rest_route=/noformat-logger/v1/events&after=0&limit=2",
+            "signing_path": "/wp-json/noformat-logger/v1/events",
+            "raw_query": "rest_route=/noformat-logger/v1/events&after=0&limit=2",
+            "timestamp": 1761660300,
+            "nonce": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "body": "",
+            "expected": {
+                "canonical_query": "after=0&limit=2",
+                "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "string_to_sign": "v1\nGET\n/wp-json/noformat-logger/v1/events\nafter=0&limit=2\n1761660300\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "signature": "v1=fb41d880198043a6ff7650d9b54c76ba9b81b6eefaf0803bdddc479e1c86c553"
+            }
+        },
+        {
+            "name": "encoding",
+            "description": "Values are decoded (\"+\" is a space) and re-encoded with RFC 3986 (uppercase hex, unreserved A-Z a-z 0-9 - . _ ~ kept); a key without \"=\" gets an empty value.",
+            "method": "GET",
+            "url": "https://example.com/wp-json/noformat-logger/v1/events?since=2026-10-28T00%3A00%3A00Z&category=security,error&label=hello+world&x=%7e~&empty",
+            "signing_path": "/wp-json/noformat-logger/v1/events",
+            "raw_query": "since=2026-10-28T00%3A00%3A00Z&category=security,error&label=hello+world&x=%7e~&empty",
+            "timestamp": 1761660400,
+            "nonce": "0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f",
+            "body": "",
+            "expected": {
+                "canonical_query": "category=security%2Cerror&empty=&label=hello%20world&since=2026-10-28T00%3A00%3A00Z&x=~~",
+                "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "string_to_sign": "v1\nGET\n/wp-json/noformat-logger/v1/events\ncategory=security%2Cerror&empty=&label=hello%20world&since=2026-10-28T00%3A00%3A00Z&x=~~\n1761660400\n0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "signature": "v1=12f8ff07ab120bdd61a1702d93fdf2d0bc3840d0bc6bcc63f89caeda611f412b"
+            }
+        },
+        {
+            "name": "duplicate_keys",
+            "description": "Duplicate keys are sorted by encoded value.",
+            "method": "GET",
+            "url": "https://example.com/wp-json/noformat-logger/v1/events?b=2&a=z&a=y",
+            "signing_path": "/wp-json/noformat-logger/v1/events",
+            "raw_query": "b=2&a=z&a=y",
+            "timestamp": 1761660500,
+            "nonce": "11111111111111111111111111111111",
+            "body": "",
+            "expected": {
+                "canonical_query": "a=y&a=z&b=2",
+                "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "string_to_sign": "v1\nGET\n/wp-json/noformat-logger/v1/events\na=y&a=z&b=2\n1761660500\n11111111111111111111111111111111\ne3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                "signature": "v1=8b3d0607c68a7fbccbc6c2175c13eb3defc60bcd6914da291170cebf5a017af8"
+            }
+        },
+        {
+            "name": "post_marker",
+            "description": "Body hash covers the exact raw body bytes.",
+            "method": "POST",
+            "url": "https://example.com/wp-json/noformat-logger/v1/marker",
+            "signing_path": "/wp-json/noformat-logger/v1/marker",
+            "raw_query": "",
+            "timestamp": 1761660600,
+            "nonce": "22222222222222222222222222222222",
+            "body": "{\"label\":\"Release 2.3\",\"ref\":\"v2.3.0\"}",
+            "expected": {
+                "canonical_query": "",
+                "body_sha256": "84571f405e3a6cd43159a4962b24869de16888b95b9549ec7f80987c287fcec4",
+                "string_to_sign": "v1\nPOST\n/wp-json/noformat-logger/v1/marker\n\n1761660600\n22222222222222222222222222222222\n84571f405e3a6cd43159a4962b24869de16888b95b9549ec7f80987c287fcec4",
+                "signature": "v1=b45a7137313770a782c479f8ec010f6f3664b3035ac4e85422d59940943f9644"
+            }
+        }
+    ],
+    "rejections": [
+        {
+            "name": "skew",
+            "based_on": "events_basic",
+            "now": 1761660492,
+            "expected_reason": "skew",
+            "description": "Timestamp more than 300 s away from the server clock."
+        },
+        {
+            "name": "skew_edge_ok",
+            "based_on": "events_basic",
+            "now": 1761660491,
+            "expected_reason": "ok",
+            "description": "Exactly 300 s is accepted."
+        },
+        {
+            "name": "bad_signature",
+            "based_on": "events_basic",
+            "now": 1761660191,
+            "override_headers": {
+                "x-nf-signature": "v1=0000000000000000000000000000000000000000000000000000000000000000"
+            },
+            "expected_reason": "bad_signature"
+        },
+        {
+            "name": "unknown_key",
+            "based_on": "events_basic",
+            "now": 1761660191,
+            "override_headers": {
+                "x-nf-key": "nfk_AAAAAAAAAAAAAAAA"
+            },
+            "expected_reason": "unknown_key",
+            "description": "Returned to the caller exactly like bad_signature (generic 401)."
+        },
+        {
+            "name": "nonce_reused",
+            "based_on": "events_basic",
+            "now": 1761660191,
+            "repeat": 2,
+            "expected_reason": "nonce_reused",
+            "description": "The second identical request is rejected."
+        },
+        {
+            "name": "http_refused",
+            "based_on": "events_basic",
+            "now": 1761660191,
+            "https": false,
+            "expected_reason": "https_required",
+            "description": "Plain HTTP is refused unless NOFORMAT_LOGGER_ALLOW_HTTP is true."
+        },
+        {
+            "name": "missing_header",
+            "based_on": "events_basic",
+            "now": 1761660191,
+            "override_headers": {
+                "x-nf-nonce": ""
+            },
+            "expected_reason": "missing_headers"
+        },
+        {
+            "name": "bad_nonce_format",
+            "based_on": "events_basic",
+            "now": 1761660191,
+            "override_headers": {
+                "x-nf-nonce": "not-hex"
+            },
+            "expected_reason": "bad_format"
+        }
+    ]
+}

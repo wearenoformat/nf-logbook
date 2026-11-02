@@ -1,0 +1,6 @@
+.local/
+vendor/
+node_modules/
+.phpunit.cache/
+*.zip
+.DS_Store

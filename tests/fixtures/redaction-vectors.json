@@ -1,0 +1,558 @@
+{
+    "description": "Noformat Logger redaction test vectors (CONTRACT §2). Shared by the PHP plugin and the TypeScript port. Cases marked php_only use PHP serialization.",
+    "algorithm": {
+        "sensitive_key": "case-insensitive substring match of any pattern in sensitive_patterns (a pattern wrapped in /…/ is a regex); never sensitive: integer keys, keys in safe_keys (exact, case-insensitive), keys ending in _id, _ids, _hash or _count; patterns /^ip$/ and /_ip$/ are anchored so 'description', 'zip' or 'ip_scope' do not match",
+        "marker": "{\"redacted\": true, \"sha256_8\": first 8 hex of HMAC-SHA256(salt, value)}; value: strings as-is, integers in decimal, true/false, null as \"\", arrays as canonical JSON (see hash-vectors.json)",
+        "truncation": "strings longer than 2048 bytes become {\"truncated\": true, \"length\": <bytes>, \"sha256_8\": …}",
+        "diff": "list of {field, old, new}; nested maps and lists recurse with dotted paths (field.key.0); a sensitive key at any level replaces both sides with markers; scalars compare as strings (10 == \"10\"), booleans strictly; max 100 changes, then one {\"field\":\"*\",\"old\":null,\"new\":{\"truncated\":true,\"omitted\":n}}",
+        "username_hash": "first 32 hex of HMAC-SHA256(salt, \"username:\" + lowercase(trim(username)))",
+        "value_scrub": "every string leaf that is not redacted (any key, any depth, also inside serialized values and diffs) has e-mail addresses replaced by \"[email]\" and IPv4/IPv6 addresses by \"[ip]\" before truncation (PHP Text::scrub())"
+    },
+    "salt": "fixture-salt-0123456789abcdef",
+    "sensitive_patterns": [
+        "email",
+        "mail",
+        "phone",
+        "tel",
+        "mobile",
+        "fax",
+        "address",
+        "street",
+        "zipcode",
+        "zip_code",
+        "postcode",
+        "postal",
+        "password",
+        "pass",
+        "pwd",
+        "secret",
+        "token",
+        "key",
+        "auth",
+        "salt",
+        "nonce",
+        "cookie",
+        "session",
+        "credential",
+        "private",
+        "signature",
+        "iban",
+        "card",
+        "cvv",
+        "cvc",
+        "ssn",
+        "bank",
+        "account_number",
+        "dob",
+        "birth",
+        "name",
+        "login",
+        "billing",
+        "shipping",
+        "remote_addr",
+        "client_ip",
+        "remote_ip",
+        "/^ip$/",
+        "/_ip$/",
+        "/^comment_author/",
+        "adminhash",
+        "user_agent"
+    ],
+    "safe_keys": [
+        "post_author",
+        "author",
+        "meta_key",
+        "option_name",
+        "post_name",
+        "slug",
+        "field_key",
+        "field_name",
+        "setting_id",
+        "taxonomy",
+        "menu_name",
+        "term_name",
+        "key_id",
+        "sha256_8",
+        "blogname",
+        "blogdescription"
+    ],
+    "is_sensitive_key": [
+        {
+            "key": "user_email",
+            "sensitive": true
+        },
+        {
+            "key": "billing_phone",
+            "sensitive": true
+        },
+        {
+            "key": "password",
+            "sensitive": true
+        },
+        {
+            "key": "api_token",
+            "sensitive": true
+        },
+        {
+            "key": "first_name",
+            "sensitive": true
+        },
+        {
+            "key": "post_title",
+            "sensitive": false
+        },
+        {
+            "key": "post_status",
+            "sensitive": false
+        },
+        {
+            "key": "post_author",
+            "sensitive": false
+        },
+        {
+            "key": "meta_key",
+            "sensitive": false
+        },
+        {
+            "key": "option_name",
+            "sensitive": false
+        },
+        {
+            "key": "post_name",
+            "sensitive": false
+        },
+        {
+            "key": "user_id",
+            "sensitive": false
+        },
+        {
+            "key": "username_hash",
+            "sensitive": false
+        },
+        {
+            "key": "menu_order",
+            "sensitive": false
+        },
+        {
+            "key": "AUTH_KEY",
+            "sensitive": true
+        },
+        {
+            "key": "EmailAddress",
+            "sensitive": true
+        },
+        {
+            "key": "thumbnail_id",
+            "sensitive": false
+        },
+        {
+            "key": "display_name",
+            "sensitive": true
+        },
+        {
+            "key": "iban",
+            "sensitive": true
+        },
+        {
+            "key": "template",
+            "sensitive": false
+        },
+        {
+            "key": "ip",
+            "sensitive": true
+        },
+        {
+            "key": "IP",
+            "sensitive": true
+        },
+        {
+            "key": "remote_ip",
+            "sensitive": true
+        },
+        {
+            "key": "user_ip",
+            "sensitive": true
+        },
+        {
+            "key": "comment_author",
+            "sensitive": true
+        },
+        {
+            "key": "comment_author_email",
+            "sensitive": true
+        },
+        {
+            "key": "comment_author_IP",
+            "sensitive": true
+        },
+        {
+            "key": "adminhash",
+            "sensitive": true
+        },
+        {
+            "key": "description",
+            "sensitive": false
+        },
+        {
+            "key": "zip",
+            "sensitive": false
+        },
+        {
+            "key": "ip_scope",
+            "sensitive": false
+        },
+        {
+            "key": "ip_hash",
+            "sensitive": false
+        },
+        {
+            "key": "comment_author_id",
+            "sensitive": false
+        },
+        {
+            "key": "tooltip",
+            "sensitive": false
+        }
+    ],
+    "redact_value": [
+        {
+            "key": "user_email",
+            "value": "jane@example.com",
+            "expected": {
+                "redacted": true,
+                "sha256_8": "48761fc3"
+            }
+        },
+        {
+            "key": "post_title",
+            "value": "Hello world",
+            "expected": "Hello world"
+        },
+        {
+            "key": "password",
+            "value": null,
+            "note": "null stays null",
+            "expected": null
+        },
+        {
+            "key": "settings",
+            "value": {
+                "color": "red",
+                "smtp_password": "hunter2",
+                "nested": {
+                    "phone": "+31 6 1234",
+                    "count": 3
+                }
+            },
+            "note": "nested keys are redacted recursively",
+            "expected": {
+                "color": "red",
+                "smtp_password": {
+                    "redacted": true,
+                    "sha256_8": "8431895d"
+                },
+                "nested": {
+                    "phone": {
+                        "redacted": true,
+                        "sha256_8": "45bbb2b7"
+                    },
+                    "count": 3
+                }
+            }
+        },
+        {
+            "key": "list",
+            "value": [
+                {
+                    "email": "a@b.c"
+                },
+                {
+                    "email": "d@e.f"
+                }
+            ],
+            "expected": [
+                {
+                    "email": {
+                        "redacted": true,
+                        "sha256_8": "f391c9b3"
+                    }
+                },
+                {
+                    "email": {
+                        "redacted": true,
+                        "sha256_8": "e140a5e8"
+                    }
+                }
+            ]
+        },
+        {
+            "key": "body",
+            "value_repeat": {
+                "char": "a",
+                "count": 3000
+            },
+            "note": "strings over 2048 bytes are truncated",
+            "expected": {
+                "truncated": true,
+                "length": 3000,
+                "sha256_8": "765e4b72"
+            }
+        },
+        {
+            "key": "exact_limit",
+            "value_repeat": {
+                "char": "b",
+                "count": 2048
+            },
+            "note": "2048 bytes is kept",
+            "expected_is_input": true
+        },
+        {
+            "key": "note",
+            "value": "Call jane@example.com from 192.168.1.20 or 2001:db8::7",
+            "note": "e-mail and IP addresses are scrubbed under any key",
+            "expected": "Call [email] from [ip] or [ip]"
+        },
+        {
+            "key": "form",
+            "value": {
+                "message": "Reply to bob@example.org",
+                "version": "6.4.1",
+                "when": "12:30:45"
+            },
+            "note": "nested leaves are scrubbed; versions and times are kept",
+            "expected": {
+                "message": "Reply to [email]",
+                "version": "6.4.1",
+                "when": "12:30:45"
+            }
+        },
+        {
+            "key": "adminhash",
+            "value": {
+                "hash": "abc",
+                "newemail": "x@y.z"
+            },
+            "note": "pending admin e-mail change (WordPress option adminhash) is redacted as a whole",
+            "expected": {
+                "redacted": true,
+                "sha256_8": "b707769e"
+            }
+        }
+    ],
+    "diff": [
+        {
+            "name": "scalar",
+            "field": "blogname",
+            "old": "Old",
+            "new": "New",
+            "expected": [
+                {
+                    "field": "blogname",
+                    "old": "Old",
+                    "new": "New"
+                }
+            ]
+        },
+        {
+            "name": "unchanged",
+            "field": "blogname",
+            "old": "Same",
+            "new": "Same",
+            "expected": []
+        },
+        {
+            "name": "numeric_string_equals_int",
+            "field": "posts_per_page",
+            "old": "10",
+            "new": 10,
+            "expected": []
+        },
+        {
+            "name": "nested_arrays_dotted_paths",
+            "field": "theme_mods",
+            "old": {
+                "colors": {
+                    "bg": "#fff",
+                    "fg": "#000"
+                },
+                "logo": 5
+            },
+            "new": {
+                "colors": {
+                    "bg": "#eee",
+                    "fg": "#000"
+                },
+                "header": true
+            },
+            "expected": [
+                {
+                    "field": "theme_mods.colors.bg",
+                    "old": "#fff",
+                    "new": "#eee"
+                },
+                {
+                    "field": "theme_mods.logo",
+                    "old": 5,
+                    "new": null
+                },
+                {
+                    "field": "theme_mods.header",
+                    "old": null,
+                    "new": true
+                }
+            ]
+        },
+        {
+            "name": "list_by_index",
+            "field": "sidebars",
+            "old": [
+                "a",
+                "b"
+            ],
+            "new": [
+                "a",
+                "c",
+                "d"
+            ],
+            "expected": [
+                {
+                    "field": "sidebars.1",
+                    "old": "b",
+                    "new": "c"
+                },
+                {
+                    "field": "sidebars.2",
+                    "old": null,
+                    "new": "d"
+                }
+            ]
+        },
+        {
+            "name": "sensitive_root_field",
+            "field": "admin_email",
+            "old": "old@example.com",
+            "new": "new@example.com",
+            "expected": [
+                {
+                    "field": "admin_email",
+                    "old": {
+                        "redacted": true,
+                        "sha256_8": "d9efdae3"
+                    },
+                    "new": {
+                        "redacted": true,
+                        "sha256_8": "9ab5f60e"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "sensitive_nested_field",
+            "field": "woocommerce_settings",
+            "old": {
+                "api_key": "k1",
+                "mode": "test"
+            },
+            "new": {
+                "api_key": "k2",
+                "mode": "live"
+            },
+            "expected": [
+                {
+                    "field": "woocommerce_settings.api_key",
+                    "old": {
+                        "redacted": true,
+                        "sha256_8": "48dd3343"
+                    },
+                    "new": {
+                        "redacted": true,
+                        "sha256_8": "70e52576"
+                    }
+                },
+                {
+                    "field": "woocommerce_settings.mode",
+                    "old": "test",
+                    "new": "live"
+                }
+            ]
+        },
+        {
+            "name": "serialized_php_arrays",
+            "field": "widget_text",
+            "old": "a:2:{s:5:\"title\";s:1:\"A\";s:5:\"count\";i:1;}",
+            "new": "a:2:{s:5:\"title\";s:1:\"B\";s:5:\"count\";i:1;}",
+            "php_only": true,
+            "note": "PHP-serialized strings are unserialized (allowed_classes=false) before diffing",
+            "expected": [
+                {
+                    "field": "widget_text.title",
+                    "old": "A",
+                    "new": "B"
+                }
+            ]
+        },
+        {
+            "name": "serialized_object_not_instantiated",
+            "field": "x",
+            "old": "O:8:\"stdClass\":1:{s:1:\"a\";i:1;}",
+            "new": "O:8:\"stdClass\":1:{s:1:\"a\";i:2;}",
+            "php_only": true,
+            "note": "objects become plain maps; __PHP_Incomplete_Class_Name becomes __class",
+            "expected": [
+                {
+                    "field": "x.a",
+                    "old": 1,
+                    "new": 2
+                }
+            ]
+        },
+        {
+            "name": "type_change_scalar_to_array",
+            "field": "opt",
+            "old": "x",
+            "new": {
+                "a": 1
+            },
+            "expected": [
+                {
+                    "field": "opt",
+                    "old": "x",
+                    "new": {
+                        "a": 1
+                    }
+                }
+            ]
+        }
+    ],
+    "hash_username": [
+        {
+            "username": " Admin ",
+            "expected": "15fbeac5c5aa442aba677a51a24f6062"
+        },
+        {
+            "username": "admin",
+            "expected": "15fbeac5c5aa442aba677a51a24f6062"
+        }
+    ],
+    "content_summary": [
+        {
+            "text": "Hello wörld",
+            "old": "Hello",
+            "expected": {
+                "sha256_8": "e239e135",
+                "length": 11,
+                "length_delta": 6,
+                "changed": true
+            }
+        },
+        {
+            "text": "",
+            "old": null,
+            "expected": {
+                "sha256_8": "19a3e70f",
+                "length": 0
+            }
+        }
+    ]
+}

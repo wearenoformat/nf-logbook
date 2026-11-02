@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<ruleset name="Noformat Logger">
+    <description>WordPress Coding Standards for wp-noformat-logger.</description>
+
+    <file>noformat-logger.php</file>
+    <file>uninstall.php</file>
+    <file>mu-loader</file>
+    <file>src</file>
+
+    <exclude-pattern>*/vendor/*</exclude-pattern>
+    <exclude-pattern>*/.local/*</exclude-pattern>
+    <exclude-pattern>*/node_modules/*</exclude-pattern>
+
+    <arg name="extensions" value="php"/>
+    <arg name="colors"/>
+    <arg value="sp"/>
+    <arg name="parallel" value="8"/>
+
+    <config name="testVersion" value="8.1-"/>
+    <config name="minimum_wp_version" value="6.4"/>
+
+    <rule ref="WordPress">
+        <!-- PSR-4 class files (src/Foo/BarBaz.php), not class-bar-baz.php. -->
+        <exclude name="WordPress.Files.FileName"/>
+        <!-- Namespaced PSR-style code base: camelCase methods/properties/variables, as used by the public listener API. -->
+        <exclude name="WordPress.NamingConventions.ValidFunctionName.MethodNameInvalid"/>
+        <exclude name="WordPress.NamingConventions.ValidVariableName"/>
+        <!-- Short array syntax is used throughout (PHP 8.1 code base). -->
+        <exclude name="Universal.Arrays.DisallowShortArraySyntax"/>
+        <!-- Strict comparisons are enforced; Yoda order adds nothing on top of that. -->
+        <exclude name="WordPress.PHP.YodaConditions"/>
+        <!-- Hook names use the documented "noformat_logger/..." form. -->
+        <exclude name="WordPress.NamingConventions.ValidHookName.UseUnderscores"/>
+        <!-- Docblocks: one-line descriptions are enough for typed getters. -->
+        <exclude name="Squiz.Commenting.FunctionComment.MissingParamComment"/>
+        <exclude name="Generic.Commenting.DocComment.MissingShort"/>
+        <exclude name="Squiz.Commenting.InlineComment.InvalidEndChar"/>
+        <exclude name="Squiz.Commenting.FileComment.MissingPackageTag"/>
+        <exclude name="Squiz.Commenting.VariableComment.Missing"/>
+        <exclude name="Squiz.Commenting.FunctionCommentThrowTag.Missing"/>
+        <!-- Does not understand PHPStan generics such as list<string> or class-string<T>. -->
+        <exclude name="Squiz.Commenting.FunctionComment.IncorrectTypeHint"/>
+        <!-- Enums and classes may share files with nothing else; one statement per file is fine. -->
+        <exclude name="Universal.Operators.DisallowShortTernary.Found"/>
+    </rule>
+    <rule ref="WordPress-Extra"/>
+
+    <rule ref="PHPCompatibilityWP"/>
+
+    <rule ref="WordPress.WP.I18n">
+        <properties>
+            <property name="text_domain" type="array">
+                <element value="noformat-logger"/>
+            </property>
+        </properties>
+    </rule>
+
+    <rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+        <properties>
+            <property name="prefixes" type="array">
+                <element value="nflog"/>
+                <element value="noformat_logger"/>
+                <element value="Noformat\Logger"/>
+            </property>
+        </properties>
+    </rule>
+
+    <!-- The bootstrap and the MU loader must stay parseable by old PHP versions. -->
+    <rule ref="PHPCompatibility">
+        <exclude-pattern>*/src/*</exclude-pattern>
+    </rule>
+</ruleset>
