@@ -93,7 +93,7 @@ if [ "${RUN_CHECK}" = "1" ]; then
   (cd "${PLUGIN_DIR}" && composer check)
 fi
 
-WORK="$(mktemp -d -t nflog-release)"
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/nflog-release.XXXXXX")"
 trap 'rm -rf "${WORK}"' EXIT
 if [ -z "${OUT}" ]; then
   OUT="${WORK}/out"
