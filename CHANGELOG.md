@@ -2,6 +2,23 @@
 
 All notable changes to this plugin. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.1.1] - 2026-11-02
+
+### Changed
+
+- Plugin description: "Tamper-evident, privacy-preserving log of content changes and error, security and stability signals." (the clause about the Controlroom reading it over a signed API is gone from the header and the *View details* modal; the signed API itself is unchanged).
+
+### Fixed (noise in the Content log)
+
+Machine-written state no longer shows up as content changes. Both rules log the write at `debug` with `context.technical: true` and `context.technical_reason`, so it is dropped unless `log_debug` is on (like the existing technical meta keys). Notice and critical options (`siteurl`, `home`, `admin_email`, `{prefix}user_roles`, `users_can_register`, `default_role`, `active_plugins`, `blogname`, `permalink_structure`, `theme_mods_*`, … and anything the `noformat_logger/option_severity` / `critical_options` filters raise above `info`) are always exempt.
+
+- **Write-on-read rule** (`RequestContext::machineWriteReason()`): an `option.*` or `meta.*` (all object types) write during a `GET` or `HEAD` request (front-end views, admin page loads, REST GETs; reason `read_request`), during WP-Cron (`cron`) or in the admin-ajax `heartbeat` action (`heartbeat`) is machine state. A non-REST GET that carries `_wpnonce` (activate / trash links, bulk edit on `edit.php`) is still a deliberate action. POST/PUT/PATCH/DELETE, REST writes, forms and WP-CLI are unchanged; ACF grouped events are unchanged.
+- **State-key patterns** (`Config::defaultTechnicalKeyPatterns()`, filter `noformat_logger/technical_key_patterns`; reason `key_pattern`), whatever the method: names containing a state word (`dismissed`, `pointer(s)`, `version_info`, `usage_analytics`, `sticky_admin_messages`, `last_checked`, `last_run`, `last_update_check`, `transient`, `batch`, `queue`, `lock`, `telemetry`, `install_date`, `activation_time`, `review_notice`) or ending in `notification(s)` / `notices` / `admin_notice`, and the prefixes `wp_yoast_`, `_yoast_`, `imagify_`, `gsmtp_`, `gform_version`, `_transient_`, `_site_transient_` plus `rg_gforms_message`. Keys ending in `_settings` / `_options` are exempt (`imagify_settings` saved from its screen stays `info`), and so are the Yoast fields an editor types (`MetaListener::MEANINGFUL_KEYS`). Covers `wp_yoast_notifications`, `wpseo_notifications`, `gsmtp_version_info`, `gform_version_info`, `gform_sticky_admin_messages`, `imagify_optimize_media_batch_*`. `rg_gforms_*` as a whole is deliberately not on the list: most of those options are Gravity Forms settings.
+
+### Changed (errors)
+
+- `doing_it_wrong` for `_load_textdomain_just_in_time` (raised on every request by translation-eager plugins since WordPress 6.7) is `info` instead of `warning`; still aggregated by fingerprint. Every other `doing_it_wrong` stays `warning`.
+
 ## [1.1.0] - 2026-11-02
 
 ### Added (updates)

@@ -307,3 +307,10 @@ tooling, optional object-cache backed nonce store.
   against the release's `manifest.json`), no update server of our own;
   `tools/release.sh` and `.github/workflows/release.yml` cut releases
   (`docs/UPDATES.md`).
+
+- 2026-11-02 (1.1.1): quieter Content log. Option and meta writes during
+  GET/HEAD requests, cron and heartbeat (write-on-read rule) and keys matching
+  the state-key patterns (`Config::defaultTechnicalKeyPatterns()`, filter
+  `noformat_logger/technical_key_patterns`) are `debug` + `context.technical`,
+  notice/critical options exempt; `doing_it_wrong(_load_textdomain_just_in_time)`
+  is `info`; plugin description shortened.

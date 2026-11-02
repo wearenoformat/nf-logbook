@@ -142,7 +142,7 @@ final class Updater {
 	 * @return array<string, mixed>
 	 */
 	public static function detailsArray( ?array $release, string $error, string $installed, string $repo ): array {
-		$description = '<p>Tamper-evident, privacy-preserving log of content changes and error, security and stability signals, read only by the Noformat Controlroom over a signed API.</p>'
+		$description = '<p>Tamper-evident, privacy-preserving log of content changes and error, security and stability signals.</p>'
 			. '<p>Updates come from the GitHub releases of <code>' . htmlspecialchars( $repo, ENT_QUOTES ) . '</code>; every package is checked against the SHA-256 in the release\'s manifest.json before it is installed.</p>';
 		$changelog   = null === $release || '' === $release['changelog']
 			? '<p>' . htmlspecialchars( '' === $error ? 'No release notes.' : 'No release information: ' . $error, ENT_QUOTES ) . '</p>'

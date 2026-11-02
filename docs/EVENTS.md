@@ -106,9 +106,9 @@ console). The split is display only (filter `noformat_logger/content_categories`
 | `post.restored` | content | notice | `post / id` (post type) | — | PostListener |
 | `post.deleted` | content | notice | `post / id` (post type) | — | PostListener |
 | `post.revision_restored` | content | info | `post / id` (post type) | — | PostListener |
-| `meta.added` | fields | info (internal `_` keys and technical keys: debug) | `post`/`term`/`user`/`comment` `/ id` (meta key) | — | MetaListener |
-| `meta.updated` | fields | info (internal `_` keys and technical keys: debug) | as above | — | MetaListener |
-| `meta.deleted` | fields | info (internal `_` keys and technical keys: debug) | as above | — | MetaListener |
+| `meta.added` | fields | info (internal `_` keys, technical keys and machine state: debug) | `post`/`term`/`user`/`comment` `/ id` (meta key) | — | MetaListener |
+| `meta.updated` | fields | info (internal `_` keys, technical keys and machine state: debug) | as above | — | MetaListener |
+| `meta.deleted` | fields | info (internal `_` keys, technical keys and machine state: debug) | as above | — | MetaListener |
 | `term.created` | taxonomy | info | `term / id` (taxonomy) | — | TermListener |
 | `term.updated` | taxonomy | info | `term / id` (taxonomy) | — | TermListener |
 | `term.deleted` | taxonomy | info | `term / id` (taxonomy) | — | TermListener |
@@ -139,9 +139,9 @@ console). The split is display only (filter `noformat_logger/content_categories`
 | `privacy.import_finished` | privacy | notice | — | — | PrivacyListener |
 | `privacy.personal_data_exported` | privacy | notice | `user / id` or `user_request / id` | — | PrivacyListener |
 | `privacy.personal_data_erased` | privacy | notice | `user / id` or `user_request / id` | — | PrivacyListener |
-| `option.added` | settings | info / notice / critical (severity map) | `option / name` | — | OptionListener |
-| `option.updated` | settings | info / notice / critical (severity map) | `option / name` | — | OptionListener |
-| `option.deleted` | settings | info / notice / critical (severity map) | `option / name` | — | OptionListener |
+| `option.added` | settings | info / notice / critical (severity map); machine state: debug | `option / name` | — | OptionListener |
+| `option.updated` | settings | info / notice / critical (severity map); machine state: debug | `option / name` | — | OptionListener |
+| `option.deleted` | settings | info / notice / critical (severity map); machine state: debug | `option / name` | — | OptionListener |
 | `plugin.installed` | plugin | notice (failed: error) | `plugin / slug` | — | PluginThemeListener |
 | `plugin.activated` | plugin | notice | `plugin / slug` | — | PluginThemeListener |
 | `plugin.deactivated` | plugin | notice | `plugin / slug` | — | PluginThemeListener |
@@ -188,7 +188,7 @@ console). The split is display only (filter `noformat_logger/content_categories`
 | `deprecated.argument` | error | warning | `function / name` | action + name | DeprecationListener |
 | `deprecated.hook` | error | warning | `hook / name` | action + name | DeprecationListener |
 | `deprecated.file` | error | warning | `file / relative path` | action + name | DeprecationListener |
-| `doing_it_wrong` | error | warning | `function / name` | action + name | DeprecationListener |
+| `doing_it_wrong` | error | warning (`_load_textdomain_just_in_time`: info) | `function / name` | action + name | DeprecationListener |
 | `http.request_failed` | http | error | `host / host` | host + path + status or error code | HttpApiListener |
 | `mail.failed` | mail | error | — | error code + PHPMailer code | MailListener |
 | `config.risky_setting` | security | per finding (warning / error); resolved: info | `config / finding id` | — (one event per state change) | ConfigAudit |
@@ -295,8 +295,13 @@ sensitive keys, redaction markers ([personal values](#conventions)).
   `_yoast_wpseo_wordproof_timestamp`, the user preferences
   `wpseo_keyword_analysis_disable`, `wpseo_content_analysis_disable`,
   `wpseo_inclusive_language_analysis_disable`, `screen_layout_*`,
-  `edit_*_per_page`, `managenav-menuscolumnshidden`. They are `debug` with
-  `context.technical: true`, so they are dropped unless `log_debug` is on.
+  `edit_*_per_page`, `managenav-menuscolumnshidden`, plus every key matching
+  the shared state-key patterns (see [machine state](#machine-state-technical-writes);
+  the meaningful Yoast fields above are exempt from the patterns). They are
+  `debug` with `context.technical: true`, so they are dropped unless
+  `log_debug` is on.
+- Writes during a read request, cron or heartbeat are machine state on every
+  meta type (see [machine state](#machine-state-technical-writes)).
   Pure noise (`_edit_lock`, `session_tokens`, `closedpostboxes_*`, `_wp_old_slug`,
   `last_update`, `dismissed_wp_pointers`, …) stays on the ignored list and is
   never stored.
@@ -495,6 +500,54 @@ Severity map (`OptionRules`):
 
 Exact names win over glob patterns; among matching globs the most severe wins.
 
+An `info` option write that is machine state (state-key pattern, or a write
+during a read request, cron or heartbeat) is logged at `debug` with
+`context.technical: true` (see [machine state](#machine-state-technical-writes)).
+Options the map puts above `info` (every notice and critical option) are never
+downgraded.
+
+#### Machine state (technical writes)
+
+Plugins write state on page loads (notification queues, version caches, batch
+cursors). None of it is a change a person made, so `option.*` and `meta.*`
+writes are logged at `debug` with `context.technical: true` and
+`context.technical_reason` (dropped unless `log_debug` is on) when either rule
+holds. Notice and critical options are exempt from both.
+
+1. **Write-on-read** (`RequestContext::machineWriteReason()`), applied to
+   `option.added|updated|deleted` and `meta.*` on posts, terms, users and
+   comments:
+   - `read_request`: the request method is `GET` or `HEAD` (front-end views,
+     admin page loads, REST GETs). A non-REST GET carrying `_wpnonce` (activate
+     and trash links, bulk edit on `edit.php`, whose form is a GET) is a
+     deliberate admin action and is not downgraded;
+   - `cron`: WP-Cron;
+   - `heartbeat`: the admin-ajax `heartbeat` action.
+   People change things with POST/PUT/PATCH/DELETE, REST writes, forms and
+   WP-CLI; those are unchanged. WP-CLI and ACF grouped events (`acf.*`) are
+   never downgraded by this rule.
+2. **State-key patterns** (`Config::defaultTechnicalKeyPatterns()`,
+   `Config::isTechnicalKey()`; reason `key_pattern`), whatever the method:
+   - regex `/(^|_)(dismissed|pointers?|version_info|usage_analytics|sticky_admin_messages|last_checked|last_run|last_update_check|transient|batch|queue|lock|telemetry|install_date|activation_time|review_notice)(_|$)/i`;
+   - regex `/(^|_)(notifications?|notices|admin_notice)$/i` (only as the last
+     word: `cookie_notice_options` and `woocommerce_demo_store_notice` are
+     settings);
+   - prefixes `wp_yoast_*`, `_yoast_*`, `imagify_*`, `gsmtp_*`,
+     `gform_version*`, `_transient_*`, `_site_transient_*`, and
+     `rg_gforms_message`;
+   - exemptions (checked first): `!*_settings`, `!*_options`, so a settings
+     screen save such as `imagify_settings` stays `info`. `rg_gforms_*` as a
+     whole, `aiowps_*` options and `wpseo*` options are deliberately not
+     listed: they are settings an admin saves; when a plugin rewrites them on
+     a page load the write-on-read rule covers it.
+
+   The filter `noformat_logger/technical_key_patterns` receives and returns the
+   list: entries starting with `/` are PCRE patterns with delimiters (an invalid
+   one never matches), other entries are `*` globs, and a leading `!` makes an
+   entry an exemption. Example: `$list[] = 'acme_cache_*';` or
+   `$list[] = '!gsmtp_version_info';`. Meta keys additionally use
+   `MetaListener::TECHNICAL_KEYS` (`noformat_logger/technical_meta_keys`).
+
 Skipped (never logged by this listener):
 
 - `Config::isIgnoredOption()` (transients, `cron`, `rewrite_rules`, `nflog_*`, … and the `noformat_logger/ignored_options` filter).
@@ -641,7 +694,7 @@ Conventions for every error event:
 | `deprecated.argument` | error | warning | `function` | `function`, `version`, `message` (tags stripped, paths relative), `component`, `caller` | action, name |
 | `deprecated.hook` | error | warning | `hook` | `hook`, `replacement`, `version`, `message`, `component`, `caller` | action, name |
 | `deprecated.file` | error | warning | `file` | `file` (relative), `replacement`, `version`, `message`, `component`, `caller` | action, name |
-| `doing_it_wrong` | error | warning | `function` | `function`, `version`, `message`, `component`, `caller` | action, name |
+| `doing_it_wrong` | error | warning; info for `_load_textdomain_just_in_time` (`DeprecationListener::INFO_DOING_IT_WRONG`: since WordPress 6.7 every translation-eager plugin raises it on every request, a developer notice rather than an incident) | `function` | `function`, `version`, `message`, `component`, `caller` | action, name |
 | `http.request_failed` | http | error | `host` | `host` (IP literals: `ip-<hash8>`), `ip_scope` (IP hosts only: `loopback`/`private`/`reserved`/`public`), `scheme`, `port`, `path` (no query; segments containing `@`, longer than 12 characters with a digit, or opaque tokens of 20+ characters become `{hash8}`, e.g. Slack/Discord/Telegram webhook tokens and e-mails in CRM paths; the first segment too when it is a token), `method`, `status` (≥ 500) or null, `error_code` / `error` (WP_Error), `duration_ms` | host, path, status or error code |
 | `mail.failed` | mail | error | | `error_code`, `error` (addresses scrubbed), `exception_code` (PHPMailer), `recipient_count`, `subject_hash` (hash8), `attachments` (bool) | error code, PHPMailer exception code |
 | `config.risky_setting` | security | per finding (warning / error); `resolved`: info | `config` / finding id | `finding`, `state` (`present` \| `changed` \| `resolved`), `detail` (see below), `previous_severity` | none (one event per state change) |
@@ -904,6 +957,7 @@ strings; a non-array return falls back to the default.
 | `noformat_logger/is_https` | `bool` whether the API request counts as HTTPS (default `is_ssl()`; TLS terminated at a trusted proxy) | Authenticator |
 | `noformat_logger/critical_options` | `list<string>` option names / globs logged as critical (`siteurl`, `home`, `admin_email`, `{prefix}user_roles`) | OptionListener |
 | `noformat_logger/option_severity` | `array<string, string>` option name / glob → severity | OptionListener |
+| `noformat_logger/technical_key_patterns` | `list<string>` state-key patterns: `/regex/`, `*` globs, `!` exemptions (`Config::defaultTechnicalKeyPatterns()`); matching option names and meta keys are `debug` + `context.technical` | OptionListener, MetaListener |
 | `noformat_logger/privileged_roles` | `list<string>` roles whose grant is critical (`administrator`) | UserListener, AuthListener |
 | `noformat_logger/login_burst` | `array{threshold: int, window: int}` (10 / 300 s) | AuthListener, XmlRpcListener |
 | `noformat_logger/probe_patterns` | `array<string, string>` pattern name → regex body | ProbeListener |

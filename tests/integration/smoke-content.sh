@@ -24,7 +24,9 @@ OUT="$(mktemp -d -t nflog-content)"
 PASS=0
 FAIL=0
 
+STATE_MU="${WP_DIR}/wp-content/mu-plugins/nfltest-state-writer.php"
 cleanup() {
+  rm -f "${STATE_MU}"
   if [ -n "${SERVER_PID:-}" ]; then kill "${SERVER_PID}" 2>/dev/null || true; fi
   pkill -f "127.0.0.1:${NFLOG_PORT}" 2>/dev/null || true
   rm -rf "${OUT}"
@@ -132,6 +134,34 @@ assert "_wp_page_template logged at info"             "${OUT}/meta.json" "find('
 assert "sensitive meta value redacted"                "${OUT}/meta.json" "one('meta.added', e => e.object.subtype==='smoke_phone' && ch(e,'smoke_phone').new.redacted===true)"
 assert "_edit_lock ignored"                           "${OUT}/meta.json" "ev.every(e => !(e.object && e.object.subtype==='_edit_lock'))"
 assert "user meta"                                    "${OUT}/meta.json" "[...find('meta.added'), ...find('meta.updated')].filter(e => e.object.type==='user' && id(e, ${SMOKE_ID}) && e.object.subtype==='smoke_pref').length===1"
+
+echo "==> Machine state (write-on-read)"
+# A mu-plugin rewrites an option on every page load, like plugins caching state.
+# The key is deliberately not nflog_* (that prefix is on the ignore list).
+mkdir -p "$(dirname "${STATE_MU}")"
+cat > "${STATE_MU}" <<'PHP'
+<?php
+add_action(
+	'init',
+	static function (): void {
+		$method = isset( $_SERVER['REQUEST_METHOD'] ) ? strtoupper( (string) $_SERVER['REQUEST_METHOD'] ) : '';
+		if ( 'GET' === $method || 'POST' === $method ) {
+			update_option( 'nfltest_state_x', strtolower( $method ) . '-' . uniqid( '', true ), false );
+		}
+	}
+);
+PHP
+CS="$(cursor)"
+curl -fs -o /dev/null "${NFLOG_SITE}/" || true
+curl -s -o /dev/null "${NFLOG_SITE}/?feed=rss2" || true
+curl -fs -o /dev/null -X POST -d "nfltest=1" "${NFLOG_SITE}/" || true
+rm -f "${STATE_MU}"
+${WP} option update nfltest_state_x "cli-${RANDOM}" --quiet
+since "${CS}" "${OUT}/state.json"
+assert "GET page loads: no option.updated for the state key" "${OUT}/state.json" "find('option.updated', e => id(e, 'nfltest_state_x') && e.request.method==='GET').length===0 && find('option.added', e => id(e, 'nfltest_state_x') && e.request.method==='GET').length===0"
+assert "same write on POST is logged (info, not technical)"  "${OUT}/state.json" "[...find('option.updated'), ...find('option.added')].filter(e => id(e, 'nfltest_state_x') && e.request.method==='POST' && e.severity==='info' && !(e.context && e.context.technical)).length===1"
+assert "same write via WP-CLI is logged"                       "${OUT}/state.json" "one('option.updated', e => id(e, 'nfltest_state_x') && e.request.source==='cli' && e.severity==='info' && String(ch(e,'nfltest_state_x').new).startsWith('cli-'))"
+${WP} option delete nfltest_state_x --quiet > /dev/null 2>&1 || true
 
 echo "==> Terms"
 C3="$(cursor)"

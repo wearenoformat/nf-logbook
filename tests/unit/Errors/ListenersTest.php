@@ -61,6 +61,19 @@ final class ListenersTest extends TestCase {
 		self::assertSame( 'Scripts must be enqueued in wp-content/plugins/x/x.php.', $event->getContext()['message'] );
 	}
 
+	public function test_textdomain_just_in_time_is_info_other_doing_it_wrong_warning(): void {
+		$jit = DeprecationListener::buildEvent( 'doing_it_wrong', 'function', '_load_textdomain_just_in_time', '', '6.7.0', 'Translation loading for the <code>x</code> domain was triggered too early.', null, $this->mapper() );
+		self::assertSame( 'info', $jit->getSeverity()->value );
+		self::assertSame( 'doing_it_wrong', $jit->getAction() );
+		self::assertNotNull( $jit->getFingerprint(), 'still aggregated by fingerprint' );
+		$again = DeprecationListener::buildEvent( 'doing_it_wrong', 'function', '_load_textdomain_just_in_time', '', '6.7.0', 'other domain', null, $this->mapper() );
+		self::assertSame( $jit->getFingerprint(), $again->getFingerprint() );
+		$other = DeprecationListener::buildEvent( 'doing_it_wrong', 'function', 'wp_enqueue_script', '', '3.3.0', '', null, $this->mapper() );
+		self::assertSame( 'warning', $other->getSeverity()->value );
+		$deprecated = DeprecationListener::buildEvent( 'deprecated.function', 'function', '_load_textdomain_just_in_time', '', '6.7.0', '', null, $this->mapper() );
+		self::assertSame( 'warning', $deprecated->getSeverity()->value, 'only doing_it_wrong is downgraded' );
+	}
+
 	public function test_consume_trigger_only_once_and_only_from_functions_php(): void {
 		$listener = new DeprecationListener();
 		$property = new \ReflectionProperty( DeprecationListener::class, 'triggerPending' );

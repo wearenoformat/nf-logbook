@@ -38,6 +38,13 @@ final class Config {
 	private array $pinned = [];
 
 	/**
+	 * Resolved technical key patterns (technicalKeyPatterns()).
+	 *
+	 * @var list<string>|null
+	 */
+	private ?array $technicalPatterns = null;
+
+	/**
 	 * Build from explicit sources (used by tests and fromEnvironment()).
 	 *
 	 * @param array<string, mixed> $option    Stored option value.
@@ -448,6 +455,100 @@ final class Config {
 	 */
 	public function isIgnoredMetaKey( string $key ): bool {
 		return self::matchesGlob( $key, $this->ignoredMetaKeys() );
+	}
+
+	/**
+	 * Default technical key patterns: option names and meta keys that are
+	 * unambiguously machine-written plugin state (notification queues, version
+	 * caches, batch cursors, locks, telemetry). Entries starting with `/` are
+	 * regular expressions, other entries are `*` globs, entries starting with `!`
+	 * are exemptions (a glob or regex that is never technical, checked first).
+	 * Kept to state-like words and vendor state prefixes on purpose: settings an
+	 * admin saves from a settings screen (POST) must stay `info`; writes during
+	 * reads are handled by the write-on-read rule (RequestContext::machineWriteReason()).
+	 *
+	 * @return list<string>
+	 */
+	public static function defaultTechnicalKeyPatterns(): array {
+		return [
+			// Saved settings stay visible even under a vendor state prefix (imagify_settings, …).
+			'!*_settings',
+			'!*_options',
+			'/(^|_)(dismissed|pointers?|version_info|usage_analytics|sticky_admin_messages|last_checked|last_run|last_update_check|transient|batch|queue|lock|telemetry|install_date|activation_time|review_notice)(_|$)/i',
+			// Notification and notice queues: only as the last word (cookie_notice_options is a setting).
+			'/(^|_)(notifications?|notices|admin_notice)$/i',
+			'wp_yoast_*',
+			'_yoast_*',
+			'imagify_*',
+			'gsmtp_*',
+			'gform_version*',
+			'rg_gforms_message',
+			'_site_transient_*',
+			'_transient_*',
+		];
+	}
+
+	/**
+	 * Technical key patterns after the noformat_logger/technical_key_patterns filter.
+	 *
+	 * @return list<string>
+	 */
+	public function technicalKeyPatterns(): array {
+		if ( null === $this->technicalPatterns ) {
+			$list = self::defaultTechnicalKeyPatterns();
+			if ( function_exists( 'apply_filters' ) ) {
+				/**
+				 * Filter the technical key patterns (option names and meta keys logged at debug
+				 * with context.technical). `/regex/flags`, `*` globs, `!` prefix for exemptions.
+				 *
+				 * @param list<string> $list Patterns.
+				 */
+				$list = apply_filters( 'noformat_logger/technical_key_patterns', $list );
+			}
+			$this->technicalPatterns = is_array( $list ) ? array_values( array_filter( array_map( 'strval', $list ), static fn( string $p ): bool => '' !== $p && '!' !== $p ) ) : [];
+		}
+		return $this->technicalPatterns;
+	}
+
+	/**
+	 * Whether an option name or meta key is machine-written plugin state
+	 * (technicalKeyPatterns(); exemptions win).
+	 *
+	 * @param string $key Option name or meta key.
+	 */
+	public function isTechnicalKey( string $key ): bool {
+		if ( '' === $key ) {
+			return false;
+		}
+		$include = [];
+		foreach ( $this->technicalKeyPatterns() as $pattern ) {
+			if ( str_starts_with( $pattern, '!' ) ) {
+				if ( self::matchesPattern( $key, substr( $pattern, 1 ) ) ) {
+					return false;
+				}
+				continue;
+			}
+			$include[] = $pattern;
+		}
+		foreach ( $include as $pattern ) {
+			if ( self::matchesPattern( $key, $pattern ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * One technical pattern: `/regex/flags` or a `*` glob. An invalid regex never matches.
+	 *
+	 * @param string $subject Name.
+	 * @param string $pattern Pattern.
+	 */
+	public static function matchesPattern( string $subject, string $pattern ): bool {
+		if ( str_starts_with( $pattern, '/' ) && strlen( $pattern ) > 2 ) {
+			return 1 === @preg_match( $pattern, $subject ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged -- filtered patterns may be invalid; an invalid one never matches.
+		}
+		return self::matchesGlob( $subject, [ $pattern ] );
 	}
 
 	/**

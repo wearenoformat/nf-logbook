@@ -29,6 +29,11 @@ defined( 'ABSPATH' ) || exit;
  * critical. nav_menu_locations inside theme_mods_* belongs to MenuListener.
  * ACF option page fields ({page}_{field}, _{page}_{field}) are skipped while
  * AcfListener saves that page (acf.options_saved).
+ *
+ * Machine state is logged at debug with context.technical (dropped unless
+ * log_debug is on): option names matching Config::isTechnicalKey() and any write
+ * during a read request, cron or heartbeat (RequestContext::machineWriteReason()).
+ * Notice and critical options are exempt.
  */
 final class OptionListener implements Listener {
 
@@ -159,9 +164,19 @@ final class OptionListener implements Listener {
 			}
 		}
 
-		$severity = OptionRules::severity( $name, $newValue );
-		$verb     = substr( $action, strlen( 'option.' ) );
-		$summary  = sprintf( 'Option %s %s', $name, $verb );
+		$severity  = OptionRules::severity( $name, $newValue );
+		$technical = null;
+		if ( $severity->priority() >= Severity::INFO->priority() ) {
+			// Notice and critical options (siteurl, home, admin_email, default_role, …) are always exempt.
+			$technical = $this->config->isTechnicalKey( $name ) ? 'key_pattern' : $this->logger->context()->machineWriteReason();
+		}
+		if ( null !== $technical ) {
+			$severity                    = Severity::DEBUG;
+			$context['technical']        = true;
+			$context['technical_reason'] = $technical;
+		}
+		$verb    = substr( $action, strlen( 'option.' ) );
+		$summary = sprintf( 'Option %s %s', $name, $verb );
 		if ( 'active_plugins' === $name ) {
 			$summary = sprintf( 'Active plugins changed outside the plugins screen (%d added, %d removed)', count( $context['added'] ), count( $context['removed'] ) );
 		}

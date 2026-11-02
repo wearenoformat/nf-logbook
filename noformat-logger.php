@@ -2,8 +2,8 @@
 /**
  * Plugin Name:       Noformat Logger
  * Plugin URI:        https://noformat.com
- * Description:       Tamper-evident, privacy-preserving log of content changes and error, security and stability signals, read only by the Noformat Controlroom over a signed API.
- * Version:           1.1.0
+ * Description:       Tamper-evident, privacy-preserving log of content changes and error, security and stability signals.
+ * Version:           1.1.1
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Tested up to:      7.1
@@ -26,7 +26,7 @@ if ( defined( 'NOFORMAT_LOGGER_VERSION' ) ) {
 	return;
 }
 
-define( 'NOFORMAT_LOGGER_VERSION', '1.1.0' );
+define( 'NOFORMAT_LOGGER_VERSION', '1.1.1' );
 define( 'NOFORMAT_LOGGER_FILE', __FILE__ );
 define( 'NOFORMAT_LOGGER_DIR', plugin_dir_path( __FILE__ ) );
 

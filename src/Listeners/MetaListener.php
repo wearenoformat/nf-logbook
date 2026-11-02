@@ -28,7 +28,9 @@ defined( 'ABSPATH' ) || exit;
  * comments and posts of non-viewable post types are content summaries
  * (PersonalValues); term meta and viewable post meta are diffed. Underscore-prefixed (internal) keys are
  * logged at debug severity unless listed as meaningful; technical keys
- * (TECHNICAL_KEYS) at debug with context.technical.
+ * (TECHNICAL_KEYS and Config::isTechnicalKey()) and every write during a read
+ * request, cron or heartbeat (RequestContext::machineWriteReason()) at debug
+ * with context.technical.
  */
 final class MetaListener implements Listener {
 
@@ -319,7 +321,11 @@ final class MetaListener implements Listener {
 		if ( null === $this->technical ) {
 			$this->technical = self::filteredList( 'noformat_logger/technical_meta_keys', self::TECHNICAL_KEYS );
 		}
-		return Config::matchesGlob( $key, $this->technical );
+		if ( Config::matchesGlob( $key, $this->technical ) ) {
+			return true;
+		}
+		// Shared state-key patterns (Config::isTechnicalKey()); fields an editor types stay visible.
+		return null !== $this->config && $this->config->isTechnicalKey( $key ) && ! in_array( $key, $this->meaningfulKeys(), true );
 	}
 
 	/**
@@ -489,14 +495,18 @@ final class MetaListener implements Listener {
 			return;
 		}
 		$context['meta_key'] = $key; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- context key, not a query.
-		if ( $this->isTechnical( $key ) ) {
-			$context['technical'] = true;
+		$severity            = $this->severityFor( $key );
+		$technical           = $this->isTechnical( $key ) ? 'key_pattern' : $this->logger->context()->machineWriteReason();
+		if ( null !== $technical ) {
+			$severity                    = Severity::DEBUG;
+			$context['technical']        = true;
+			$context['technical_reason'] = $technical;
 		}
 		if ( 'post' === $type && $objectId > 0 && function_exists( 'get_post_type' ) ) {
 			$context['post_type'] = (string) get_post_type( $objectId );
 		}
 		$this->emit(
-			Event::make( Category::FIELDS, $action, $this->severityFor( $key ) )
+			Event::make( Category::FIELDS, $action, $severity )
 				->object( $type, $objectId > 0 ? $objectId : null, $key )
 				->summary( sprintf( 'Meta "%s" %s on %s #%d', $key, $verb, $type, $objectId ) )
 				->changes( $changes )

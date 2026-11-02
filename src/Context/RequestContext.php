@@ -235,6 +235,47 @@ final class RequestContext {
 	}
 
 	/**
+	 * Why an option or meta write in this request is machine state rather than a
+	 * human change (null: treat it as a change). Humans change things with
+	 * POST/PUT/PATCH/DELETE, REST writes, forms and WP-CLI; a write while a page,
+	 * feed or REST resource is merely read is a plugin caching or bookkeeping:
+	 *
+	 * - `cron`: WP-Cron;
+	 * - `heartbeat`: the admin-ajax `heartbeat` action;
+	 * - `read_request`: a GET or HEAD request (front-end views, admin page loads,
+	 *   REST GETs). Exception: a non-REST GET that carries `_wpnonce` is a
+	 *   deliberate admin action (activate/trash links, bulk edit on edit.php).
+	 *
+	 * WP-CLI is never machine state here.
+	 */
+	public function machineWriteReason(): ?string {
+		$source = $this->source();
+		if ( Source::CLI === $source ) {
+			return null;
+		}
+		if ( Source::CRON === $source ) {
+			return 'cron';
+		}
+		// phpcs:disable WordPress.Security.NonceVerification -- read-only request classification.
+		if ( Source::AJAX === $source ) {
+			$action = $_REQUEST['action'] ?? null; // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized, WordPress.Security.ValidatedSanitizedInput.MissingUnslash -- compared to a literal.
+			if ( 'heartbeat' === $action ) {
+				return 'heartbeat';
+			}
+		}
+		$method = $this->method();
+		if ( 'GET' !== $method && 'HEAD' !== $method ) {
+			return null;
+		}
+		$rest = Source::REST === $source || Source::APP_PASSWORD === $source;
+		if ( ! $rest && isset( $_GET['_wpnonce'] ) ) {
+			return null;
+		}
+		// phpcs:enable WordPress.Security.NonceVerification
+		return 'read_request';
+	}
+
+	/**
 	 * Client IP (REMOTE_ADDR, filterable for trusted proxies). Never stored.
 	 */
 	public function clientIp(): ?string {

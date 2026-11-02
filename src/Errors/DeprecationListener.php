@@ -34,6 +34,13 @@ final class DeprecationListener implements Listener {
 	/** Max distinct deprecation events per request. */
 	public const MAX_EVENTS = 50;
 
+	/**
+	 * `doing_it_wrong` functions logged at info instead of warning (developer notices, not incidents).
+	 *
+	 * @var list<string>
+	 */
+	public const INFO_DOING_IT_WRONG = [ '_load_textdomain_just_in_time' ];
+
 	private static bool $triggerPending = false;
 
 	private ?Logger $logger = null;
@@ -176,11 +183,26 @@ final class DeprecationListener implements Listener {
 			'component'   => null === $caller ? 'unknown' : PathMapper::component( $caller['file'] ),
 			'caller'      => $caller,
 		];
-		return Event::make( Category::ERROR, $action, Severity::WARNING )
+		return Event::make( Category::ERROR, $action, self::severityFor( $action, $name ) )
 			->object( $objectType, ErrorHandler::objectId( $name ) )
 			->summary( sprintf( '%s %s%s', $labels[ $action ] ?? $action, $name, '' === $version ? '' : ' (since ' . $version . ')' ) )
 			->context( $context )
 			->fingerprint( $action, $name );
+	}
+
+	/**
+	 * Severity of a deprecation event: warning, except the `_load_textdomain_just_in_time`
+	 * notice WordPress 6.7 raises for every translation-eager plugin (a developer
+	 * notice on every request, not an incident): info.
+	 *
+	 * @param string $action Action.
+	 * @param string $name   Function, hook or file.
+	 */
+	public static function severityFor( string $action, string $name ): Severity {
+		if ( 'doing_it_wrong' === $action && in_array( $name, self::INFO_DOING_IT_WRONG, true ) ) {
+			return Severity::INFO;
+		}
+		return Severity::WARNING;
 	}
 
 	/**
