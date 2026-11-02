@@ -32,7 +32,7 @@ fi
 mkdir -p "${LOG_DIR}"
 
 declare -a NAMES=() RESULTS=() LINES=()
-for script in smoke.sh smoke-content.sh smoke-privacy.sh smoke-system.sh smoke-errors.sh smoke-admin.sh smoke-update.sh; do
+for script in smoke.sh smoke-content.sh smoke-privacy.sh smoke-system.sh smoke-errors.sh smoke-admin.sh smoke-update.sh smoke-update-private.sh; do
   echo
   echo "==> ${script}"
   log="${LOG_DIR}/${script%.sh}.log"
@@ -49,7 +49,7 @@ echo
 echo "==> run-all summary (${NFLOG_WP_DIR})"
 FAILED=0
 for i in "${!NAMES[@]}"; do
-  printf '  %-18s %-8s %s\n' "${NAMES[$i]}" "${RESULTS[$i]}" "${LINES[$i]}"
+  printf '  %-26s %-8s %s\n' "${NAMES[$i]}" "${RESULTS[$i]}" "${LINES[$i]}"
   [ "${RESULTS[$i]}" = "PASS" ] || FAILED=1
 done
 echo "  logs: ${LOG_DIR}"

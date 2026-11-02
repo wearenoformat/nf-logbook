@@ -143,6 +143,18 @@ builds the two assets from the working tree without git or GitHub (a version
 different from the header is written into the built copy);
 `tests/integration/smoke-update.sh` uses it.
 
+`tests/integration/smoke-update-private.sh` covers the private-repository
+(token) path without GitHub and without a real token: it installs
+`tests/integration/github-emulator.php` as a mu-plugin, whose
+`pre_http_request` filter answers `api.github.com`, `github.com` and
+`release-assets.githubusercontent.com` the way GitHub does for a private repository
+(anonymous 404, bad token 401, ETag / 304, asset API 302 to pre-signed storage
+that answers 400 when the token is forwarded, browser download URLs 404). It
+checks the three error/ok states of `wp nflog update-check`, the headers of
+every request (Bearer only to the API, never to storage, `application/octet-stream`
+for assets), the ETag revalidation, `wp plugin update`, the SHA-256 refusal of a
+tampered zip, and that the token is never printed or stored.
+
 ## Verifying a release
 
 ```sh

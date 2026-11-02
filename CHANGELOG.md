@@ -2,6 +2,12 @@
 
 All notable changes to this plugin. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Tests
+
+- `tests/integration/smoke-update-private.sh` (in `run-all.sh`): the updater's private-repository (token) path end to end against a GitHub emulator mu-plugin (`tests/integration/github-emulator.php`, a `pre_http_request` filter; no network to GitHub, no real token): 404 without a token, 401 with a wrong one, 200 / ETag 304 with the right one, manifest and package through the asset API with the redirect to storage followed without `Authorization`, `wp plugin update` to 9.9.9, SHA-256 refusal of a tampered zip, and the token never printed or stored.
+
 ## [1.1.1] - 2026-11-02
 
 ### Changed
