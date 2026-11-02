@@ -1,6 +1,6 @@
 <?php
 /**
- * Tools → Noformat Logger → Content log.
+ * Tools → Noformat Logbook → Content log.
  *
  * @package Noformat\Logger
  */
@@ -91,7 +91,7 @@ final class ContentLogPage {
 		$canView = Access::canViewEvents( $this->plugin->config() );
 		if ( ! $canView && isset( $_GET['nflog_export'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- refused either way.
 			check_admin_referer( Export::NONCE );
-			wp_die( esc_html__( 'You are not allowed to export the Noformat Logger event log.', 'noformat-logger' ), 403 );
+			wp_die( esc_html__( 'You are not allowed to export the Noformat Logbook event log.', 'nf-logbook' ), 403 );
 		}
 		if ( ! $canView ) {
 			return;
@@ -100,7 +100,7 @@ final class ContentLogPage {
 		add_screen_option(
 			'per_page',
 			[
-				'label'   => __( 'Entries per page (max 200)', 'noformat-logger' ),
+				'label'   => __( 'Entries per page (max 200)', 'nf-logbook' ),
 				'default' => EventFilters::PER_PAGE_DEFAULT,
 				'option'  => self::PER_PAGE_OPT,
 			]
@@ -116,11 +116,11 @@ final class ContentLogPage {
 		$config = $this->plugin->config();
 		echo '<div class="wrap nflog-wrap"><div class="nflog-page nflog-page--content">' . $tabs; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Menu::tabBar() escapes.
 		if ( ! Access::canViewEvents( $config ) ) {
-			echo Ui::header( __( 'Content log', 'noformat-logger' ), __( 'Who changed what on this site', 'noformat-logger' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+			echo Ui::header( __( 'Content log', 'nf-logbook' ), __( 'Who changed what on this site', 'nf-logbook' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 			$empty = Ui::empty(
-				__( 'You do not have permission to view the Noformat Logger event log.', 'noformat-logger' ),
-				__( 'On this site the log is reserved for accounts with the noformat_logger_view_events capability.', 'noformat-logger' ),
-				Ui::button( Menu::url( Menu::STATUS ), __( 'Open Status', 'noformat-logger' ) )
+				__( 'You do not have permission to view the Noformat Logbook event log.', 'nf-logbook' ),
+				__( 'On this site the log is reserved for accounts with the noformat_logger_view_events capability.', 'nf-logbook' ),
+				Ui::button( Menu::url( Menu::STATUS ), __( 'Open Status', 'nf-logbook' ) )
 			);
 			echo '<div class="nflog-card nflog-no-permission">' . $empty . '</div></div></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 			return;
@@ -130,7 +130,7 @@ final class ContentLogPage {
 		try {
 			$this->page( $clean );
 		} catch ( \Throwable $e ) {
-			echo Ui::notice( __( 'The event log storage is not available.', 'noformat-logger' ), 'error' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+			echo Ui::notice( __( 'The event log storage is not available.', 'nf-logbook' ), 'error' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 		}
 		echo '</div></div>';
 	}
@@ -167,11 +167,11 @@ final class ContentLogPage {
 		$to   = min( $total, $paged * $perPage );
 		printf(
 			'<div class="nflog-feed__head"><h2 class="nflog-feed__title" id="nflog-feed-title">%1$s</h2><p class="nflog-feed__count">%2$s</p></div>',
-			esc_html__( 'Activity', 'noformat-logger' ),
+			esc_html__( 'Activity', 'nf-logbook' ),
 			esc_html(
-				0 === $total ? __( 'No events', 'noformat-logger' ) : sprintf(
+				0 === $total ? __( 'No events', 'nf-logbook' ) : sprintf(
 					/* translators: 1: first shown, 2: last shown, 3: total number of entries */
-					_n( '%1$s–%2$s of %3$s entry', '%1$s–%2$s of %3$s entries', $total, 'noformat-logger' ),
+					_n( '%1$s–%2$s of %3$s entry', '%1$s–%2$s of %3$s entries', $total, 'nf-logbook' ),
 					number_format_i18n( $from ),
 					number_format_i18n( $to ),
 					number_format_i18n( $total )
@@ -228,13 +228,13 @@ final class ContentLogPage {
 	 */
 	private function header( array $clean ): string {
 		$labels  = [
-			'today' => __( 'Today', 'noformat-logger' ),
-			'7d'    => __( '7 days', 'noformat-logger' ),
-			'30d'   => __( '30 days', 'noformat-logger' ),
-			'all'   => __( 'All', 'noformat-logger' ),
+			'today' => __( 'Today', 'nf-logbook' ),
+			'7d'    => __( '7 days', 'nf-logbook' ),
+			'30d'   => __( '30 days', 'nf-logbook' ),
+			'all'   => __( 'All', 'nf-logbook' ),
 		];
 		$current = isset( $clean['from'] ) || isset( $clean['to'] ) ? '' : ( $clean['window'] ?? self::DEFAULT_WINDOW );
-		$periods = '<div class="nflog-segmented" role="group" aria-label="' . esc_attr__( 'Period', 'noformat-logger' ) . '">';
+		$periods = '<div class="nflog-segmented" role="group" aria-label="' . esc_attr__( 'Period', 'nf-logbook' ) . '">';
 		foreach ( self::PERIODS as $period ) {
 			$args           = array_diff_key( $clean, array_flip( [ 'window', 'from', 'to' ] ) );
 			$args['window'] = $period;
@@ -247,11 +247,11 @@ final class ContentLogPage {
 		foreach ( array_diff_key( $clean, [ 's' => true ] ) as $key => $value ) {
 			$search .= '<input type="hidden" name="' . esc_attr( $key ) . '" value="' . esc_attr( $value ) . '">';
 		}
-		$search .= '<label class="screen-reader-text" for="nflog-search">' . esc_html__( 'Search the content log', 'noformat-logger' ) . '</label>';
-		$search .= '<span class="nflog-input-icon">' . Ui::icon( 'search' ) . '<input class="nflog-input" type="search" id="nflog-search" name="s" value="' . esc_attr( $clean['s'] ?? '' ) . '" placeholder="' . esc_attr__( 'Search summary, action or id', 'noformat-logger' ) . '"></span></form>';
+		$search .= '<label class="screen-reader-text" for="nflog-search">' . esc_html__( 'Search the content log', 'nf-logbook' ) . '</label>';
+		$search .= '<span class="nflog-input-icon">' . Ui::icon( 'search' ) . '<input class="nflog-input" type="search" id="nflog-search" name="s" value="' . esc_attr( $clean['s'] ?? '' ) . '" placeholder="' . esc_attr__( 'Search summary, action or id', 'nf-logbook' ) . '"></span></form>';
 
-		$export = Ui::button( Export::url( Scope::CONTENT, $clean ), __( 'Export JSON', 'noformat-logger' ), 'secondary', 'download' );
-		return Ui::header( __( 'Content log', 'noformat-logger' ), __( 'Who changed what on this site', 'noformat-logger' ), $periods . $search . $export );
+		$export = Ui::button( Export::url( Scope::CONTENT, $clean ), __( 'Export JSON', 'nf-logbook' ), 'secondary', 'download' );
+		return Ui::header( __( 'Content log', 'nf-logbook' ), __( 'Who changed what on this site', 'nf-logbook' ), $periods . $search . $export );
 	}
 
 	/**
@@ -267,11 +267,11 @@ final class ContentLogPage {
 		$parts = [];
 		if ( $critical > 0 ) {
 			/* translators: %s: number of critical events */
-			$parts[] = sprintf( _n( '%s critical event', '%s critical events', $critical, 'noformat-logger' ), number_format_i18n( $critical ) );
+			$parts[] = sprintf( _n( '%s critical event', '%s critical events', $critical, 'nf-logbook' ), number_format_i18n( $critical ) );
 		}
 		if ( $errors > 0 ) {
 			/* translators: %s: number of errors */
-			$parts[] = sprintf( _n( '%s error', '%s errors', $errors, 'noformat-logger' ), number_format_i18n( $errors ) );
+			$parts[] = sprintf( _n( '%s error', '%s errors', $errors, 'nf-logbook' ), number_format_i18n( $errors ) );
 		}
 		$url = SystemLogPage::url(
 			[
@@ -284,12 +284,12 @@ final class ContentLogPage {
 			$critical > 0 ? ' nflog-attention--critical' : '',
 			esc_url( $url ),
 			Ui::icon( 'alert' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
-			esc_html__( 'Needs attention:', 'noformat-logger' ),
+			esc_html__( 'Needs attention:', 'nf-logbook' ),
 			esc_html(
 				/* translators: %s: 3 critical events and 4 errors */
-				sprintf( __( '%s in the last 24 hours', 'noformat-logger' ), Humanizer::listing( $parts ) )
+				sprintf( __( '%s in the last 24 hours', 'nf-logbook' ), Humanizer::listing( $parts ) )
 			),
-			esc_html__( 'System log', 'noformat-logger' ),
+			esc_html__( 'System log', 'nf-logbook' ),
 			Ui::icon( 'arrow' ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
 		);
 	}
@@ -302,17 +302,17 @@ final class ContentLogPage {
 	 */
 	private function toolbar( array $clean, Resolver $resolver ): void {
 		$types = [
-			''           => __( 'Everything', 'noformat-logger' ),
-			'pages'      => __( 'Pages', 'noformat-logger' ),
-			'posts'      => __( 'Posts', 'noformat-logger' ),
-			'media'      => __( 'Media', 'noformat-logger' ),
-			'menus'      => __( 'Menus', 'noformat-logger' ),
-			'fields'     => __( 'Fields', 'noformat-logger' ),
-			'users'      => __( 'Users', 'noformat-logger' ),
-			'comments'   => __( 'Comments', 'noformat-logger' ),
-			'settings'   => __( 'Settings', 'noformat-logger' ),
-			'extensions' => __( 'Plugins & themes', 'noformat-logger' ),
-			'other'      => __( 'Other', 'noformat-logger' ),
+			''           => __( 'Everything', 'nf-logbook' ),
+			'pages'      => __( 'Pages', 'nf-logbook' ),
+			'posts'      => __( 'Posts', 'nf-logbook' ),
+			'media'      => __( 'Media', 'nf-logbook' ),
+			'menus'      => __( 'Menus', 'nf-logbook' ),
+			'fields'     => __( 'Fields', 'nf-logbook' ),
+			'users'      => __( 'Users', 'nf-logbook' ),
+			'comments'   => __( 'Comments', 'nf-logbook' ),
+			'settings'   => __( 'Settings', 'nf-logbook' ),
+			'extensions' => __( 'Plugins & themes', 'nf-logbook' ),
+			'other'      => __( 'Other', 'nf-logbook' ),
 		];
 		$more  = isset( $clean['from'] ) || isset( $clean['to'] ) || isset( $clean['object_id'] ) || isset( $clean['request_id'] ) || isset( $clean['object_type'] );
 		echo '<form class="nflog-card nflog-toolbar" method="get" action="' . esc_url( Menu::formAction() ) . '" data-nflog-autosubmit>';
@@ -323,7 +323,7 @@ final class ContentLogPage {
 			}
 		}
 		echo '<div class="nflog-toolbar__row">';
-		echo '<fieldset class="nflog-chips"><legend class="nflog-label">' . esc_html__( 'Type', 'noformat-logger' ) . '</legend><div class="nflog-chips__list">';
+		echo '<fieldset class="nflog-chips"><legend class="nflog-label">' . esc_html__( 'Type', 'nf-logbook' ) . '</legend><div class="nflog-chips__list">';
 		foreach ( $types as $value => $label ) {
 			$active = ( $clean['type'] ?? '' ) === $value;
 			printf(
@@ -338,26 +338,26 @@ final class ContentLogPage {
 
 		echo '<div class="nflog-toolbar__row nflog-toolbar__row--controls">';
 		$this->personSelect( $clean, $resolver );
-		echo '<div class="nflog-field"><label class="nflog-label" for="nflog-importance">' . esc_html__( 'Importance', 'noformat-logger' ) . '</label>';
-		echo '<select class="nflog-select" id="nflog-importance" name="important"><option value="">' . esc_html__( 'All changes', 'noformat-logger' ) . '</option><option value="1"' . selected( $clean['important'] ?? '', '1', false ) . '>' . esc_html__( 'Important only', 'noformat-logger' ) . '</option></select></div>';
+		echo '<div class="nflog-field"><label class="nflog-label" for="nflog-importance">' . esc_html__( 'Importance', 'nf-logbook' ) . '</label>';
+		echo '<select class="nflog-select" id="nflog-importance" name="important"><option value="">' . esc_html__( 'All changes', 'nf-logbook' ) . '</option><option value="1"' . selected( $clean['important'] ?? '', '1', false ) . '>' . esc_html__( 'Important only', 'nf-logbook' ) . '</option></select></div>';
 		echo '<div class="nflog-toolbar__actions">';
 		printf(
 			'<button type="button" class="nflog-btn nflog-btn--ghost" aria-expanded="%1$s" aria-controls="nflog-more" data-nflog-toggle>%2$s<span>%3$s</span></button>',
 			$more ? 'true' : 'false',
 			Ui::icon( 'filter' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
-			esc_html__( 'More filters', 'noformat-logger' )
+			esc_html__( 'More filters', 'nf-logbook' )
 		);
-		echo '<button type="submit" class="nflog-btn nflog-btn--primary">' . esc_html__( 'Apply', 'noformat-logger' ) . '</button>';
+		echo '<button type="submit" class="nflog-btn nflog-btn--primary">' . esc_html__( 'Apply', 'nf-logbook' ) . '</button>';
 		$hasFilters = [] !== array_diff_key( $clean, [ 'window' => true ] );
 		if ( $hasFilters ) {
-			echo Ui::button( self::url( isset( $clean['window'] ) ? [ 'window' => $clean['window'] ] : [] ), __( 'Clear', 'noformat-logger' ), 'ghost' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+			echo Ui::button( self::url( isset( $clean['window'] ) ? [ 'window' => $clean['window'] ] : [] ), __( 'Clear', 'nf-logbook' ), 'ghost' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 		}
 		echo '</div></div>';
 
 		echo '<div class="nflog-toolbar__more" id="nflog-more"' . ( $more ? '' : ' hidden' ) . '>';
 		foreach ( [
-			'from' => __( 'From (site time)', 'noformat-logger' ),
-			'to'   => __( 'To (site time)', 'noformat-logger' ),
+			'from' => __( 'From (site time)', 'nf-logbook' ),
+			'to'   => __( 'To (site time)', 'nf-logbook' ),
 		] as $name => $label ) {
 			$value = $clean[ $name ] ?? '';
 			printf(
@@ -369,17 +369,17 @@ final class ContentLogPage {
 		}
 		printf(
 			'<div class="nflog-field"><label class="nflog-label" for="nflog-object-type">%1$s</label><input class="nflog-input nflog-input--short" type="text" id="nflog-object-type" name="object_type" value="%2$s" placeholder="post"></div>',
-			esc_html__( 'Object type', 'noformat-logger' ),
+			esc_html__( 'Object type', 'nf-logbook' ),
 			esc_attr( $clean['object_type'] ?? '' )
 		);
 		printf(
 			'<div class="nflog-field"><label class="nflog-label" for="nflog-object-id">%1$s</label><input class="nflog-input nflog-input--short" type="text" id="nflog-object-id" name="object_id" value="%2$s" inputmode="numeric"></div>',
-			esc_html__( 'Object id', 'noformat-logger' ),
+			esc_html__( 'Object id', 'nf-logbook' ),
 			esc_attr( $clean['object_id'] ?? '' )
 		);
 		printf(
 			'<div class="nflog-field nflog-field--wide"><label class="nflog-label" for="nflog-request-id">%1$s</label><input class="nflog-input nflog-input--mono" type="text" id="nflog-request-id" name="request_id" value="%2$s" spellcheck="false"></div>',
-			esc_html__( 'Request id', 'noformat-logger' ),
+			esc_html__( 'Request id', 'nf-logbook' ),
 			esc_attr( $clean['request_id'] ?? '' )
 		);
 		echo '</div></form>';
@@ -412,22 +412,22 @@ final class ContentLogPage {
 			$users[ $clean['actor_id'] ] = $resolver->userInfo( (int) $clean['actor_id'] )['name'];
 		}
 		asort( $users, SORT_NATURAL | SORT_FLAG_CASE );
-		echo '<div class="nflog-field"><label class="nflog-label" for="nflog-person">' . esc_html__( 'Person', 'noformat-logger' ) . '</label><select class="nflog-select" id="nflog-person" name="person"><option value="">' . esc_html__( 'Anyone', 'noformat-logger' ) . '</option>';
+		echo '<div class="nflog-field"><label class="nflog-label" for="nflog-person">' . esc_html__( 'Person', 'nf-logbook' ) . '</label><select class="nflog-select" id="nflog-person" name="person"><option value="">' . esc_html__( 'Anyone', 'nf-logbook' ) . '</option>';
 		if ( [] !== $users ) {
-			echo '<optgroup label="' . esc_attr__( 'People', 'noformat-logger' ) . '">';
+			echo '<optgroup label="' . esc_attr__( 'People', 'nf-logbook' ) . '">';
 			foreach ( $users as $id => $name ) {
 				echo '<option value="' . esc_attr( (string) $id ) . '"' . selected( $current, (string) $id, false ) . '>' . esc_html( $name ) . '</option>';
 			}
 			echo '</optgroup>';
 		}
 		$words = [
-			'cli'       => __( 'WP-CLI', 'noformat-logger' ),
-			'cron'      => __( 'Cron', 'noformat-logger' ),
-			'system'    => __( 'System', 'noformat-logger' ),
-			'anonymous' => __( 'Visitors (not logged in)', 'noformat-logger' ),
-			'app'       => __( 'Apps', 'noformat-logger' ),
+			'cli'       => __( 'WP-CLI', 'nf-logbook' ),
+			'cron'      => __( 'Cron', 'nf-logbook' ),
+			'system'    => __( 'System', 'nf-logbook' ),
+			'anonymous' => __( 'Visitors (not logged in)', 'nf-logbook' ),
+			'app'       => __( 'Apps', 'nf-logbook' ),
 		];
-		echo '<optgroup label="' . esc_attr__( 'System / WP-CLI / Cron', 'noformat-logger' ) . '">';
+		echo '<optgroup label="' . esc_attr__( 'System / WP-CLI / Cron', 'nf-logbook' ) . '">';
 		foreach ( $words as $type => $label ) {
 			if ( isset( $others[ $type ] ) || $current === $type || in_array( $type, [ 'cli', 'cron', 'system' ], true ) ) {
 				echo '<option value="' . esc_attr( $type ) . '"' . selected( $current, $type, false ) . '>' . esc_html( $label ) . '</option>';
@@ -457,8 +457,8 @@ final class ContentLogPage {
 				}
 				$day   = $key;
 				$label = match ( $key ) {
-					$today     => __( 'Today', 'noformat-logger' ),
-					$yesterday => __( 'Yesterday', 'noformat-logger' ),
+					$today     => __( 'Today', 'nf-logbook' ),
+					$yesterday => __( 'Yesterday', 'nf-logbook' ),
 					default    => Ui::localTime( $ms, Ui::localTime( $ms, 'Y' ) === $thisYear ? 'l j F' : 'l j F Y' ),
 				};
 				echo '<div class="nflog-day"><h3 class="nflog-day__label"><span>' . esc_html( $label ) . '</span></h3><ol class="nflog-entries">';
@@ -505,7 +505,7 @@ final class ContentLogPage {
 			echo ' <span class="nflog-entry__also">' . esc_html( $suffix ) . '</span>';
 		}
 		if ( Severity::CRITICAL === $severity ) {
-			echo ' ' . Ui::badge( $severity, __( 'Important', 'noformat-logger' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+			echo ' ' . Ui::badge( $severity, __( 'Important', 'nf-logbook' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 		}
 		echo '</p><p class="nflog-entry__meta">';
 		echo Ui::time( $story['last_ms'], (string) get_option( 'time_format', 'H:i' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
@@ -515,13 +515,13 @@ final class ContentLogPage {
 		}
 		if ( $count > 1 ) {
 			/* translators: %s: number of times */
-			echo '<span class="nflog-dot-sep" aria-hidden="true">·</span><span class="nflog-entry__count">' . esc_html( sprintf( _n( '%s time', '%s times', $count, 'noformat-logger' ), number_format_i18n( $count ) ) ) . '</span>';
+			echo '<span class="nflog-dot-sep" aria-hidden="true">·</span><span class="nflog-entry__count">' . esc_html( sprintf( _n( '%s time', '%s times', $count, 'nf-logbook' ), number_format_i18n( $count ) ) ) . '</span>';
 		}
 		$detail = 'nflog-detail-' . $id;
 		printf(
 			'<span class="nflog-dot-sep" aria-hidden="true">·</span><button type="button" class="nflog-expander" aria-expanded="false" aria-controls="%1$s" data-nflog-toggle><span>%2$s</span>%3$s</button>',
 			esc_attr( $detail ),
-			esc_html( [] === $changes && [] === $story['secondary'] ? __( 'Details', 'noformat-logger' ) : __( 'What changed', 'noformat-logger' ) ),
+			esc_html( [] === $changes && [] === $story['secondary'] ? __( 'Details', 'nf-logbook' ) : __( 'What changed', 'nf-logbook' ) ),
 			Ui::icon( 'chevron' ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
 		);
 		echo '</p>';
@@ -589,7 +589,7 @@ final class ContentLogPage {
 			return;
 		}
 		/* translators: %s: number of other events */
-		echo '<table class="nflog-diff nflog-diff--also"><caption>' . esc_html( sprintf( _n( 'Also in this save (%s event)', 'Also in this save (%s events)', $n, 'noformat-logger' ), number_format_i18n( $n ) ) ) . '</caption><tbody>';
+		echo '<table class="nflog-diff nflog-diff--also"><caption>' . esc_html( sprintf( _n( 'Also in this save (%s event)', 'Also in this save (%s events)', $n, 'nf-logbook' ), number_format_i18n( $n ) ) ) . '</caption><tbody>';
 		echo implode( '', $lines ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built from esc_html(), Humanizer::value() and sentence().
 		echo '</tbody></table>';
 	}
@@ -602,7 +602,7 @@ final class ContentLogPage {
 	 */
 	private static function compactLine( array $row, array $change ): string {
 		$field = is_scalar( $change['field'] ?? null ) ? (string) $change['field'] : Stories::metaKey( $row );
-		$label = 'user' === ( $row['object_type'] ?? '' ) && 'description' === $field ? __( 'Bio', 'noformat-logger' ) : Humanizer::label( $field );
+		$label = 'user' === ( $row['object_type'] ?? '' ) && 'description' === $field ? __( 'Bio', 'nf-logbook' ) : Humanizer::label( $field );
 		$line  = Humanizer::contentLine( $change );
 		$old   = $change['old'] ?? null;
 		$new   = $change['new'] ?? null;
@@ -610,7 +610,7 @@ final class ContentLogPage {
 			$value = esc_html( $line );
 		} else {
 			$value = ( null === $old || '' === $old ? Humanizer::value( $old ) : '<del>' . Humanizer::value( $old ) . '</del>' )
-				. ' <span class="nflog-diff__arrow" aria-hidden="true">→</span><span class="screen-reader-text">' . esc_html__( 'changed to', 'noformat-logger' ) . '</span> '
+				. ' <span class="nflog-diff__arrow" aria-hidden="true">→</span><span class="screen-reader-text">' . esc_html__( 'changed to', 'nf-logbook' ) . '</span> '
 				. ( null === $new || '' === $new ? Humanizer::value( $new ) : '<ins>' . Humanizer::value( $new ) . '</ins>' );
 		}
 		$key = $label !== $field && '' !== $field ? '<code class="nflog-diff__key">' . esc_html( $field ) . '</code>' : '';
@@ -633,7 +633,7 @@ final class ContentLogPage {
 				$name   = null === $termId ? null : $resolver->termName( $termId );
 				$out[]  = null === $name ? '#' . (string) $termId : $name;
 			}
-			return implode( _x( ', ', 'list separator', 'noformat-logger' ), $out );
+			return implode( _x( ', ', 'list separator', 'nf-logbook' ), $out );
 		};
 		$added    = $names( $context['added'] ?? [] );
 		$removed  = $names( $context['removed'] ?? [] );
@@ -659,16 +659,16 @@ final class ContentLogPage {
 			return ucfirst( Humanizer::postTypeLabel( $postType ) );
 		}
 		return match ( $type ) {
-			'attachment' => __( 'Media', 'noformat-logger' ),
-			'option'     => __( 'Setting', 'noformat-logger' ),
-			'menu_item'  => __( 'Menu item', 'noformat-logger' ),
-			'menu'       => __( 'Menu', 'noformat-logger' ),
-			'term'       => __( 'Term', 'noformat-logger' ),
-			'user'       => __( 'User', 'noformat-logger' ),
-			'comment'    => __( 'Comment', 'noformat-logger' ),
-			'plugin'     => __( 'Plugin', 'noformat-logger' ),
-			'theme'      => __( 'Theme', 'noformat-logger' ),
-			'core'       => __( 'WordPress', 'noformat-logger' ),
+			'attachment' => __( 'Media', 'nf-logbook' ),
+			'option'     => __( 'Setting', 'nf-logbook' ),
+			'menu_item'  => __( 'Menu item', 'nf-logbook' ),
+			'menu'       => __( 'Menu', 'nf-logbook' ),
+			'term'       => __( 'Term', 'nf-logbook' ),
+			'user'       => __( 'User', 'nf-logbook' ),
+			'comment'    => __( 'Comment', 'nf-logbook' ),
+			'plugin'     => __( 'Plugin', 'nf-logbook' ),
+			'theme'      => __( 'Theme', 'nf-logbook' ),
+			'core'       => __( 'WordPress', 'nf-logbook' ),
 			default      => Humanizer::humanize( $type ),
 		};
 	}
@@ -682,7 +682,7 @@ final class ContentLogPage {
 		if ( [] === $changes ) {
 			return;
 		}
-		echo '<table class="nflog-diff"><thead><tr><th scope="col">' . esc_html__( 'Field', 'noformat-logger' ) . '</th><th scope="col">' . esc_html__( 'Before', 'noformat-logger' ) . '</th><th scope="col">' . esc_html__( 'After', 'noformat-logger' ) . '</th></tr></thead><tbody>';
+		echo '<table class="nflog-diff"><thead><tr><th scope="col">' . esc_html__( 'Field', 'nf-logbook' ) . '</th><th scope="col">' . esc_html__( 'Before', 'nf-logbook' ) . '</th><th scope="col">' . esc_html__( 'After', 'nf-logbook' ) . '</th></tr></thead><tbody>';
 		foreach ( $changes as $change ) {
 			if ( ! is_array( $change ) ) {
 				continue;
@@ -694,7 +694,7 @@ final class ContentLogPage {
 			if ( null !== $line ) {
 				echo '<td colspan="2" class="nflog-diff__content">' . esc_html(
 					/* translators: %s: 26 → 53 characters (+27) */
-					sprintf( __( 'Content changed: %s', 'noformat-logger' ), $line )
+					sprintf( __( 'Content changed: %s', 'nf-logbook' ), $line )
 				) . '</td></tr>';
 				continue;
 			}
@@ -719,10 +719,10 @@ final class ContentLogPage {
 				continue;
 			}
 			if ( 'changed_fields' === $key && is_array( $value ) ) {
-				$facts[ $key ] = esc_html( implode( _x( ', ', 'list separator', 'noformat-logger' ), Humanizer::profileFields( array_values( array_filter( $value, 'is_string' ) ) ) ) );
+				$facts[ $key ] = esc_html( implode( _x( ', ', 'list separator', 'nf-logbook' ), Humanizer::profileFields( array_values( array_filter( $value, 'is_string' ) ) ) ) );
 			} elseif ( is_array( $value ) && Humanizer::isContentSummary( $value ) ) {
 				/* translators: %s: length in characters */
-				$facts[ $key ] = esc_html( sprintf( __( '%s characters', 'noformat-logger' ), number_format_i18n( (int) $value['length'] ) ) );
+				$facts[ $key ] = esc_html( sprintf( __( '%s characters', 'nf-logbook' ), number_format_i18n( (int) $value['length'] ) ) );
 			} elseif ( is_scalar( $value ) || null === $value || ( is_array( $value ) && array_is_list( $value ) && count( $value ) <= 12 ) ) {
 				$facts[ $key ] = Humanizer::value( $value );
 			}
@@ -748,7 +748,7 @@ final class ContentLogPage {
 		if ( '' !== $request ) {
 			printf(
 				'<span>%1$s <code title="%2$s">%3$s</code></span><a href="%4$s">%5$s</a>',
-				esc_html__( 'Request', 'noformat-logger' ),
+				esc_html__( 'Request', 'nf-logbook' ),
 				esc_attr( $request ),
 				esc_html( substr( $request, 0, 8 ) ),
 				esc_url(
@@ -759,7 +759,7 @@ final class ContentLogPage {
 						]
 					)
 				),
-				esc_html__( 'Show everything from this save', 'noformat-logger' )
+				esc_html__( 'Show everything from this save', 'nf-logbook' )
 			);
 		}
 		$route = trim( (string) ( $row['method'] ?? '' ) . ' ' . (string) ( $row['route'] ?? '' ) );
@@ -767,7 +767,7 @@ final class ContentLogPage {
 			echo '<span class="nflog-entry__route"><code>' . esc_html( $route ) . '</code></span>';
 		}
 		/* translators: %d: event id */
-		echo '<span class="nflog-entry__id">' . esc_html( sprintf( __( 'Event #%d', 'noformat-logger' ), (int) $row['id'] ) ) . '</span></div>';
+		echo '<span class="nflog-entry__id">' . esc_html( sprintf( __( 'Event #%d', 'nf-logbook' ), (int) $row['id'] ) ) . '</span></div>';
 	}
 
 	/**
@@ -778,16 +778,16 @@ final class ContentLogPage {
 	private function emptyState( array $clean ): void {
 		$active = EventFilters::describe( array_diff_key( $clean, [ 'window' => true ] ) );
 		if ( [] === $active && 'all' === ( $clean['window'] ?? '' ) ) {
-			echo Ui::empty( __( 'No events have been recorded yet.', 'noformat-logger' ), __( 'Changes to pages, posts, media, menus, users and settings appear here as they happen.', 'noformat-logger' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+			echo Ui::empty( __( 'No events have been recorded yet.', 'nf-logbook' ), __( 'Changes to pages, posts, media, menus, users and settings appear here as they happen.', 'nf-logbook' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 			return;
 		}
 		$title = [] === $active
-			? __( 'Nothing changed in this period.', 'noformat-logger' )
+			? __( 'Nothing changed in this period.', 'nf-logbook' )
 			/* translators: %s: comma separated list of active filters */
-			: sprintf( __( 'No events match: %s.', 'noformat-logger' ), implode( _x( ', ', 'filter list separator', 'noformat-logger' ), $active ) );
+			: sprintf( __( 'No events match: %s.', 'nf-logbook' ), implode( _x( ', ', 'filter list separator', 'nf-logbook' ), $active ) );
 		$args = $clean;
 		unset( $args['window'] );
-		echo Ui::empty( $title, __( 'Try a longer period or clear the filters.', 'noformat-logger' ), Ui::button( self::url( [ 'window' => 'all' ] ), __( 'Show everything', 'noformat-logger' ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+		echo Ui::empty( $title, __( 'Try a longer period or clear the filters.', 'nf-logbook' ), Ui::button( self::url( [ 'window' => 'all' ] ), __( 'Show everything', 'nf-logbook' ) ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 	}
 
 	/**
@@ -803,10 +803,10 @@ final class ContentLogPage {
 			return;
 		}
 		$link = fn( int $page ): string => self::url( array_merge( $clean, [ 'paged' => (string) $page ] ) );
-		echo '<nav class="nflog-pagination" aria-label="' . esc_attr__( 'Pages', 'noformat-logger' ) . '">';
+		echo '<nav class="nflog-pagination" aria-label="' . esc_attr__( 'Pages', 'nf-logbook' ) . '">';
 		/* translators: %s: number of entries */
-		echo '<span class="nflog-pagination__total">' . esc_html( sprintf( _n( '%s entry', '%s entries', $total, 'noformat-logger' ), number_format_i18n( $total ) ) ) . '</span><span class="nflog-pagination__pages">';
-		echo $paged > 1 ? Ui::button( $link( $paged - 1 ), __( 'Newer', 'noformat-logger' ), 'secondary', '', 'rel="prev"' ) : '<span class="nflog-btn nflog-btn--secondary is-disabled" aria-disabled="true"><span>' . esc_html__( 'Newer', 'noformat-logger' ) . '</span></span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+		echo '<span class="nflog-pagination__total">' . esc_html( sprintf( _n( '%s entry', '%s entries', $total, 'nf-logbook' ), number_format_i18n( $total ) ) ) . '</span><span class="nflog-pagination__pages">';
+		echo $paged > 1 ? Ui::button( $link( $paged - 1 ), __( 'Newer', 'nf-logbook' ), 'secondary', '', 'rel="prev"' ) : '<span class="nflog-btn nflog-btn--secondary is-disabled" aria-disabled="true"><span>' . esc_html__( 'Newer', 'nf-logbook' ) . '</span></span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 		$window = array_unique( [ 1, max( 1, $paged - 1 ), $paged, min( $pages, $paged + 1 ), $pages ] );
 		sort( $window );
 		$last = 0;
@@ -818,11 +818,11 @@ final class ContentLogPage {
 				echo '<span class="nflog-pagination__page is-current" aria-current="page">' . esc_html( number_format_i18n( $page ) ) . '</span>';
 			} else {
 				/* translators: %s: page number */
-				echo '<a class="nflog-pagination__page" href="' . esc_url( $link( $page ) ) . '" aria-label="' . esc_attr( sprintf( __( 'Page %s', 'noformat-logger' ), number_format_i18n( $page ) ) ) . '">' . esc_html( number_format_i18n( $page ) ) . '</a>';
+				echo '<a class="nflog-pagination__page" href="' . esc_url( $link( $page ) ) . '" aria-label="' . esc_attr( sprintf( __( 'Page %s', 'nf-logbook' ), number_format_i18n( $page ) ) ) . '">' . esc_html( number_format_i18n( $page ) ) . '</a>';
 			}
 			$last = $page;
 		}
-		echo $paged < $pages ? Ui::button( $link( $paged + 1 ), __( 'Older', 'noformat-logger' ), 'secondary', '', 'rel="next"' ) : '<span class="nflog-btn nflog-btn--secondary is-disabled" aria-disabled="true"><span>' . esc_html__( 'Older', 'noformat-logger' ) . '</span></span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+		echo $paged < $pages ? Ui::button( $link( $paged + 1 ), __( 'Older', 'nf-logbook' ), 'secondary', '', 'rel="next"' ) : '<span class="nflog-btn nflog-btn--secondary is-disabled" aria-disabled="true"><span>' . esc_html__( 'Older', 'nf-logbook' ) . '</span></span>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 		echo '</span></nav>';
 	}
 }

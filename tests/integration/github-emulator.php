@@ -11,7 +11,7 @@
  * Configuration (constants in wp-config.php, set by the smoke test):
  *   NFLOG_GH_EMU_REPO   owner/name of the emulated repository
  *   NFLOG_GH_EMU_TOKEN  the only accepted token
- *   NFLOG_GH_EMU_DIR    directory with noformat-logger.zip and manifest.json
+ *   NFLOG_GH_EMU_DIR    directory with nf-logbook.zip and manifest.json
  *   NFLOG_GH_EMU_LOG    JSON-lines log, one line per intercepted request
  *
  * Behaviour:
@@ -118,7 +118,7 @@ function nflog_gh_emu_answer( string $url, array $args, bool $hasAuth, bool $aut
 	$dir    = rtrim( (string) NFLOG_GH_EMU_DIR, '/' );
 	$method = strtoupper( (string) ( $args['method'] ?? 'GET' ) );
 	$assets = [
-		'101' => 'noformat-logger.zip',
+		'101' => 'nf-logbook.zip',
 		'102' => 'manifest.json',
 	];
 

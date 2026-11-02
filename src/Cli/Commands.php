@@ -24,7 +24,7 @@ use WP_CLI;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Inspect and operate the Noformat Logger.
+ * Inspect and operate the Noformat Logbook.
  */
 final class Commands {
 
@@ -461,7 +461,7 @@ final class Commands {
 		if ( '' !== $summary['error'] ) {
 			WP_CLI::warning( 'Update check failed: ' . $summary['error'] );
 		} elseif ( $summary['update_available'] ) {
-			WP_CLI::log( 'Run `wp plugin update noformat-logger` to install ' . $summary['latest'] . '.' );
+			WP_CLI::log( 'Run `wp plugin update nf-logbook` to install ' . $summary['latest'] . '.' );
 		}
 	}
 
@@ -517,7 +517,7 @@ final class Commands {
 	}
 
 	/**
-	 * Copy the early error loader into wp-content/mu-plugins.
+	 * Copy the early error loader into wp-content/mu-plugins (and remove the pre-1.2 noformat-logger-loader.php).
 	 *
 	 * ## OPTIONS
 	 *
@@ -531,9 +531,9 @@ final class Commands {
 	 */
 	public function installMuLoader( array $args, array $assoc ): void {
 		unset( $args );
-		$source = NOFORMAT_LOGGER_DIR . 'mu-loader/noformat-logger-loader.php';
+		$source = NOFORMAT_LOGGER_DIR . 'mu-loader/nf-logbook-loader.php';
 		$dir    = defined( 'WPMU_PLUGIN_DIR' ) ? WPMU_PLUGIN_DIR : WP_CONTENT_DIR . '/mu-plugins';
-		$target = rtrim( $dir, '/' ) . '/noformat-logger-loader.php';
+		$target = rtrim( $dir, '/' ) . '/nf-logbook-loader.php';
 		if ( file_exists( $target ) && ! WP_CLI\Utils\get_flag_value( $assoc, 'force', false ) ) {
 			WP_CLI::error( $target . ' exists; use --force to overwrite.' );
 		}
@@ -542,6 +542,17 @@ final class Commands {
 		}
 		if ( ! copy( $source, $target ) ) { // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_copy -- CLI context, explicit operator action.
 			WP_CLI::error( 'Copy failed.' );
+		}
+		// The loader was called noformat-logger-loader.php before the rename to Noformat Logbook (1.2.0).
+		$legacy = rtrim( $dir, '/' ) . '/noformat-logger-loader.php';
+		if ( file_exists( $legacy ) ) {
+			wp_delete_file( $legacy ); // Returns a value only from WordPress 6.7: check the file instead.
+			clearstatcache( true, $legacy );
+			if ( is_file( $legacy ) ) {
+				WP_CLI::warning( 'Could not remove the old loader ' . $legacy . '; delete it by hand.' );
+			} else {
+				WP_CLI::log( 'Removed the old loader ' . $legacy );
+			}
 		}
 		WP_CLI::success( 'Installed ' . $target );
 	}

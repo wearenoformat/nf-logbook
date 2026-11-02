@@ -46,7 +46,7 @@ final class DashboardWidget {
 		if ( ! Access::canViewEvents( $this->plugin->config() ) ) {
 			return;
 		}
-		wp_add_dashboard_widget( self::ID, __( 'Recent activity', 'noformat-logger' ), [ $this, 'render' ] );
+		wp_add_dashboard_widget( self::ID, __( 'Recent activity', 'nf-logbook' ), [ $this, 'render' ] );
 		Menu::enqueueStyle();
 	}
 
@@ -61,7 +61,7 @@ final class DashboardWidget {
 		try {
 			$result = ContentLogPage::loadStories( $repo, [ 'categories' => Scope::content() ], 1, 5, false );
 		} catch ( \Throwable $e ) {
-			echo '<p class="nflog-muted">' . esc_html__( 'The event log storage is not available.', 'noformat-logger' ) . '</p>';
+			echo '<p class="nflog-muted">' . esc_html__( 'The event log storage is not available.', 'nf-logbook' ) . '</p>';
 			return;
 		}
 		$resolver = new Resolver();
@@ -69,7 +69,7 @@ final class DashboardWidget {
 		$humanizer = new Humanizer( $resolver );
 		echo '<div class="nflog-widget">';
 		if ( [] === $result['stories'] ) {
-			echo '<p class="nflog-widget__empty">' . esc_html__( 'No changes recorded yet.', 'noformat-logger' ) . '</p>';
+			echo '<p class="nflog-widget__empty">' . esc_html__( 'No changes recorded yet.', 'nf-logbook' ) . '</p>';
 		} else {
 			echo '<ul class="nflog-widget__list">';
 			foreach ( $result['stories'] as $story ) {
@@ -94,13 +94,13 @@ final class DashboardWidget {
 					'' === $suffix ? '' : ' <span class="nflog-widget__also">' . esc_html( $suffix ) . '</span>',
 					esc_html(
 						/* translators: %s: human readable time difference */
-						sprintf( __( '%s ago', 'noformat-logger' ), human_time_diff( intdiv( $story['last_ms'], 1000 ) ) )
+						sprintf( __( '%s ago', 'nf-logbook' ), human_time_diff( intdiv( $story['last_ms'], 1000 ) ) )
 					)
 				);
 			}
 			echo '</ul>';
 		}
-		echo '<p class="nflog-widget__more"><a href="' . esc_url( ContentLogPage::url() ) . '">' . esc_html__( 'Open the Content log', 'noformat-logger' ) . ' ' . Ui::icon( 'arrow' ) . '</a></p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
+		echo '<p class="nflog-widget__more"><a href="' . esc_url( ContentLogPage::url() ) . '">' . esc_html__( 'Open the Content log', 'nf-logbook' ) . ' ' . Ui::icon( 'arrow' ) . '</a></p>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
 		if ( Access::canViewSystemLog( $this->plugin->config() ) ) {
 			$this->systemLine();
 		}
@@ -124,7 +124,7 @@ final class DashboardWidget {
 		}
 		$text = sprintf(
 			/* translators: 1: number of critical events, 2: number of errors */
-			__( 'System: %1$s critical, %2$s errors in 24 h', 'noformat-logger' ),
+			__( 'System: %1$s critical, %2$s errors in 24 h', 'nf-logbook' ),
 			number_format_i18n( $critical ),
 			number_format_i18n( $errors )
 		);
@@ -141,7 +141,7 @@ final class DashboardWidget {
 			),
 			$critical > 0 ? 'critical' : 'error',
 			esc_html( $text ),
-			esc_html__( 'System log', 'noformat-logger' ),
+			esc_html__( 'System log', 'nf-logbook' ),
 			Ui::icon( 'arrow' ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
 		);
 	}

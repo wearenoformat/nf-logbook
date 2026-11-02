@@ -645,7 +645,7 @@ final class IntegrityCheck implements Listener {
 			}
 		}
 		$slug = dirname( $file );
-		return 'noformat-logger' === $slug ? null : sanitize_key( $slug );
+		return 'nf-logbook' === $slug ? null : sanitize_key( $slug );
 	}
 
 	/**

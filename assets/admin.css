@@ -1,6 +1,6 @@
 /*
- * Noformat Logger admin design system.
- * Loaded on Tools → Noformat Logger (tabs: Content log, System log, Status,
+ * Noformat Logbook admin design system.
+ * Loaded on Tools → Noformat Logbook (tabs: Content log, System log, Status,
  * Settings) and the dashboard widget only. No external fonts or assets.
  */
 
@@ -104,7 +104,7 @@
 .nflog-header__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--nflog-s2); }
 .nflog-backlink { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; }
 
-/* Tabs (Tools → Noformat Logger) */
+/* Tabs (Tools → Noformat Logbook) */
 /* Block, not flex: a flex bar would shrink beside the floated Screen Options button; this one keeps its full-width rule. */
 .nflog-tabs { display: block; margin: calc(-1 * var(--nflog-s2)) 0 var(--nflog-s5); border-bottom: 1px solid var(--nflog-border); line-height: 0; }
 .nflog-tabs__brand { display: inline-flex; align-items: center; gap: var(--nflog-s2); height: 40px; margin: 0 var(--nflog-s5) 0 0; vertical-align: bottom; font-size: 13px; line-height: 1; font-weight: 600; color: var(--nflog-text-2); white-space: nowrap; }

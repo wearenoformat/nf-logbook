@@ -1,5 +1,5 @@
 /**
- * Noformat Logger admin: expanders, auto-submitting filter forms and the
+ * Noformat Logbook admin: expanders, auto-submitting filter forms and the
  * chain verification on the Status page. Vanilla JS, no dependencies.
  */
 ( function () {

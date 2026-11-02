@@ -1,6 +1,6 @@
 <?php
 /**
- * Tools → Noformat Logger → Status.
+ * Tools → Noformat Logbook → Status.
  *
  * @package Noformat\Logger
  */
@@ -72,10 +72,10 @@ final class StatusPage {
 		}
 		check_admin_referer( Updater::CHECK_NONCE );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You are not allowed to check for Noformat Logger updates.', 'noformat-logger' ), 403 );
+			wp_die( esc_html__( 'You are not allowed to check for Noformat Logbook updates.', 'nf-logbook' ), 403 );
 		}
 		$state            = $this->updater()->checkNow();
-		$this->notice     = '' === $state['error'] ? __( 'Update check done.', 'noformat-logger' ) : __( 'Update check failed:', 'noformat-logger' ) . ' ' . $state['error'];
+		$this->notice     = '' === $state['error'] ? __( 'Update check done.', 'nf-logbook' ) : __( 'Update check failed:', 'nf-logbook' ) . ' ' . $state['error'];
 		$this->noticeType = '' === $state['error'] ? 'success' : 'error';
 		nocache_headers();
 	}
@@ -96,7 +96,7 @@ final class StatusPage {
 		}
 		check_admin_referer( self::NONCE );
 		if ( ! current_user_can( 'manage_options' ) ) {
-			wp_die( esc_html__( 'You are not allowed to manage the Noformat Logger key.', 'noformat-logger' ), 403 );
+			wp_die( esc_html__( 'You are not allowed to manage the Noformat Logbook key.', 'nf-logbook' ), 403 );
 		}
 		$action = sanitize_key( wp_unslash( (string) $_POST['nflog_key_action'] ) );
 		$keys   = $this->plugin->keys();
@@ -105,7 +105,7 @@ final class StatusPage {
 				case 'generate':
 					$this->newKey = $keys->generate();
 					$this->plugin->logKeyChange( 'generated', $this->newKey['id'] );
-					$this->notice = __( 'Key generated. Copy the secret now: it is shown only once.', 'noformat-logger' );
+					$this->notice = __( 'Key generated. Copy the secret now: it is shown only once.', 'nf-logbook' );
 					break;
 				case 'rotate':
 					$pair         = $keys->rotate();
@@ -114,13 +114,13 @@ final class StatusPage {
 						'secret' => $pair['secret'],
 					];
 					$this->plugin->logKeyChange( 'rotated', $pair['id'], $pair['previous_id'] );
-					$this->notice = __( 'Key rotated. The previous key stays valid for 24 hours. Copy the new secret now: it is shown only once.', 'noformat-logger' );
+					$this->notice = __( 'Key rotated. The previous key stays valid for 24 hours. Copy the new secret now: it is shown only once.', 'nf-logbook' );
 					break;
 				case 'revoke':
 					$previous = $keys->describe()['previous_id'];
 					$keys->revoke( false );
 					$this->plugin->logKeyChange( 'revoked', $previous );
-					$this->notice = __( 'Previous key revoked.', 'noformat-logger' );
+					$this->notice = __( 'Previous key revoked.', 'nf-logbook' );
 					break;
 			}
 		} catch ( \Throwable $e ) {
@@ -139,7 +139,7 @@ final class StatusPage {
 		$canManage = current_user_can( 'manage_options' );
 		$manifest  = $this->plugin->manifest();
 		echo '<div class="wrap nflog-wrap"><div class="nflog-page nflog-page--status">' . $tabs; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Menu::tabBar() escapes.
-		echo Ui::header( __( 'Status', 'noformat-logger' ), __( 'Connection, storage, health and scheduled jobs', 'noformat-logger' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+		echo Ui::header( __( 'Status', 'nf-logbook' ), __( 'Connection, storage, health and scheduled jobs', 'nf-logbook' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 		if ( '' !== $this->notice ) {
 			echo Ui::notice( $this->notice, $this->noticeType ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 		}
@@ -161,10 +161,10 @@ final class StatusPage {
 	 * @param array{id: string, secret: string} $key New key.
 	 */
 	private function secret( array $key ): void {
-		echo '<section class="nflog-card nflog-secret"><h2 class="nflog-card__title">' . Ui::icon( 'lock' ) . esc_html__( 'New API key', 'noformat-logger' ) . '</h2>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
-		echo '<dl class="nflog-kv"><div><dt>' . esc_html__( 'Key id', 'noformat-logger' ) . '</dt><dd><code>' . esc_html( $key['id'] ) . '</code></dd></div>';
-		echo '<div><dt>' . esc_html__( 'Secret (shown once)', 'noformat-logger' ) . '</dt><dd><code class="nflog-secret__value">' . esc_html( $key['secret'] ) . '</code></dd></div></dl>';
-		echo '<p class="nflog-help">' . esc_html__( 'Recommended: move the key to wp-config.php (it then no longer lives in the database):', 'noformat-logger' ) . '</p>';
+		echo '<section class="nflog-card nflog-secret"><h2 class="nflog-card__title">' . Ui::icon( 'lock' ) . esc_html__( 'New API key', 'nf-logbook' ) . '</h2>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
+		echo '<dl class="nflog-kv"><div><dt>' . esc_html__( 'Key id', 'nf-logbook' ) . '</dt><dd><code>' . esc_html( $key['id'] ) . '</code></dd></div>';
+		echo '<div><dt>' . esc_html__( 'Secret (shown once)', 'nf-logbook' ) . '</dt><dd><code class="nflog-secret__value">' . esc_html( $key['secret'] ) . '</code></dd></div></dl>';
+		echo '<p class="nflog-help">' . esc_html__( 'Recommended: move the key to wp-config.php (it then no longer lives in the database):', 'nf-logbook' ) . '</p>';
 		echo '<pre class="nflog-code">' . esc_html( KeyStore::configLines( $key['id'], $key['secret'] ) ) . '</pre></section>';
 	}
 
@@ -178,22 +178,22 @@ final class StatusPage {
 		$key      = $this->plugin->keys()->describe();
 		$lastPull = is_array( $manifest['last_pull'] ?? null ) ? (int) ( $manifest['last_pull']['at'] ?? 0 ) : 0;
 		$sources  = [
-			'constant' => __( 'wp-config.php constants', 'noformat-logger' ),
-			'option'   => __( 'database (encrypted)', 'noformat-logger' ),
-			'none'     => __( 'none', 'noformat-logger' ),
+			'constant' => __( 'wp-config.php constants', 'nf-logbook' ),
+			'option'   => __( 'database (encrypted)', 'nf-logbook' ),
+			'none'     => __( 'none', 'nf-logbook' ),
 		];
-		$state    = null === $key['id'] ? [ 'warning', __( 'No key', 'noformat-logger' ) ] : ( $lastPull > 0 && time() - $lastPull < 2 * DAY_IN_SECONDS ? [ 'ok', __( 'Connected', 'noformat-logger' ) ] : [ 'idle', __( 'Waiting for the Controlroom', 'noformat-logger' ) ] );
-		$this->cardOpen( __( 'Connection', 'noformat-logger' ), 'shield', $state );
+		$state    = null === $key['id'] ? [ 'warning', __( 'No key', 'nf-logbook' ) ] : ( $lastPull > 0 && time() - $lastPull < 2 * DAY_IN_SECONDS ? [ 'ok', __( 'Connected', 'nf-logbook' ) ] : [ 'idle', __( 'Waiting for the Controlroom', 'nf-logbook' ) ] );
+		$this->cardOpen( __( 'Connection', 'nf-logbook' ), 'shield', $state );
 		$rows = [
-			__( 'Key id', 'noformat-logger' )        => null === $key['id'] ? '—' : '<code>' . esc_html( $key['id'] ) . '</code>',
-			__( 'Secret source', 'noformat-logger' ) => esc_html( $sources[ $key['source'] ] ?? $key['source'] ),
-			__( 'Previous key', 'noformat-logger' )  => null === $key['previous_id'] ? '—' : '<code>' . esc_html( $key['previous_id'] ) . '</code>' . ( null === $key['previous_valid_until'] ? '' : ' <span class="nflog-muted">' . esc_html(
+			__( 'Key id', 'nf-logbook' )        => null === $key['id'] ? '—' : '<code>' . esc_html( $key['id'] ) . '</code>',
+			__( 'Secret source', 'nf-logbook' ) => esc_html( $sources[ $key['source'] ] ?? $key['source'] ),
+			__( 'Previous key', 'nf-logbook' )  => null === $key['previous_id'] ? '—' : '<code>' . esc_html( $key['previous_id'] ) . '</code>' . ( null === $key['previous_valid_until'] ? '' : ' <span class="nflog-muted">' . esc_html(
 				/* translators: %s: date */
-				sprintf( __( 'valid until %s', 'noformat-logger' ), gmdate( 'Y-m-d H:i', $key['previous_valid_until'] ) . ' UTC' )
+				sprintf( __( 'valid until %s', 'nf-logbook' ), gmdate( 'Y-m-d H:i', $key['previous_valid_until'] ) . ' UTC' )
 			) . '</span>' ),
-			__( 'Last pull', 'noformat-logger' )     => $lastPull > 0 ? self::ago( $lastPull ) : esc_html__( 'never', 'noformat-logger' ),
-			__( 'Ack cursor', 'noformat-logger' )    => '<span class="nflog-num">#' . esc_html( number_format_i18n( (int) ( $manifest['ack_cursor'] ?? 0 ) ) ) . '</span>',
-			__( 'API', 'noformat-logger' )           => '<a href="' . esc_url( rest_url( 'noformat-logger/v1' ) ) . '">' . esc_html__( 'API index (JSON)', 'noformat-logger' ) . '</a> · <a href="' . esc_url( plugins_url( 'docs/API.md', NOFORMAT_LOGGER_FILE ) ) . '">' . esc_html__( 'API docs', 'noformat-logger' ) . '</a>',
+			__( 'Last pull', 'nf-logbook' )     => $lastPull > 0 ? self::ago( $lastPull ) : esc_html__( 'never', 'nf-logbook' ),
+			__( 'Ack cursor', 'nf-logbook' )    => '<span class="nflog-num">#' . esc_html( number_format_i18n( (int) ( $manifest['ack_cursor'] ?? 0 ) ) ) . '</span>',
+			__( 'API', 'nf-logbook' )           => '<a href="' . esc_url( rest_url( 'noformat-logger/v1' ) ) . '">' . esc_html__( 'API index (JSON)', 'nf-logbook' ) . '</a> · <a href="' . esc_url( plugins_url( 'docs/API.md', NOFORMAT_LOGGER_FILE ) ) . '">' . esc_html__( 'API docs', 'nf-logbook' ) . '</a>',
 		];
 		self::kv( $rows );
 		if ( $canManage ) {
@@ -201,13 +201,13 @@ final class StatusPage {
 			wp_nonce_field( self::NONCE );
 			$constant = 'constant' === $key['source'];
 			if ( $constant ) {
-				echo '<p class="nflog-help">' . esc_html__( 'The key is defined in wp-config.php. Rotate it there (or with `wp nflog key generate --print-config`).', 'noformat-logger' ) . '</p>';
+				echo '<p class="nflog-help">' . esc_html__( 'The key is defined in wp-config.php. Rotate it there (or with `wp nflog key generate --print-config`).', 'nf-logbook' ) . '</p>';
 			} elseif ( null === $key['id'] ) {
-				echo '<button type="submit" class="nflog-btn nflog-btn--primary" name="nflog_key_action" value="generate">' . esc_html__( 'Generate key', 'noformat-logger' ) . '</button>';
+				echo '<button type="submit" class="nflog-btn nflog-btn--primary" name="nflog_key_action" value="generate">' . esc_html__( 'Generate key', 'nf-logbook' ) . '</button>';
 			} else {
-				echo '<button type="submit" class="nflog-btn nflog-btn--secondary" name="nflog_key_action" value="rotate">' . esc_html__( 'Rotate key', 'noformat-logger' ) . '</button>';
+				echo '<button type="submit" class="nflog-btn nflog-btn--secondary" name="nflog_key_action" value="rotate">' . esc_html__( 'Rotate key', 'nf-logbook' ) . '</button>';
 				if ( null !== $key['previous_id'] ) {
-					echo '<button type="submit" class="nflog-btn nflog-btn--ghost" name="nflog_key_action" value="revoke">' . esc_html__( 'Revoke previous key now', 'noformat-logger' ) . '</button>';
+					echo '<button type="submit" class="nflog-btn nflog-btn--ghost" name="nflog_key_action" value="revoke">' . esc_html__( 'Revoke previous key now', 'nf-logbook' ) . '</button>';
 				}
 			}
 			echo '</form>';
@@ -225,22 +225,22 @@ final class StatusPage {
 		$head      = is_array( $manifest['chain_head'] ?? null ) ? $manifest['chain_head'] : [];
 		$available = (bool) ( $storage['available'] ?? false );
 		$failures  = (int) ( $manifest['failures']['count'] ?? 0 );
-		$this->cardOpen( __( 'Storage', 'noformat-logger' ), 'refresh', $available ? ( $failures > 0 ? [ 'warning', __( 'Available, with failures', 'noformat-logger' ) ] : [ 'ok', __( 'Available', 'noformat-logger' ) ] ) : [ 'error', __( 'Unavailable', 'noformat-logger' ) ] );
-		echo '<div class="nflog-metric"><span class="nflog-metric__value">' . esc_html( number_format_i18n( (int) ( $storage['events'] ?? 0 ) ) ) . '</span><span class="nflog-metric__label">' . esc_html__( 'stored events', 'noformat-logger' ) . '</span></div>';
+		$this->cardOpen( __( 'Storage', 'nf-logbook' ), 'refresh', $available ? ( $failures > 0 ? [ 'warning', __( 'Available, with failures', 'nf-logbook' ) ] : [ 'ok', __( 'Available', 'nf-logbook' ) ] ) : [ 'error', __( 'Unavailable', 'nf-logbook' ) ] );
+		echo '<div class="nflog-metric"><span class="nflog-metric__value">' . esc_html( number_format_i18n( (int) ( $storage['events'] ?? 0 ) ) ) . '</span><span class="nflog-metric__label">' . esc_html__( 'stored events', 'nf-logbook' ) . '</span></div>';
 		$hash = (string) ( $head['hash'] ?? '' );
 		$rows = [
-			__( 'Event ids', 'noformat-logger' )         => '<span class="nflog-num">#' . esc_html( number_format_i18n( (int) ( $storage['oldest_id'] ?? 0 ) ) ) . ' – #' . esc_html( number_format_i18n( (int) ( $storage['newest_id'] ?? 0 ) ) ) . '</span>',
-			__( 'Chain head', 'noformat-logger' )        => '<code title="' . esc_attr( $hash ) . '">#' . esc_html( (string) (int) ( $head['id'] ?? 0 ) ) . ' ' . esc_html( substr( $hash, 0, 16 ) ) . '…</code>',
-			__( 'Schema', 'noformat-logger' )            => esc_html(
+			__( 'Event ids', 'nf-logbook' )         => '<span class="nflog-num">#' . esc_html( number_format_i18n( (int) ( $storage['oldest_id'] ?? 0 ) ) ) . ' – #' . esc_html( number_format_i18n( (int) ( $storage['newest_id'] ?? 0 ) ) ) . '</span>',
+			__( 'Chain head', 'nf-logbook' )        => '<code title="' . esc_attr( $hash ) . '">#' . esc_html( (string) (int) ( $head['id'] ?? 0 ) ) . ' ' . esc_html( substr( $hash, 0, 16 ) ) . '…</code>',
+			__( 'Schema', 'nf-logbook' )            => esc_html(
 				/* translators: 1: installed schema version, 2: expected version */
-				sprintf( __( '%1$d (expected %2$d)', 'noformat-logger' ), Schema::installedVersion(), Schema::VERSION )
+				sprintf( __( '%1$d (expected %2$d)', 'nf-logbook' ), Schema::installedVersion(), Schema::VERSION )
 			),
-			__( 'Retention', 'noformat-logger' )         => esc_html(
+			__( 'Retention', 'nf-logbook' )         => esc_html(
 				/* translators: 1: retention days, 2: hard maximum days, 3: maximum rows */
-				sprintf( __( '%1$s days (hard max %2$s), at most %3$s events', 'noformat-logger' ), number_format_i18n( (int) ( $manifest['retention']['retention_days'] ?? 0 ) ), number_format_i18n( (int) ( $manifest['retention']['hard_max_days'] ?? 0 ) ), number_format_i18n( (int) ( $manifest['retention']['max_rows'] ?? 0 ) ) )
+				sprintf( __( '%1$s days (hard max %2$s), at most %3$s events', 'nf-logbook' ), number_format_i18n( (int) ( $manifest['retention']['retention_days'] ?? 0 ) ), number_format_i18n( (int) ( $manifest['retention']['hard_max_days'] ?? 0 ) ), number_format_i18n( (int) ( $manifest['retention']['max_rows'] ?? 0 ) ) )
 			),
-			__( 'Internal failures', 'noformat-logger' ) => '<span class="nflog-num">' . esc_html( number_format_i18n( $failures ) ) . '</span>',
-			__( 'Plugin version', 'noformat-logger' )    => esc_html( NOFORMAT_LOGGER_VERSION ),
+			__( 'Internal failures', 'nf-logbook' ) => '<span class="nflog-num">' . esc_html( number_format_i18n( $failures ) ) . '</span>',
+			__( 'Plugin version', 'nf-logbook' )    => esc_html( NOFORMAT_LOGGER_VERSION ),
 		];
 		self::kv( $rows );
 		printf(
@@ -250,7 +250,7 @@ final class StatusPage {
 			Ui::icon( 'check' ), // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
 			esc_html(
 				/* translators: %s: number of events */
-				sprintf( __( 'Verify chain (last %s events)', 'noformat-logger' ), number_format_i18n( Ajax::VERIFY_ROWS ) )
+				sprintf( __( 'Verify chain (last %s events)', 'nf-logbook' ), number_format_i18n( Ajax::VERIFY_ROWS ) )
 			)
 		);
 		echo '</section>';
@@ -272,26 +272,26 @@ final class StatusPage {
 		$overdue   = (int) ( $cron['overdue_count'] ?? 0 );
 		$pending   = (int) ( $updates['core'] ?? 0 ) + (int) ( $updates['plugins'] ?? 0 ) + (int) ( $updates['themes'] ?? 0 );
 		$intOk     = self::integrityOk( $integrity );
-		$state     = false === $intOk ? [ 'error', __( 'Integrity mismatch', 'noformat-logger' ) ] : ( $overdue > 0 || $pending > 0 ? [ 'warning', __( 'Needs attention', 'noformat-logger' ) ] : [ 'ok', __( 'Healthy', 'noformat-logger' ) ] );
-		$this->cardOpen( __( 'Health', 'noformat-logger' ), 'pulse', $state );
+		$state     = false === $intOk ? [ 'error', __( 'Integrity mismatch', 'nf-logbook' ) ] : ( $overdue > 0 || $pending > 0 ? [ 'warning', __( 'Needs attention', 'nf-logbook' ) ] : [ 'ok', __( 'Healthy', 'nf-logbook' ) ] );
+		$this->cardOpen( __( 'Health', 'nf-logbook' ), 'pulse', $state );
 		$db   = trim( (string) ( $versions['db_engine'] ?? '' ) . ' ' . (string) ( $versions['db_server'] ?? '' ) );
 		$rows = [
-			__( 'PHP', 'noformat-logger' )             => esc_html( (string) ( $versions['php'] ?? PHP_VERSION ) ),
-			__( 'WordPress', 'noformat-logger' )       => esc_html( (string) ( $versions['wordpress'] ?? get_bloginfo( 'version' ) ) ),
-			__( 'Database', 'noformat-logger' )        => esc_html( '' === $db ? '—' : $db ),
-			__( 'Environment', 'noformat-logger' )     => esc_html( is_string( $snapshot['environment'] ?? null ) ? $snapshot['environment'] : '—' ),
-			__( 'Cron', 'noformat-logger' )            => self::pill( 0 === $overdue ? 'ok' : 'warning', 0 === $overdue ? __( 'on time', 'noformat-logger' ) : sprintf( /* translators: %s: number of jobs */ _n( '%s job overdue', '%s jobs overdue', $overdue, 'noformat-logger' ), number_format_i18n( $overdue ) ) ) . ( isset( $cron['last_run_age'] ) && is_numeric( $cron['last_run_age'] ) ? ' <span class="nflog-muted">' . esc_html(
+			__( 'PHP', 'nf-logbook' )             => esc_html( (string) ( $versions['php'] ?? PHP_VERSION ) ),
+			__( 'WordPress', 'nf-logbook' )       => esc_html( (string) ( $versions['wordpress'] ?? get_bloginfo( 'version' ) ) ),
+			__( 'Database', 'nf-logbook' )        => esc_html( '' === $db ? '—' : $db ),
+			__( 'Environment', 'nf-logbook' )     => esc_html( is_string( $snapshot['environment'] ?? null ) ? $snapshot['environment'] : '—' ),
+			__( 'Cron', 'nf-logbook' )            => self::pill( 0 === $overdue ? 'ok' : 'warning', 0 === $overdue ? __( 'on time', 'nf-logbook' ) : sprintf( /* translators: %s: number of jobs */ _n( '%s job overdue', '%s jobs overdue', $overdue, 'nf-logbook' ), number_format_i18n( $overdue ) ) ) . ( isset( $cron['last_run_age'] ) && is_numeric( $cron['last_run_age'] ) ? ' <span class="nflog-muted">' . esc_html(
 				/* translators: %s: human readable time difference */
-				sprintf( __( 'last run %s ago', 'noformat-logger' ), human_time_diff( time() - (int) $cron['last_run_age'] ) )
+				sprintf( __( 'last run %s ago', 'nf-logbook' ), human_time_diff( time() - (int) $cron['last_run_age'] ) )
 			) . '</span>' : '' ),
-			__( 'Pending updates', 'noformat-logger' ) => [] === $updates ? '—' : self::pill(
+			__( 'Pending updates', 'nf-logbook' ) => [] === $updates ? '—' : self::pill(
 				0 === $pending ? 'ok' : 'warning',
 				esc_html(
 				/* translators: 1: core updates, 2: plugin updates, 3: theme updates */
-					sprintf( __( '%1$s core · %2$s plugins · %3$s themes', 'noformat-logger' ), number_format_i18n( (int) ( $updates['core'] ?? 0 ) ), number_format_i18n( (int) ( $updates['plugins'] ?? 0 ) ), number_format_i18n( (int) ( $updates['themes'] ?? 0 ) ) )
+					sprintf( __( '%1$s core · %2$s plugins · %3$s themes', 'nf-logbook' ), number_format_i18n( (int) ( $updates['core'] ?? 0 ) ), number_format_i18n( (int) ( $updates['plugins'] ?? 0 ) ), number_format_i18n( (int) ( $updates['themes'] ?? 0 ) ) )
 				)
 			),
-			__( 'Integrity', 'noformat-logger' )       => null === $intOk ? '<span class="nflog-muted">' . esc_html__( 'not checked yet', 'noformat-logger' ) . '</span>' : self::pill( $intOk ? 'ok' : 'error', $intOk ? __( 'core, plugins and chain intact', 'noformat-logger' ) : __( 'mismatch found, see the System log', 'noformat-logger' ) ) . ( is_string( $integrity['ran_at'] ?? null ) ? ' <span class="nflog-muted">' . esc_html( self::agoIso( $integrity['ran_at'] ) ) . '</span>' : '' ),
+			__( 'Integrity', 'nf-logbook' )       => null === $intOk ? '<span class="nflog-muted">' . esc_html__( 'not checked yet', 'nf-logbook' ) . '</span>' : self::pill( $intOk ? 'ok' : 'error', $intOk ? __( 'core, plugins and chain intact', 'nf-logbook' ) : __( 'mismatch found, see the System log', 'nf-logbook' ) ) . ( is_string( $integrity['ran_at'] ?? null ) ? ' <span class="nflog-muted">' . esc_html( self::agoIso( $integrity['ran_at'] ) ) . '</span>' : '' ),
 		];
 		self::kv( $rows );
 		echo '</section>';
@@ -303,8 +303,8 @@ final class StatusPage {
 	private function jobs(): void {
 		$runs = Scheduler::nextRuns();
 		$late = array_filter( $runs, static fn( ?int $next ): bool => null === $next || $next < time() - HOUR_IN_SECONDS );
-		$this->cardOpen( __( 'Scheduled jobs', 'noformat-logger' ), 'clock', [] === $late ? [ 'ok', __( 'Scheduled', 'noformat-logger' ) ] : [ 'warning', __( 'Check cron', 'noformat-logger' ) ] );
-		echo '<table class="nflog-table nflog-table--compact"><thead><tr><th scope="col">' . esc_html__( 'Job', 'noformat-logger' ) . '</th><th scope="col">' . esc_html__( 'Every', 'noformat-logger' ) . '</th><th scope="col">' . esc_html__( 'Next run', 'noformat-logger' ) . '</th></tr></thead><tbody>';
+		$this->cardOpen( __( 'Scheduled jobs', 'nf-logbook' ), 'clock', [] === $late ? [ 'ok', __( 'Scheduled', 'nf-logbook' ) ] : [ 'warning', __( 'Check cron', 'nf-logbook' ) ] );
+		echo '<table class="nflog-table nflog-table--compact"><thead><tr><th scope="col">' . esc_html__( 'Job', 'nf-logbook' ) . '</th><th scope="col">' . esc_html__( 'Every', 'nf-logbook' ) . '</th><th scope="col">' . esc_html__( 'Next run', 'nf-logbook' ) . '</th></tr></thead><tbody>';
 		$schedules = function_exists( 'wp_get_schedules' ) ? wp_get_schedules() : [];
 		foreach ( $runs as $hook => $next ) {
 			$recurrence = Scheduler::JOBS[ $hook ] ?? '';
@@ -315,7 +315,7 @@ final class StatusPage {
 				esc_html( Humanizer::humanize( $name ) ),
 				esc_html( $hook ),
 				esc_html( $every ),
-				null === $next ? self::pill( 'warning', __( 'not scheduled', 'noformat-logger' ) ) : '<time datetime="' . esc_attr( gmdate( 'c', $next ) ) . '" title="' . esc_attr( gmdate( 'Y-m-d H:i:s', $next ) . ' UTC' ) . '">' . esc_html( $next > time() ? sprintf( /* translators: %s: human readable time difference */ __( 'in %s', 'noformat-logger' ), human_time_diff( $next ) ) : sprintf( /* translators: %s: human readable time difference */ __( '%s overdue', 'noformat-logger' ), human_time_diff( $next ) ) ) . '</time>' // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- pill() and the time element are escaped.
+				null === $next ? self::pill( 'warning', __( 'not scheduled', 'nf-logbook' ) ) : '<time datetime="' . esc_attr( gmdate( 'c', $next ) ) . '" title="' . esc_attr( gmdate( 'Y-m-d H:i:s', $next ) . ' UTC' ) . '">' . esc_html( $next > time() ? sprintf( /* translators: %s: human readable time difference */ __( 'in %s', 'nf-logbook' ), human_time_diff( $next ) ) : sprintf( /* translators: %s: human readable time difference */ __( '%s overdue', 'nf-logbook' ), human_time_diff( $next ) ) ) . '</time>' // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- pill() and the time element are escaped.
 			);
 		}
 		echo '</tbody></table></section>';
@@ -329,25 +329,25 @@ final class StatusPage {
 	private function updates( bool $canManage ): void {
 		$client  = $this->updater()->client();
 		$summary = Updater::summary( $client->cached() ?? [], NOFORMAT_LOGGER_VERSION, $client->sourceLabel() );
-		$state   = 0 === $summary['checked_at'] ? [ 'idle', __( 'Not checked yet', 'noformat-logger' ) ] : ( ! $summary['ok'] ? [ 'error', __( 'Check failed', 'noformat-logger' ) ] : ( $summary['update_available'] ? [ 'warning', __( 'Update available', 'noformat-logger' ) ] : [ 'ok', __( 'Up to date', 'noformat-logger' ) ] ) );
-		$this->cardOpen( __( 'Updates', 'noformat-logger' ), 'download', $state );
-		$latest = null === $summary['latest'] ? '<span class="nflog-muted">' . esc_html__( 'unknown', 'noformat-logger' ) . '</span>' : esc_html( $summary['latest'] );
+		$state   = 0 === $summary['checked_at'] ? [ 'idle', __( 'Not checked yet', 'nf-logbook' ) ] : ( ! $summary['ok'] ? [ 'error', __( 'Check failed', 'nf-logbook' ) ] : ( $summary['update_available'] ? [ 'warning', __( 'Update available', 'nf-logbook' ) ] : [ 'ok', __( 'Up to date', 'nf-logbook' ) ] ) );
+		$this->cardOpen( __( 'Updates', 'nf-logbook' ), 'download', $state );
+		$latest = null === $summary['latest'] ? '<span class="nflog-muted">' . esc_html__( 'unknown', 'nf-logbook' ) . '</span>' : esc_html( $summary['latest'] );
 		if ( $summary['update_available'] && current_user_can( 'update_plugins' ) ) {
-			$latest .= ' · <a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">' . esc_html__( 'Update in Dashboard → Updates', 'noformat-logger' ) . '</a>';
+			$latest .= ' · <a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">' . esc_html__( 'Update in Dashboard → Updates', 'nf-logbook' ) . '</a>';
 		}
 		$rows = [
-			__( 'Installed', 'noformat-logger' )  => esc_html( $summary['installed'] ),
-			__( 'Latest', 'noformat-logger' )     => $latest,
-			__( 'Source', 'noformat-logger' )     => esc_html( $summary['source'] ),
-			__( 'Last check', 'noformat-logger' ) => 0 === $summary['checked_at'] ? esc_html__( 'never', 'noformat-logger' ) : self::ago( $summary['checked_at'] ),
-			__( 'Result', 'noformat-logger' )     => 0 === $summary['checked_at'] ? '—' : ( $summary['ok'] ? self::pill( 'ok', __( 'ok', 'noformat-logger' ) ) : '<span class="nflog-update-error">' . esc_html( $summary['error'] ) . '</span>' ),
+			__( 'Installed', 'nf-logbook' )  => esc_html( $summary['installed'] ),
+			__( 'Latest', 'nf-logbook' )     => $latest,
+			__( 'Source', 'nf-logbook' )     => esc_html( $summary['source'] ),
+			__( 'Last check', 'nf-logbook' ) => 0 === $summary['checked_at'] ? esc_html__( 'never', 'nf-logbook' ) : self::ago( $summary['checked_at'] ),
+			__( 'Result', 'nf-logbook' )     => 0 === $summary['checked_at'] ? '—' : ( $summary['ok'] ? self::pill( 'ok', __( 'ok', 'nf-logbook' ) ) : '<span class="nflog-update-error">' . esc_html( $summary['error'] ) . '</span>' ),
 		];
 		self::kv( $rows );
 		if ( $canManage ) {
 			echo '<form method="post" class="nflog-card__actions" action="' . esc_url( self::url() ) . '">';
 			wp_nonce_field( Updater::CHECK_NONCE );
-			echo '<button type="submit" class="nflog-btn nflog-btn--secondary" name="nflog_update_check" value="1">' . Ui::icon( 'refresh' ) . '<span>' . esc_html__( 'Check now', 'noformat-logger' ) . '</span></button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
-			echo '<p class="nflog-help">' . esc_html__( 'Releases are checked every 6 hours; WordPress installs them like any other plugin update.', 'noformat-logger' ) . '</p>';
+			echo '<button type="submit" class="nflog-btn nflog-btn--secondary" name="nflog_update_check" value="1">' . Ui::icon( 'refresh' ) . '<span>' . esc_html__( 'Check now', 'nf-logbook' ) . '</span></button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
+			echo '<p class="nflog-help">' . esc_html__( 'Releases are checked every 6 hours; WordPress installs them like any other plugin update.', 'nf-logbook' ) . '</p>';
 			echo '</form>';
 		}
 		echo '</section>';
@@ -395,7 +395,7 @@ final class StatusPage {
 	private static function ago( int $time ): string {
 		return '<time datetime="' . esc_attr( gmdate( 'c', $time ) ) . '" title="' . esc_attr( gmdate( 'Y-m-d H:i:s', $time ) . ' UTC' ) . '">' . esc_html(
 			/* translators: %s: human readable time difference */
-			sprintf( __( '%s ago', 'noformat-logger' ), human_time_diff( $time ) )
+			sprintf( __( '%s ago', 'nf-logbook' ), human_time_diff( $time ) )
 		) . '</time>';
 	}
 
@@ -407,7 +407,7 @@ final class StatusPage {
 	private static function agoIso( string $iso ): string {
 		$time = strtotime( $iso );
 		/* translators: %s: human readable time difference */
-		return false === $time ? $iso : sprintf( __( 'checked %s ago', 'noformat-logger' ), human_time_diff( $time ) );
+		return false === $time ? $iso : sprintf( __( 'checked %s ago', 'nf-logbook' ), human_time_diff( $time ) );
 	}
 
 	/**

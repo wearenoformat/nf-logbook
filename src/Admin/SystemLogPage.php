@@ -1,6 +1,6 @@
 <?php
 /**
- * Tools → Noformat Logger → System log.
+ * Tools → Noformat Logbook → System log.
  *
  * @package Noformat\Logger
  */
@@ -97,8 +97,8 @@ final class SystemLogPage {
 	public function render( string $tabs = '' ): void {
 		echo '<div class="wrap nflog-wrap"><div class="nflog-page nflog-page--system">' . $tabs; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Menu::tabBar() escapes.
 		if ( ! Access::canViewSystemLog( $this->plugin->config() ) ) {
-			echo Ui::header( __( 'System log', 'noformat-logger' ), '' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
-			echo '<div class="nflog-card">' . Ui::empty( __( 'You do not have permission to view the System log.', 'noformat-logger' ), __( 'On this site the developer view is reserved for accounts with the noformat_logger_view_events capability.', 'noformat-logger' ) ) . '</div></div></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+			echo Ui::header( __( 'System log', 'nf-logbook' ), '' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+			echo '<div class="nflog-card">' . Ui::empty( __( 'You do not have permission to view the System log.', 'nf-logbook' ), __( 'On this site the developer view is reserved for accounts with the noformat_logger_view_events capability.', 'nf-logbook' ) ) . '</div></div></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 			return;
 		}
 		$clean = self::requestFilters();
@@ -106,7 +106,7 @@ final class SystemLogPage {
 		try {
 			$this->page( $clean );
 		} catch ( \Throwable $e ) {
-			echo Ui::notice( __( 'The event log storage is not available.', 'noformat-logger' ), 'error' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+			echo Ui::notice( __( 'The event log storage is not available.', 'nf-logbook' ), 'error' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 		}
 		echo '</div></div>';
 	}
@@ -143,8 +143,8 @@ final class SystemLogPage {
 			'i18n'    => self::i18n(),
 		];
 
-		$back = Access::canViewEvents( $this->plugin->config() ) ? '<a class="nflog-backlink" href="' . esc_url( ContentLogPage::url() ) . '">' . esc_html__( 'Looking for who changed what? Open the Content log', 'noformat-logger' ) . ' ' . Ui::icon( 'arrow' ) . '</a>' : '';
-		echo Ui::header( __( 'System log', 'noformat-logger' ), __( 'Errors, security signals, HTTP, mail, cron and deploys', 'noformat-logger' ), $back ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes; $back is escaped above.
+		$back = Access::canViewEvents( $this->plugin->config() ) ? '<a class="nflog-backlink" href="' . esc_url( ContentLogPage::url() ) . '">' . esc_html__( 'Looking for who changed what? Open the Content log', 'nf-logbook' ) . ' ' . Ui::icon( 'arrow' ) . '</a>' : '';
+		echo Ui::header( __( 'System log', 'nf-logbook' ), __( 'Errors, security signals, HTTP, mail, cron and deploys', 'nf-logbook' ), $back ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes; $back is escaped above.
 		$this->statBar( $clean );
 		$this->console( $clean, $payload );
 	}
@@ -166,7 +166,7 @@ final class SystemLogPage {
 		$active = isset( $clean['levels'] ) ? explode( ',', $clean['levels'] ) : [];
 		$events = 0;
 		$occ    = 0;
-		echo '<div class="nflog-stats" role="group" aria-label="' . esc_attr__( 'Events per severity in the selected window', 'noformat-logger' ) . '">';
+		echo '<div class="nflog-stats" role="group" aria-label="' . esc_attr__( 'Events per severity in the selected window', 'nf-logbook' ) . '">';
 		foreach ( Severity::cases() as $severity ) {
 			$row     = $counts[ $severity->value ] ?? [
 				'events'      => 0,
@@ -191,16 +191,16 @@ final class SystemLogPage {
 				esc_html( number_format_i18n( (int) $row['events'] ) ),
 				(int) $row['occurrences'] > (int) $row['events'] ? esc_html(
 					/* translators: %s: number of occurrences */
-					sprintf( __( '%s occurrences', 'noformat-logger' ), number_format_i18n( (int) $row['occurrences'] ) )
+					sprintf( __( '%s occurrences', 'nf-logbook' ), number_format_i18n( (int) $row['occurrences'] ) )
 				) : '&nbsp;'
 			);
 		}
 		printf(
 			'<div class="nflog-stat nflog-stat--totals"><span class="nflog-stat__label">%1$s</span><span class="nflog-stat__value">%2$s <span class="nflog-stat__slash">/</span> %3$s</span><span class="nflog-stat__sub">%4$s <code title="%5$s">#%6$s · %7$s</code></span></div>',
-			esc_html__( 'Events / occurrences', 'noformat-logger' ),
+			esc_html__( 'Events / occurrences', 'nf-logbook' ),
 			esc_html( number_format_i18n( $events ) ),
 			esc_html( number_format_i18n( $occ ) ),
-			esc_html__( 'Chain head', 'noformat-logger' ),
+			esc_html__( 'Chain head', 'nf-logbook' ),
 			esc_attr( $head['hash'] ),
 			esc_html( (string) $head['id'] ),
 			esc_html( substr( $head['hash'], 0, 10 ) )
@@ -217,33 +217,33 @@ final class SystemLogPage {
 	private function console( array $clean, array $payload ): void {
 		$host  = (string) wp_parse_url( home_url(), PHP_URL_HOST );
 		$query = EventFilters::toQuery( array_diff_key( $clean, array_flip( [ 'levels', 'cats', 'source', 'window' ] ) ) );
-		echo '<section class="nflog-card nflog-console" id="nflog-console" aria-label="' . esc_attr__( 'System log console', 'noformat-logger' ) . '">';
+		echo '<section class="nflog-card nflog-console" id="nflog-console" aria-label="' . esc_attr__( 'System log console', 'nf-logbook' ) . '">';
 
 		echo '<div class="nflog-console__bar">';
 		echo '<span class="nflog-console__dots" aria-hidden="true"><i></i><i></i><i></i></span>';
-		echo '<span class="nflog-console__title"><span class="nflog-console__host">' . esc_html( '' === $host ? 'localhost' : $host ) . '</span> — ' . esc_html__( 'System log', 'noformat-logger' ) . '<span class="nflog-console__live" hidden><span class="nflog-console__pulse" aria-hidden="true"></span>' . esc_html__( 'live', 'noformat-logger' ) . '</span></span>';
+		echo '<span class="nflog-console__title"><span class="nflog-console__host">' . esc_html( '' === $host ? 'localhost' : $host ) . '</span> — ' . esc_html__( 'System log', 'nf-logbook' ) . '<span class="nflog-console__live" hidden><span class="nflog-console__pulse" aria-hidden="true"></span>' . esc_html__( 'live', 'nf-logbook' ) . '</span></span>';
 		echo '<span class="nflog-console__tools">';
-		echo '<button type="button" class="nflog-cbtn" data-nflog-follow aria-pressed="false">' . esc_html__( 'Follow', 'noformat-logger' ) . '</button>';
-		echo '<button type="button" class="nflog-cbtn" data-nflog-wrap aria-pressed="false">' . esc_html__( 'Wrap', 'noformat-logger' ) . '</button>';
-		echo '<a class="nflog-cbtn" href="' . esc_url( Export::url( Scope::SYSTEM, $clean ) ) . '">' . esc_html__( 'Export JSON', 'noformat-logger' ) . '</a>';
-		echo '<a class="nflog-cbtn" href="' . esc_url( self::url() ) . '">' . esc_html__( 'Clear filters', 'noformat-logger' ) . '</a>';
+		echo '<button type="button" class="nflog-cbtn" data-nflog-follow aria-pressed="false">' . esc_html__( 'Follow', 'nf-logbook' ) . '</button>';
+		echo '<button type="button" class="nflog-cbtn" data-nflog-wrap aria-pressed="false">' . esc_html__( 'Wrap', 'nf-logbook' ) . '</button>';
+		echo '<a class="nflog-cbtn" href="' . esc_url( Export::url( Scope::SYSTEM, $clean ) ) . '">' . esc_html__( 'Export JSON', 'nf-logbook' ) . '</a>';
+		echo '<a class="nflog-cbtn" href="' . esc_url( self::url() ) . '">' . esc_html__( 'Clear filters', 'nf-logbook' ) . '</a>';
 		echo '</span></div>';
 
 		echo '<form class="nflog-console__filters" method="get" action="' . esc_url( Menu::formAction() ) . '" data-nflog-console-form>';
 		echo Menu::formFields( Menu::SYSTEM ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in formFields().
-		echo '<div class="nflog-console__query"><span class="nflog-console__prompt" aria-hidden="true">$</span><label class="screen-reader-text" for="nflog-q">' . esc_html__( 'Filter the system log', 'noformat-logger' ) . '</label>';
+		echo '<div class="nflog-console__query"><span class="nflog-console__prompt" aria-hidden="true">$</span><label class="screen-reader-text" for="nflog-q">' . esc_html__( 'Filter the system log', 'nf-logbook' ) . '</label>';
 		printf(
 			'<input type="text" id="nflog-q" name="q" value="%1$s" placeholder="%2$s" autocomplete="off" spellcheck="false" aria-describedby="nflog-q-help"><kbd class="nflog-console__kbd" title="%3$s">/</kbd>',
 			esc_attr( $query ),
-			esc_attr__( 'filter: text, action:php.warning, cat:security, src:cron, req:<id>, fp:<fingerprint>, since:24h', 'noformat-logger' ),
-			esc_attr__( 'Press / to focus', 'noformat-logger' )
+			esc_attr__( 'filter: text, action:php.warning, cat:security, src:cron, req:<id>, fp:<fingerprint>, since:24h', 'nf-logbook' ),
+			esc_attr__( 'Press / to focus', 'nf-logbook' )
 		);
-		echo '<button type="submit" class="nflog-cbtn nflog-cbtn--apply">' . esc_html__( 'Apply', 'noformat-logger' ) . '</button>';
-		echo '<span id="nflog-q-help" class="screen-reader-text">' . esc_html__( 'Free text searches summary and action. Keys: action:, cat:, src:, req:, fp:, since:, sev:, actor:, obj:. Press Enter to apply.', 'noformat-logger' ) . '</span></div>';
+		echo '<button type="submit" class="nflog-cbtn nflog-cbtn--apply">' . esc_html__( 'Apply', 'nf-logbook' ) . '</button>';
+		echo '<span id="nflog-q-help" class="screen-reader-text">' . esc_html__( 'Free text searches summary and action. Keys: action:, cat:, src:, req:, fp:, since:, sev:, actor:, obj:. Press Enter to apply.', 'nf-logbook' ) . '</span></div>';
 
 		echo '<div class="nflog-console__controls">';
 		$levels = isset( $clean['levels'] ) ? explode( ',', $clean['levels'] ) : [];
-		echo '<fieldset class="nflog-cchips"><legend class="screen-reader-text">' . esc_html__( 'Severities', 'noformat-logger' ) . '</legend>';
+		echo '<fieldset class="nflog-cchips"><legend class="screen-reader-text">' . esc_html__( 'Severities', 'nf-logbook' ) . '</legend>';
 		foreach ( Severity::cases() as $severity ) {
 			printf(
 				'<label class="nflog-cchip nflog-cchip--%1$s%2$s"><input type="checkbox" name="levels[]" value="%1$s"%3$s><span>%4$s</span></label>',
@@ -255,7 +255,7 @@ final class SystemLogPage {
 		}
 		echo '</fieldset><span class="nflog-console__sep" aria-hidden="true"></span>';
 		$cats = isset( $clean['cats'] ) ? explode( ',', $clean['cats'] ) : [];
-		echo '<fieldset class="nflog-cchips"><legend class="screen-reader-text">' . esc_html__( 'Categories', 'noformat-logger' ) . '</legend>';
+		echo '<fieldset class="nflog-cchips"><legend class="screen-reader-text">' . esc_html__( 'Categories', 'nf-logbook' ) . '</legend>';
 		foreach ( Scope::system() as $category ) {
 			printf(
 				'<label class="nflog-cchip%1$s"><input type="checkbox" name="cats[]" value="%2$s"%3$s><span>%2$s</span></label>',
@@ -266,26 +266,26 @@ final class SystemLogPage {
 		}
 		echo '</fieldset><span class="nflog-console__spacer"></span>';
 
-		echo '<label class="screen-reader-text" for="nflog-source">' . esc_html__( 'Source', 'noformat-logger' ) . '</label><select class="nflog-cselect" id="nflog-source" name="source"><option value="">' . esc_html__( 'src: any', 'noformat-logger' ) . '</option>';
+		echo '<label class="screen-reader-text" for="nflog-source">' . esc_html__( 'Source', 'nf-logbook' ) . '</label><select class="nflog-cselect" id="nflog-source" name="source"><option value="">' . esc_html__( 'src: any', 'nf-logbook' ) . '</option>';
 		foreach ( Source::cases() as $source ) {
 			echo '<option value="' . esc_attr( $source->value ) . '"' . selected( $clean['source'] ?? '', $source->value, false ) . '>src: ' . esc_html( $source->value ) . '</option>';
 		}
 		echo '</select>';
 		$windows = [
-			'1h'  => __( 'last 1 h', 'noformat-logger' ),
-			'24h' => __( 'last 24 h', 'noformat-logger' ),
-			'7d'  => __( 'last 7 d', 'noformat-logger' ),
-			'30d' => __( 'last 30 d', 'noformat-logger' ),
-			'all' => __( 'all time', 'noformat-logger' ),
+			'1h'  => __( 'last 1 h', 'nf-logbook' ),
+			'24h' => __( 'last 24 h', 'nf-logbook' ),
+			'7d'  => __( 'last 7 d', 'nf-logbook' ),
+			'30d' => __( 'last 30 d', 'nf-logbook' ),
+			'all' => __( 'all time', 'nf-logbook' ),
 		];
 		$window  = $clean['window'] ?? '';
-		echo '<label class="screen-reader-text" for="nflog-window">' . esc_html__( 'Window', 'noformat-logger' ) . '</label><select class="nflog-cselect" id="nflog-window" name="window">';
+		echo '<label class="screen-reader-text" for="nflog-window">' . esc_html__( 'Window', 'nf-logbook' ) . '</label><select class="nflog-cselect" id="nflog-window" name="window">';
 		if ( '' !== $window && ! isset( $windows[ $window ] ) ) {
 			/* translators: %s: window such as 15m or 3d */
-			$windows = [ $window => sprintf( __( 'last %s', 'noformat-logger' ), $window ) ] + $windows;
+			$windows = [ $window => sprintf( __( 'last %s', 'nf-logbook' ), $window ) ] + $windows;
 		}
 		if ( '' === $window ) {
-			$windows = [ '' => __( 'custom range', 'noformat-logger' ) ] + $windows;
+			$windows = [ '' => __( 'custom range', 'nf-logbook' ) ] + $windows;
 		}
 		foreach ( $windows as $value => $label ) {
 			echo '<option value="' . esc_attr( (string) $value ) . '"' . selected( $window, (string) $value, false ) . '>' . esc_html( $label ) . '</option>';
@@ -293,10 +293,10 @@ final class SystemLogPage {
 		echo '</select>';
 		echo '</div></form>';
 
-		echo '<div class="nflog-console__head" aria-hidden="true"><span>' . esc_html__( 'time', 'noformat-logger' ) . '</span><span>' . esc_html__( 'lvl', 'noformat-logger' ) . '</span><span>' . esc_html__( 'action', 'noformat-logger' ) . '</span><span>' . esc_html__( 'where', 'noformat-logger' ) . '</span><span>' . esc_html__( 'message', 'noformat-logger' ) . '</span></div>';
+		echo '<div class="nflog-console__head" aria-hidden="true"><span>' . esc_html__( 'time', 'nf-logbook' ) . '</span><span>' . esc_html__( 'lvl', 'nf-logbook' ) . '</span><span>' . esc_html__( 'action', 'nf-logbook' ) . '</span><span>' . esc_html__( 'where', 'nf-logbook' ) . '</span><span>' . esc_html__( 'message', 'nf-logbook' ) . '</span></div>';
 		echo '<div class="nflog-console__lines" role="list" data-nflog-lines aria-live="polite" aria-relevant="additions"></div>';
-		echo '<noscript><p class="nflog-console__empty">' . esc_html__( 'The System log needs JavaScript. Use Export JSON to read it without.', 'noformat-logger' ) . '</p></noscript>';
-		echo '<div class="nflog-console__foot"><button type="button" class="nflog-cbtn" data-nflog-older hidden>' . esc_html__( 'Load older', 'noformat-logger' ) . '</button><span class="nflog-console__status" data-nflog-status></span></div>';
+		echo '<noscript><p class="nflog-console__empty">' . esc_html__( 'The System log needs JavaScript. Use Export JSON to read it without.', 'nf-logbook' ) . '</p></noscript>';
+		echo '<div class="nflog-console__foot"><button type="button" class="nflog-cbtn" data-nflog-older hidden>' . esc_html__( 'Load older', 'nf-logbook' ) . '</button><span class="nflog-console__status" data-nflog-status></span></div>';
 		echo '<script type="application/json" id="nflog-console-data">' . self::json( $payload ) . '</script>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- JSON with <, >, & and quotes hex-escaped.
 		echo '</section>';
 	}
@@ -394,35 +394,35 @@ final class SystemLogPage {
 	 */
 	private static function i18n(): array {
 		return [
-			'empty'       => __( '$ nothing matches — try widening the window or clearing filters', 'noformat-logger' ),
-			'loading'     => __( 'loading…', 'noformat-logger' ),
-			'older'       => __( 'Load older', 'noformat-logger' ),
-			'noMore'      => __( 'beginning of the selected window', 'noformat-logger' ),
-			'error'       => __( 'could not load events', 'noformat-logger' ),
-			'copy'        => __( 'Copy as JSON', 'noformat-logger' ),
-			'copied'      => __( 'Copied', 'noformat-logger' ),
-			'openContent' => __( 'Open in Content log', 'noformat-logger' ),
-			'changes'     => __( 'changes', 'noformat-logger' ),
-			'context'     => __( 'context', 'noformat-logger' ),
-			'trace'       => __( 'stack', 'noformat-logger' ),
-			'event'       => __( 'event', 'noformat-logger' ),
-			'fingerprint' => __( 'fingerprint', 'noformat-logger' ),
-			'request'     => __( 'request', 'noformat-logger' ),
-			'actor'       => __( 'actor', 'noformat-logger' ),
-			'source'      => __( 'source', 'noformat-logger' ),
-			'route'       => __( 'route', 'noformat-logger' ),
-			'category'    => __( 'category', 'noformat-logger' ),
-			'count'       => __( 'count', 'noformat-logger' ),
-			'time'        => __( 'time (UTC)', 'noformat-logger' ),
-			'hash'        => __( 'hash', 'noformat-logger' ),
-			'prevHash'    => __( 'prev hash', 'noformat-logger' ),
-			'filterBy'    => __( 'filter by this', 'noformat-logger' ),
-			'live'        => __( 'live', 'noformat-logger' ),
-			'stopped'     => __( 'follow stopped after 30 minutes', 'noformat-logger' ),
+			'empty'       => __( '$ nothing matches — try widening the window or clearing filters', 'nf-logbook' ),
+			'loading'     => __( 'loading…', 'nf-logbook' ),
+			'older'       => __( 'Load older', 'nf-logbook' ),
+			'noMore'      => __( 'beginning of the selected window', 'nf-logbook' ),
+			'error'       => __( 'could not load events', 'nf-logbook' ),
+			'copy'        => __( 'Copy as JSON', 'nf-logbook' ),
+			'copied'      => __( 'Copied', 'nf-logbook' ),
+			'openContent' => __( 'Open in Content log', 'nf-logbook' ),
+			'changes'     => __( 'changes', 'nf-logbook' ),
+			'context'     => __( 'context', 'nf-logbook' ),
+			'trace'       => __( 'stack', 'nf-logbook' ),
+			'event'       => __( 'event', 'nf-logbook' ),
+			'fingerprint' => __( 'fingerprint', 'nf-logbook' ),
+			'request'     => __( 'request', 'nf-logbook' ),
+			'actor'       => __( 'actor', 'nf-logbook' ),
+			'source'      => __( 'source', 'nf-logbook' ),
+			'route'       => __( 'route', 'nf-logbook' ),
+			'category'    => __( 'category', 'nf-logbook' ),
+			'count'       => __( 'count', 'nf-logbook' ),
+			'time'        => __( 'time (UTC)', 'nf-logbook' ),
+			'hash'        => __( 'hash', 'nf-logbook' ),
+			'prevHash'    => __( 'prev hash', 'nf-logbook' ),
+			'filterBy'    => __( 'filter by this', 'nf-logbook' ),
+			'live'        => __( 'live', 'nf-logbook' ),
+			'stopped'     => __( 'follow stopped after 30 minutes', 'nf-logbook' ),
 			/* translators: %d: number of new lines */
-			'newLines'    => __( '%d new', 'noformat-logger' ),
+			'newLines'    => __( '%d new', 'nf-logbook' ),
 			/* translators: %d: number of lines shown */
-			'lines'       => __( '%d lines', 'noformat-logger' ),
+			'lines'       => __( '%d lines', 'nf-logbook' ),
 		];
 	}
 }

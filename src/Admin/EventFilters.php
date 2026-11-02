@@ -566,33 +566,33 @@ final class EventFilters {
 		if ( isset( $clean['severity'] ) ) {
 			$out[] = 'exact' === ( $clean['severity_mode'] ?? 'min' )
 				/* translators: %s: severity */
-				? sprintf( __( 'severity %s', 'noformat-logger' ), $clean['severity'] )
+				? sprintf( __( 'severity %s', 'nf-logbook' ), $clean['severity'] )
 				/* translators: %s: severity */
-				: sprintf( __( 'severity %s or worse', 'noformat-logger' ), $clean['severity'] );
+				: sprintf( __( 'severity %s or worse', 'nf-logbook' ), $clean['severity'] );
 		}
 		$labels = [
 			/* translators: %s: event category */
-			'category'     => __( 'category %s', 'noformat-logger' ),
+			'category'     => __( 'category %s', 'nf-logbook' ),
 			/* translators: %s: action prefix */
-			'event_action' => __( 'action starting with %s', 'noformat-logger' ),
+			'event_action' => __( 'action starting with %s', 'nf-logbook' ),
 			/* translators: %s: event source */
-			'source'       => __( 'source %s', 'noformat-logger' ),
+			'source'       => __( 'source %s', 'nf-logbook' ),
 			/* translators: %s: user id */
-			'actor_id'     => __( 'actor id %s', 'noformat-logger' ),
+			'actor_id'     => __( 'actor id %s', 'nf-logbook' ),
 			/* translators: %s: object type */
-			'object_type'  => __( 'object type %s', 'noformat-logger' ),
+			'object_type'  => __( 'object type %s', 'nf-logbook' ),
 			/* translators: %s: object id */
-			'object_id'    => __( 'object id %s', 'noformat-logger' ),
+			'object_id'    => __( 'object id %s', 'nf-logbook' ),
 			/* translators: %s: request id */
-			'request_id'   => __( 'request %s', 'noformat-logger' ),
+			'request_id'   => __( 'request %s', 'nf-logbook' ),
 			/* translators: %s: fingerprint */
-			'fingerprint'  => __( 'fingerprint %s', 'noformat-logger' ),
+			'fingerprint'  => __( 'fingerprint %s', 'nf-logbook' ),
 			/* translators: %s: local date and time */
-			'from'         => __( 'from %s', 'noformat-logger' ),
+			'from'         => __( 'from %s', 'nf-logbook' ),
 			/* translators: %s: local date and time */
-			'to'           => __( 'until %s', 'noformat-logger' ),
+			'to'           => __( 'until %s', 'nf-logbook' ),
 			/* translators: %s: search text */
-			's'            => __( 'search "%s"', 'noformat-logger' ),
+			's'            => __( 'search "%s"', 'nf-logbook' ),
 		];
 		foreach ( $labels as $key => $format ) {
 			if ( isset( $clean[ $key ] ) && '' !== $clean[ $key ] ) {

@@ -46,10 +46,10 @@ final class Ajax {
 	 */
 	public function tail(): void {
 		if ( false === check_ajax_referer( self::TAIL_NONCE, '_ajax_nonce', false ) ) {
-			wp_send_json_error( [ 'message' => __( 'Your session expired. Reload the page.', 'noformat-logger' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Your session expired. Reload the page.', 'nf-logbook' ) ], 403 );
 		}
 		if ( ! Access::canViewSystemLog( $this->plugin->config() ) ) {
-			wp_send_json_error( [ 'message' => __( 'You are not allowed to read the System log.', 'noformat-logger' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'You are not allowed to read the System log.', 'nf-logbook' ) ], 403 );
 		}
 		$input  = wp_unslash( $_GET ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- verified above.
 		$after  = isset( $input['after'] ) && is_numeric( $input['after'] ) ? max( 0, (int) $input['after'] ) : 0;
@@ -75,7 +75,7 @@ final class Ajax {
 			$resolver->prime( $rows );
 			$lines = SystemLogPage::lines( $repo, $resolver, $rows );
 		} catch ( \Throwable $e ) {
-			wp_send_json_error( [ 'message' => __( 'The event log storage is not available.', 'noformat-logger' ) ], 500 );
+			wp_send_json_error( [ 'message' => __( 'The event log storage is not available.', 'nf-logbook' ) ], 500 );
 		}
 		$ids = array_map( static fn( array $line ): int => (int) $line['id'], $lines );
 		wp_send_json_success(
@@ -93,11 +93,11 @@ final class Ajax {
 	 */
 	public function verify(): void {
 		if ( false === check_ajax_referer( self::VERIFY_NONCE, '_ajax_nonce', false ) ) {
-			wp_send_json_error( [ 'message' => __( 'Your session expired. Reload the page.', 'noformat-logger' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'Your session expired. Reload the page.', 'nf-logbook' ) ], 403 );
 		}
 		$config = $this->plugin->config();
 		if ( ! current_user_can( 'manage_options' ) && ! Access::canViewSystemLog( $config ) ) {
-			wp_send_json_error( [ 'message' => __( 'You are not allowed to verify the chain.', 'noformat-logger' ) ], 403 );
+			wp_send_json_error( [ 'message' => __( 'You are not allowed to verify the chain.', 'nf-logbook' ) ], 403 );
 		}
 		try {
 			$repo   = $this->plugin->repository();
@@ -105,7 +105,7 @@ final class Ajax {
 			$from   = max( 1, $stats['min_id'], $stats['max_id'] - self::VERIFY_ROWS + 1 );
 			$result = $repo->verify( $from, null, self::VERIFY_ROWS );
 		} catch ( \Throwable $e ) {
-			wp_send_json_error( [ 'message' => __( 'The event log storage is not available.', 'noformat-logger' ) ], 500 );
+			wp_send_json_error( [ 'message' => __( 'The event log storage is not available.', 'nf-logbook' ) ], 500 );
 		}
 		$ok    = (bool) ( $result['ok'] ?? false );
 		$break = is_array( $result['break'] ?? null ) ? $result['break'] : null;
@@ -121,9 +121,9 @@ final class Ajax {
 				],
 				'message' => $ok
 					/* translators: 1: number of events, 2: first id, 3: last id */
-					? sprintf( __( 'Chain intact: %1$s events checked (#%2$s–#%3$s).', 'noformat-logger' ), number_format_i18n( (int) ( $result['checked'] ?? 0 ) ), number_format_i18n( (int) ( $result['from'] ?? 0 ) ), number_format_i18n( (int) ( $result['to'] ?? 0 ) ) )
+					? sprintf( __( 'Chain intact: %1$s events checked (#%2$s–#%3$s).', 'nf-logbook' ), number_format_i18n( (int) ( $result['checked'] ?? 0 ) ), number_format_i18n( (int) ( $result['from'] ?? 0 ) ), number_format_i18n( (int) ( $result['to'] ?? 0 ) ) )
 					/* translators: 1: event id, 2: reason */
-					: sprintf( __( 'Chain broken at event #%1$s (%2$s).', 'noformat-logger' ), number_format_i18n( (int) ( $break['id'] ?? 0 ) ), is_scalar( $break['reason'] ?? null ) ? (string) $break['reason'] : '?' ),
+					: sprintf( __( 'Chain broken at event #%1$s (%2$s).', 'nf-logbook' ), number_format_i18n( (int) ( $break['id'] ?? 0 ) ), is_scalar( $break['reason'] ?? null ) ? (string) $break['reason'] : '?' ),
 			]
 		);
 	}

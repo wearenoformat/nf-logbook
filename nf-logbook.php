@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name:       Noformat Logger
+ * Plugin Name:       Noformat Logbook
  * Plugin URI:        https://noformat.com
  * Description:       Tamper-evident, privacy-preserving log of content changes and error, security and stability signals.
- * Version:           1.1.1
+ * Version:           1.2.0
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Tested up to:      7.1
@@ -11,9 +11,9 @@
  * Author URI:        https://noformat.com
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       noformat-logger
+ * Text Domain:       nf-logbook
  * Domain Path:       /languages
- * Update URI:        https://github.com/wearenoformat/wp-noformat-logger
+ * Update URI:        https://github.com/wearenoformat/nf-logbook
  *
  * @package Noformat\Logger
  */
@@ -26,7 +26,7 @@ if ( defined( 'NOFORMAT_LOGGER_VERSION' ) ) {
 	return;
 }
 
-define( 'NOFORMAT_LOGGER_VERSION', '1.1.1' );
+define( 'NOFORMAT_LOGGER_VERSION', '1.2.0' );
 define( 'NOFORMAT_LOGGER_FILE', __FILE__ );
 define( 'NOFORMAT_LOGGER_DIR', plugin_dir_path( __FILE__ ) );
 
@@ -40,14 +40,14 @@ function nflog_requirement_errors() {
 	$errors = array();
 	if ( version_compare( PHP_VERSION, '8.1', '<' ) ) {
 		/* translators: %s: PHP version */
-		$errors[] = sprintf( __( 'Noformat Logger requires PHP 8.1 or newer (running %s). The plugin is inactive.', 'noformat-logger' ), PHP_VERSION );
+		$errors[] = sprintf( __( 'Noformat Logbook requires PHP 8.1 or newer (running %s). The plugin is inactive.', 'nf-logbook' ), PHP_VERSION );
 	}
 	if ( isset( $wp_version ) && version_compare( $wp_version, '6.4', '<' ) ) {
 		/* translators: %s: WordPress version */
-		$errors[] = sprintf( __( 'Noformat Logger requires WordPress 6.4 or newer (running %s). The plugin is inactive.', 'noformat-logger' ), $wp_version );
+		$errors[] = sprintf( __( 'Noformat Logbook requires WordPress 6.4 or newer (running %s). The plugin is inactive.', 'nf-logbook' ), $wp_version );
 	}
 	if ( ! function_exists( 'hash_hmac' ) || ! function_exists( 'random_bytes' ) ) {
-		$errors[] = __( 'Noformat Logger requires the PHP hash extension and random_bytes(). The plugin is inactive.', 'noformat-logger' );
+		$errors[] = __( 'Noformat Logbook requires the PHP hash extension and random_bytes(). The plugin is inactive.', 'nf-logbook' );
 	}
 	return $errors;
 }

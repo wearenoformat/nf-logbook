@@ -1,4 +1,4 @@
-// Noformat Logger hash chain (CONTRACT §4). Zero dependencies, Node 18+.
+// Noformat Logbook hash chain (CONTRACT §4). Zero dependencies, Node 18+.
 //
 // Canonical JSON: object keys sorted by byte order recursively; lists keep order;
 // empty arrays and empty objects both encode as []; strings as JSON.stringify

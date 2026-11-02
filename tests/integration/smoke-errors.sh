@@ -22,14 +22,15 @@ MU_DIR="${WP_DIR}/wp-content/mu-plugins"
 TEST_MU="${MU_DIR}/zz-nflog-errors-test.php"
 QUERIES_MU="${MU_DIR}/aa-nflog-savequeries.php"
 QUERIES_OUT="${WP_DIR}/wp-content/nflog-queries.json"
-LOADER="${MU_DIR}/noformat-logger-loader.php"
+LOADER="${MU_DIR}/nf-logbook-loader.php"
+OLD_LOADER="${MU_DIR}/noformat-logger-loader.php"
 PASS=0
 FAIL=0
 
 cleanup() {
   if [ -n "${SERVER_PID:-}" ]; then kill "${SERVER_PID}" 2>/dev/null || true; fi
   pkill -f "127.0.0.1:${NFLOG_PORT}" 2>/dev/null || true
-  rm -f "${TEST_MU}" "${LOADER}" "${QUERIES_MU}" "${QUERIES_OUT}"
+  rm -f "${TEST_MU}" "${LOADER}" "${OLD_LOADER}" "${QUERIES_MU}" "${QUERIES_OUT}"
   if [ "${KEEP_OUT:-0}" = "1" ]; then echo "output kept in ${OUT}"; else rm -rf "${OUT}"; fi
 }
 trap cleanup EXIT
@@ -210,7 +211,9 @@ fi
 rm -f "${QUERIES_MU}" "${QUERIES_OUT}"
 
 echo "==> MU loader: early errors"
-${WP} nflog install-mu-loader --force > /dev/null
+cp "${PLUGIN_DIR}/mu-loader/nf-logbook-loader.php" "${OLD_LOADER}"
+${WP} nflog install-mu-loader --force > "${OUT}/mu-loader.txt" 2>&1
+[ -f "${LOADER}" ] && [ ! -e "${OLD_LOADER}" ] && ok "install-mu-loader installs nf-logbook-loader.php and removes noformat-logger-loader.php" || { fail "install-mu-loader (new file / old file removal)"; cat "${OUT}/mu-loader.txt"; }
 reset_fingerprints
 curl -s -o /dev/null "${NFLOG_SITE}/?nflog_test=early"
 fetch_events "${OUT}/events-early.json"
@@ -234,7 +237,7 @@ echo "==> Health"
 ${WP} nflog health 2> "${OUT}/health.err" | cli_json > "${OUT}/health.raw" || true
 node -e "const r=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')); require('fs').writeFileSync(process.argv[1]+'.json', JSON.stringify({body:r}))" "${OUT}/health.raw" 2>/dev/null || echo '{"body":{}}' > "${OUT}/health.raw.json"
 assert "wp nflog health: implemented + shape" "${OUT}/health.raw.json" \
-  "r.body.implemented===true && ['versions','environment','multisite','active_theme','plugins','updates','debug','cron','uploads_writable','ssl','users','content','errors_24h','site_health','integrity','config_audit'].every(k=>k in r.body) && r.body.versions.php && r.body.debug.wp_debug===true && Array.isArray(r.body.plugins) && r.body.plugins.some(p=>p.slug==='noformat-logger')"
+  "r.body.implemented===true && ['versions','environment','multisite','active_theme','plugins','updates','debug','cron','uploads_writable','ssl','users','content','errors_24h','site_health','integrity','config_audit'].every(k=>k in r.body) && r.body.versions.php && r.body.debug.wp_debug===true && Array.isArray(r.body.plugins) && r.body.plugins.some(p=>p.slug==='nf-logbook')"
 assert "health has no paths, names or e-mails" "${OUT}/health.raw.json" \
   "!JSON.stringify(r.body).includes('${WP_DIR}') && !JSON.stringify(r.body).includes('@example.com')"
 ${WP} cron event run noformat_logger/cron/health_cache > /dev/null 2>&1 || true

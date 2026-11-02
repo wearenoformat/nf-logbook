@@ -102,12 +102,12 @@ echo "==> Over HTTP as a logged-in administrator"
 curl -s -o /dev/null -c "${JAR}" -b "wordpress_test_cookie=WP%20Cookie%20check" \
   --data-urlencode "log=admin" --data-urlencode "pwd=${ADMIN_PASS}" -d "testcookie=1" \
   --data-urlencode "redirect_to=${NFLOG_SITE}/wp-admin/" "${NFLOG_SITE}/wp-login.php"
-TOOLS="${NFLOG_SITE}/wp-admin/tools.php?page=noformat-logger"
-TABRE='tools\.php\?page=noformat-logger(&|&#038;|&amp;)tab='
+TOOLS="${NFLOG_SITE}/wp-admin/tools.php?page=nf-logbook"
+TABRE='tools\.php\?page=nf-logbook(&|&#038;|&amp;)tab='
 curl -s -b "${JAR}" "${TOOLS}" > "${OUT}/page.html"
-grep -q 'nflog-entry nflog-entry--' "${OUT}/page.html" && grep -q 'nflog-day__label' "${OUT}/page.html" && ok "GET tools.php?page=noformat-logger renders the Content log (default tab)" || { fail "Content log over HTTP"; sed -n '1,20p' "${OUT}/page.html"; }
+grep -q 'nflog-entry nflog-entry--' "${OUT}/page.html" && grep -q 'nflog-day__label' "${OUT}/page.html" && ok "GET tools.php?page=nf-logbook renders the Content log (default tab)" || { fail "Content log over HTTP"; sed -n '1,20p' "${OUT}/page.html"; }
 grep -q "assets/admin.css" "${OUT}/page.html" && grep -q "assets/admin.js" "${OUT}/page.html" && ! grep -q "assets/system-log.js" "${OUT}/page.html" && ok "admin.css and admin.js enqueued on the plugin page (system-log.js only on its tab)" || fail "assets on the plugin page"
-! grep -q 'id="toplevel_page_noformat-logger"' "${OUT}/page.html" && grep -Eq "href=[\"']tools\.php\?page=noformat-logger[\"']" "${OUT}/page.html" && ok "no top-level menu; Tools -> Noformat Logger submenu" || fail "menu under Tools"
+! grep -q 'id="toplevel_page_nf-logbook"' "${OUT}/page.html" && grep -Eq "href=[\"']tools\.php\?page=nf-logbook[\"']" "${OUT}/page.html" && ok "no top-level menu; Tools -> Noformat Logbook submenu" || fail "menu under Tools"
 for t in content system status settings; do grep -Eq "class=\"nflog-tab[^\"]*\" href=\"[^\"]*${TABRE}${t}\"" "${OUT}/page.html" || MISSING="${MISSING:-} ${t}"; done
 [ -z "${MISSING:-}" ] && grep -q 'class="nflog-tab is-active" href="[^"]*tab=content" aria-current="page"' "${OUT}/page.html" && ok "four tabs, Content log active" || { fail "tab bar (missing:${MISSING:-})"; grep -o '<nav class="nflog-tabs".*</nav>' "${OUT}/page.html" | head -c 1500; }
 grep -q 'id="screen-options-wrap"' "${OUT}/page.html" && grep -q 'nflog_events_per_page' "${OUT}/page.html" && ok "per-page screen option" || fail "per-page screen option"
@@ -117,11 +117,15 @@ legacy() { # legacy <name> <path> <location regex>
   curl -s -o /dev/null -D "${OUT}/legacy.headers" -w '%{http_code}' -b "${JAR}" "${NFLOG_SITE}$2" > "${OUT}/legacy.code"
   if [ "$(cat "${OUT}/legacy.code")" = "301" ] && grep -Eqi "^location: .*$3" "${OUT}/legacy.headers"; then ok "$1"; else fail "$1"; cat "${OUT}/legacy.code" "${OUT}/legacy.headers"; fi
 }
-legacy "1.0 URL admin.php?page=noformat-logger -> 301 Content log tab" "/wp-admin/admin.php?page=noformat-logger&window=all" 'tools\.php\?page=noformat-logger&tab=content&window=all'
-legacy "1.0 URL admin.php?page=noformat-logger-system -> 301 System log tab, filters kept" "/wp-admin/admin.php?page=noformat-logger-system&levels%5B%5D=critical&window=24h" 'tools\.php\?page=noformat-logger&tab=system.*levels=critical'
-legacy "1.0 URL admin.php?page=noformat-logger-status -> 301 Status tab" "/wp-admin/admin.php?page=noformat-logger-status" 'tools\.php\?page=noformat-logger&tab=status'
-legacy "1.0 URL admin.php?page=noformat-logger-settings -> 301 Settings tab" "/wp-admin/admin.php?page=noformat-logger-settings" 'tools\.php\?page=noformat-logger&tab=settings'
-legacy "0.x URL tools.php?...&tab=events&category=security -> System log, filter kept" "/wp-admin/tools.php?page=noformat-logger&tab=events&category=security" 'tab=system.*category=security'
+legacy "1.0 URL admin.php?page=noformat-logger -> 301 Content log tab" "/wp-admin/admin.php?page=noformat-logger&window=all" 'tools\.php\?page=nf-logbook&tab=content&window=all'
+legacy "1.0 URL admin.php?page=noformat-logger-system -> 301 System log tab, filters kept" "/wp-admin/admin.php?page=noformat-logger-system&levels%5B%5D=critical&window=24h" 'tools\.php\?page=nf-logbook&tab=system.*levels=critical'
+legacy "1.0 URL admin.php?page=noformat-logger-status -> 301 Status tab" "/wp-admin/admin.php?page=noformat-logger-status" 'tools\.php\?page=nf-logbook&tab=status'
+legacy "1.0 URL admin.php?page=noformat-logger-settings -> 301 Settings tab" "/wp-admin/admin.php?page=noformat-logger-settings" 'tools\.php\?page=nf-logbook&tab=settings'
+legacy "0.x URL tools.php?...&tab=events&category=security -> System log, filter kept" "/wp-admin/tools.php?page=nf-logbook&tab=events&category=security" 'tab=system.*category=security'
+legacy "1.1 URL tools.php?page=noformat-logger -> 301 Content log tab" "/wp-admin/tools.php?page=noformat-logger" 'tools\.php\?page=nf-logbook&tab=content'
+legacy "1.1 URL tools.php?page=noformat-logger&tab=status -> 301 Status tab" "/wp-admin/tools.php?page=noformat-logger&tab=status" 'tools\.php\?page=nf-logbook&tab=status'
+legacy "1.1 URL tools.php?page=noformat-logger&tab=system&window=24h -> 301 System log tab, filters kept" "/wp-admin/tools.php?page=noformat-logger&tab=system&window=24h" 'tools\.php\?page=nf-logbook&tab=system.*window=24h'
+legacy "0.x URL tools.php?page=noformat-logger&tab=events -> 301 Content log tab" "/wp-admin/tools.php?page=noformat-logger&tab=events" 'tools\.php\?page=nf-logbook&tab=content'
 
 curl -s -b "${JAR}" "${TOOLS}&tab=system" > "${OUT}/system.html"
 grep -q 'nflog-console__bar' "${OUT}/system.html" && grep -q 'assets/system-log.js' "${OUT}/system.html" && grep -q 'class="nflog-tab is-active" href="[^"]*tab=system"' "${OUT}/system.html" && ok "GET System log tab renders the console and enqueues system-log.js" || fail "System log over HTTP"
@@ -196,7 +200,7 @@ assert "dashboard with the widget: <= 3 nflog_* queries (counts + latest + count
 grep -q 'id="nflog_events_widget"' "${OUT}/measure.html" && ok "dashboard widget present over HTTP" || fail "dashboard widget over HTTP"
 measure profile "/wp-admin/profile.php?nflog_queries=1"
 assert "profile.php: 0 nflog_* queries" "${OUT}/q-profile.json" "r.body && r.body.count===0"
-measure viewer "/wp-admin/tools.php?page=noformat-logger&nflog_queries=1"
+measure viewer "/wp-admin/tools.php?page=nf-logbook&nflog_queries=1"
 node -e "const r=JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).body; process.exit(r && r.count>0 ? 0 : 1)" "${OUT}/q-viewer.json" && ok "the viewer itself queries the log" || fail "viewer queries"
 rm -f "${QUERIES_MU}" "${QUERIES_OUT}"
 

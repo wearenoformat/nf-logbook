@@ -7,7 +7,7 @@ parameters:
     # Defensive runtime checks against what PHPDoc promises are intended in a plugin that must never fatal.
     treatPhpDocTypesAsCertain: false
     paths:
-        - noformat-logger.php
+        - nf-logbook.php
         - uninstall.php
         - mu-loader
         - src

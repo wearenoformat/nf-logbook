@@ -1,4 +1,4 @@
-# wp-noformat-logger: plan and specification
+# nf-logbook: plan and specification
 
 Status: Phase 1 delivered (1.0.0; privacy fix 1.0.1). Owner: Noformat. Consumer: Controlroom collector.
 Shared contract: [`docs/CONTRACT.md`](docs/CONTRACT.md) (a copy of the outer `../CONTRACT.md`, kept identical).
@@ -36,18 +36,18 @@ replacing backups or revisions.
 | D5 | Hash chain per site (`prev_hash`, `hash`) | Tamper evidence at near-zero cost. A row edited or deleted by hand breaks the chain, which the collector notices. |
 | D6 | Fingerprint + rate limit for recurring signals (errors, deprecations, failed logins, probes) | One bad plugin can throw 10 000 notices a minute. Store the first occurrence, aggregate the rest into `count` per fingerprint per window (60 s default, 1 h for `debug`). |
 | D7 | Listeners are independent classes registered from a static list; each guards its own hooks and can be disabled per site | A faulty listener must not take the others down; sites differ in what is installed. |
-| D8 | Optional MU loader (`mu-loader/noformat-logger-loader.php`) | Must-use plugins load before regular plugins, so the error handler catches failures inside other plugins' bootstrap. Optional because some hosts manage mu-plugins. |
+| D8 | Optional MU loader (`mu-loader/nf-logbook-loader.php`) | Must-use plugins load before regular plugins, so the error handler catches failures inside other plugins' bootstrap. Optional because some hosts manage mu-plugins. |
 | D9 | PHP 8.1+, WordPress 6.4+, strict types, namespaced, PSR-4 with a bundled fallback autoloader, no runtime Composer dependencies | Modern hosts, no vendor directory in production, nothing to conflict with other plugins. |
 | D10 | WPCS, PHPStan (level 6, `szepeviktor/phpstan-wordpress`), PHPUnit unit tests with Brain Monkey, an integration smoke test on a real WordPress running on SQLite | "High end" means it is verifiable, not just well written. |
-| D11 | Tools → Noformat Logger, one page with tabs (Content log, System log, Status, Settings) for two audiences: a **Content log** (activity feed with human sentences, day groups, before/after diffs; categories content, media, taxonomy, menu, fields, comment, user, settings, theme, plugin, core, commerce, privacy) for site administrators, and a **System log** (dark developer console: monospace lines by severity, repeat counts, JSON and stack detail, query filter, live follow) for developers; each has its own visibility setting (`events_visible_to`, `system_log_visible_to`; default administrators, restrictable to the `noformat_logger_view_events` capability on client sites). IDs are resolved to names at render time only. | The log must be useful to the people on the site as well as to Noformat, but clients and developers need different views, and client sites may need the developer view hidden. |
+| D11 | Tools → Noformat Logbook, one page with tabs (Content log, System log, Status, Settings) for two audiences: a **Content log** (activity feed with human sentences, day groups, before/after diffs; categories content, media, taxonomy, menu, fields, comment, user, settings, theme, plugin, core, commerce, privacy) for site administrators, and a **System log** (dark developer console: monospace lines by severity, repeat counts, JSON and stack detail, query filter, live follow) for developers; each has its own visibility setting (`events_visible_to`, `system_log_visible_to`; default administrators, restrictable to the `noformat_logger_view_events` capability on client sites). IDs are resolved to names at render time only. | The log must be useful to the people on the site as well as to Noformat, but clients and developers need different views, and client sites may need the developer view hidden. |
 
 ## 3. Architecture
 
 ```
-wp-noformat-logger/
-├── noformat-logger.php          bootstrap: constants, requirement checks, autoloader, Plugin::boot()
+nf-logbook/
+├── nf-logbook.php          bootstrap: constants, requirement checks, autoloader, Plugin::boot()
 ├── uninstall.php                drops tables/options only if "delete data on uninstall" is set
-├── mu-loader/noformat-logger-loader.php   optional early error handler (copy to wp-content/mu-plugins)
+├── mu-loader/nf-logbook-loader.php   optional early error handler (copy to wp-content/mu-plugins)
 ├── src/
 │   ├── Plugin.php               wiring, listener registry, activation/deactivation, upgrades
 │   ├── Autoloader.php           PSR-4 fallback when vendor/ is absent
@@ -65,7 +65,7 @@ wp-noformat-logger/
 │   ├── Security/                AuthListener, RestProbeListener, XmlRpcListener, ConfigAudit, IntegrityCheck, RateLimiter
 │   ├── Health/HealthReport.php  versions, updates, cron, debug flags, Site Health tests, integrity state
 │   ├── Rest/                    Controller (routes), Authenticator (HMAC), NonceStore, Responder
-│   ├── Admin/Menu.php           Tools → Noformat Logger: tabs Content log / System log / Status / Settings (D11), legacy redirects
+│   ├── Admin/Menu.php           Tools → Noformat Logbook: tabs Content log / System log / Status / Settings (D11), legacy redirects
 │   ├── Admin/ContentLogPage.php, SystemLogPage.php, StatusPage.php, SettingsPage.php, EventFilters.php, Resolver.php, Access.php   the tabs, JSON export
 │   ├── Admin/DashboardWidget.php   last 24 h per severity, latest critical/error
 │   ├── Update/                  Updater (WordPress update hooks), ReleaseClient (GitHub Releases / manifest, cache), Release, Changelog
@@ -280,7 +280,7 @@ tooling, optional object-cache backed nonce store.
   signature (v2), multisite uninstall (Phase 2), concurrent first occurrences.
 
 - 2026-10-29 (wp-admin event viewer, folded into 1.0.0): D11 revised. Tabs
-  Events / Status / Settings on Tools → Noformat Logger (`?tab=`), Events is the
+  Events / Status / Settings on Tools → Noformat Logbook (`?tab=`), Events is the
   default for users who may read the log. Access setting `events_visible_to`
   (`administrators` default, `capability_only`), constant
   `NOFORMAT_LOGGER_EVENTS_VISIBLE_TO`. `EventRepository::query()` / `count()`
@@ -298,11 +298,11 @@ tooling, optional object-cache backed nonce store.
   `tests/integration/smoke-privacy.sh`.
 
 - 2026-11-02 (1.1.0): the admin UI moves from the top-level menu back under
-  Tools, as one page `tools.php?page=noformat-logger` with in-page tabs
+  Tools, as one page `tools.php?page=nf-logbook` with in-page tabs
   (Content log · System log · Status · Settings); access rules unchanged, a tab
   the user may not open is hidden and answers 403; the 1.0 URLs redirect (301).
   D11 reworded. New `src/Update/`: the plugin updates like any other plugin
-  from GitHub Releases of `wearenoformat/wp-noformat-logger` (`Update URI`,
+  from GitHub Releases of `wearenoformat/nf-logbook` (`Update URI`,
   `update_plugins_github.com`, `plugins_api`, SHA-256 check of the package
   against the release's `manifest.json`), no update server of our own;
   `tools/release.sh` and `.github/workflows/release.yml` cut releases
@@ -314,3 +314,11 @@ tooling, optional object-cache backed nonce store.
   `noformat_logger/technical_key_patterns`) are `debug` + `context.technical`,
   notice/critical options exempt; `doing_it_wrong(_load_textdomain_just_in_time)`
   is `info`; plugin description shortened.
+
+- 2026-11-02 (1.2.0): renamed to Noformat Logbook (folder and slug `nf-logbook`,
+  main file `nf-logbook.php`, text domain `nf-logbook`, admin page
+  `tools.php?page=nf-logbook`, repository `wearenoformat/nf-logbook`, asset
+  `nf-logbook.zip`, MU loader `nf-logbook-loader.php`). Wire and storage
+  identifiers unchanged (REST namespace, producer name, tables, options,
+  constants, hooks, capabilities, cron hooks, `wp nflog`, PHP namespace).
+  1.1.x sites move over by hand once (`docs/UPDATES.md`).

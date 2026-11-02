@@ -60,7 +60,7 @@
   repository or a public releases-only mirror. The token is never stored in the
   database, logged, or shown (error messages are redacted).
 
-- Events are readable in wp-admin (Tools → Noformat Logger → Content log / System log,
+- Events are readable in wp-admin (Tools → Noformat Logbook → Content log / System log,
   dashboard widget, JSON export, the System log live tail) by administrators (`manage_options`) and by users with
   the `noformat_logger_view_events` capability, which is assigned to no role.
   On client sites set `events_visible_to` to `capability_only`

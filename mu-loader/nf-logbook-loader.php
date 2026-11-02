@@ -1,10 +1,10 @@
 <?php
 /**
- * Plugin Name: Noformat Logger (early error loader)
- * Description: Optional must-use loader for Noformat Logger. Buffers PHP errors raised before regular plugins load; the plugin consumes the buffer. Safe without the plugin.
+ * Plugin Name: Noformat Logbook (early error loader)
+ * Description: Optional must-use loader for Noformat Logbook. Buffers PHP errors raised before regular plugins load; the plugin consumes the buffer. Safe without the plugin.
  * Version:     0.2.0
  * License:     GPL-2.0-or-later
- * Text Domain: noformat-logger
+ * Text Domain: nf-logbook
  *
  * Copy this file to wp-content/mu-plugins/ (or run `wp nflog install-mu-loader`).
  * It has no dependency on the plugin and uses only PHP 7-compatible syntax.

@@ -39,7 +39,7 @@ final class ReleaseClient {
 
 	public const TIMEOUT = 10;
 
-	public const DEFAULT_REPO = 'wearenoformat/wp-noformat-logger';
+	public const DEFAULT_REPO = 'wearenoformat/nf-logbook';
 
 	private const API = 'https://api.github.com';
 
@@ -125,7 +125,7 @@ final class ReleaseClient {
 	}
 
 	/**
-	 * Human source ("GitHub wearenoformat/wp-noformat-logger").
+	 * Human source ("GitHub wearenoformat/nf-logbook").
 	 */
 	public function sourceLabel(): string {
 		if ( $this->isManifestMode() ) {

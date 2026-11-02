@@ -1,4 +1,4 @@
-// Noformat Logger request signing (CONTRACT §3, v1). Zero dependencies, Node 18+.
+// Noformat Logbook request signing (CONTRACT §3, v1). Zero dependencies, Node 18+.
 //
 //   string_to_sign = "v1\n" METHOD "\n" PATH "\n" CANONICAL_QUERY "\n" TIMESTAMP "\n" NONCE "\n" sha256_hex(BODY)
 //   X-NF-Signature: v1=<hex HMAC-SHA256(secret, string_to_sign)>

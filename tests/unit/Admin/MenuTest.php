@@ -1,6 +1,6 @@
 <?php
 /**
- * Tools → Noformat Logger: tabs, URLs and legacy redirects.
+ * Tools → Noformat Logbook: tabs, URLs and legacy redirects.
  *
  * @package Noformat\Logger
  */
@@ -39,11 +39,11 @@ final class MenuTest extends TestCase {
 	}
 
 	public function test_url_points_to_the_tools_page_and_tab(): void {
-		self::assertSame( 'https://example.test/wp-admin/tools.php?page=noformat-logger&tab=system', Menu::url( Menu::SYSTEM ) );
-		self::assertSame( 'https://example.test/wp-admin/tools.php?page=noformat-logger&tab=content&window=all', Menu::url( Menu::CONTENT, [ 'window' => 'all' ] ) );
+		self::assertSame( 'https://example.test/wp-admin/tools.php?page=nf-logbook&tab=system', Menu::url( Menu::SYSTEM ) );
+		self::assertSame( 'https://example.test/wp-admin/tools.php?page=nf-logbook&tab=content&window=all', Menu::url( Menu::CONTENT, [ 'window' => 'all' ] ) );
 		self::assertSame( 'https://example.test/wp-admin/tools.php', Menu::formAction() );
 		self::assertStringContainsString( 'name="tab" value="system"', Menu::formFields( Menu::SYSTEM ) );
-		self::assertStringContainsString( 'name="page" value="noformat-logger"', Menu::formFields( Menu::SYSTEM ) );
+		self::assertStringContainsString( 'name="page" value="nf-logbook"', Menu::formFields( Menu::SYSTEM ) );
 	}
 
 	public function test_tabs_follow_the_access_settings(): void {
@@ -78,17 +78,23 @@ final class MenuTest extends TestCase {
 		self::assertSame( 'status', Menu::legacyTab( 'admin.php', 'noformat-logger-status', [] ) );
 		self::assertSame( 'settings', Menu::legacyTab( 'admin.php', 'noformat-logger-settings', [] ) );
 		self::assertNull( Menu::legacyTab( 'admin.php', 'other-plugin', [] ) );
-		self::assertNull( Menu::legacyTab( 'tools.php', 'noformat-logger', [ 'tab' => 'system' ] ), 'the current URL is not a legacy one' );
-		self::assertNull( Menu::legacyTab( 'tools.php', 'noformat-logger', [] ) );
-		self::assertSame( 'content', Menu::legacyTab( 'tools.php', 'noformat-logger', [ 'tab' => 'events' ] ) );
+		self::assertNull( Menu::legacyTab( 'admin.php', 'nf-logbook', [] ), 'the current slug is not a legacy one' );
+		self::assertSame( 'content', Menu::legacyTab( 'tools.php', 'noformat-logger', [] ), '1.1 slug: Content log by default' );
+		self::assertSame( 'status', Menu::legacyTab( 'tools.php', 'noformat-logger', [ 'tab' => 'status' ] ), '1.1 slug: tab kept' );
+		self::assertSame( 'system', Menu::legacyTab( 'tools.php', 'noformat-logger', [ 'tab' => 'system' ] ) );
+		self::assertSame( 'content', Menu::legacyTab( 'tools.php', 'noformat-logger', [ 'tab' => 'bogus' ] ) );
 		self::assertSame( 'system', Menu::legacyTab( 'tools.php', 'noformat-logger', [ 'tab' => 'events', 'category' => 'security' ] ) );
+		self::assertNull( Menu::legacyTab( 'tools.php', 'nf-logbook', [ 'tab' => 'system' ] ), 'the current URL is not a legacy one' );
+		self::assertNull( Menu::legacyTab( 'tools.php', 'nf-logbook', [] ) );
+		self::assertSame( 'content', Menu::legacyTab( 'tools.php', 'nf-logbook', [ 'tab' => 'events' ] ) );
+		self::assertSame( 'system', Menu::legacyTab( 'tools.php', 'nf-logbook', [ 'tab' => 'events', 'category' => 'security' ] ) );
 	}
 
 	public function test_plugin_row_settings_link_for_administrators_only(): void {
 		$this->user( [ 'manage_options' ] );
 		$links = Menu::actionLinks( [ 'deactivate' => '<a>Deactivate</a>' ] );
 		self::assertCount( 2, $links );
-		self::assertStringContainsString( 'tools.php?page=noformat-logger&tab=settings', (string) reset( $links ) );
+		self::assertStringContainsString( 'tools.php?page=nf-logbook&tab=settings', (string) reset( $links ) );
 		$this->user( [ Plugin::CAP_VIEW_EVENTS ] );
 		self::assertCount( 1, Menu::actionLinks( [ 'deactivate' => '<a>Deactivate</a>' ] ) );
 	}

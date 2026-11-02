@@ -4,8 +4,22 @@ All notable changes to this plugin. Format: [Keep a Changelog](https://keepachan
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-02
+
+### Changed (name)
+
+- The plugin is renamed from **Noformat Logger** to **Noformat Logbook**: folder and slug `nf-logbook`, main file `nf-logbook.php` (basename `nf-logbook/nf-logbook.php`), text domain `nf-logbook`, admin page **Tools → Noformat Logbook** (`tools.php?page=nf-logbook&tab=…`), repository and `Update URI` `https://github.com/wearenoformat/nf-logbook`, release asset `nf-logbook.zip` (top folder `nf-logbook/`, manifest `slug` `nf-logbook`), MU loader `mu-loader/nf-logbook-loader.php`. Every user-visible string (admin titles, Tools submenu, notices, dashboard widget, CLI messages, *View details*, docs) says Noformat Logbook. The plugin's own events (`logger.*`) carry `object_id` `nf-logbook`.
+- Unchanged (wire and storage contract): REST namespace `noformat-logger/v1` and its routes, the `X-NF-*` signing headers, the hash chain and canonical JSON, the producer name `wp-noformat-logger`, event fields, tables `{prefix}nflog_*`, options and transients (`nflog_*`, `noformat_logger_*`), constants `NOFORMAT_LOGGER_*`, hooks `noformat_logger/*`, capabilities, cron hooks, `wp nflog` and the PHP namespace `Noformat\Logger`. `uninstall.php` drops the same tables and options as before.
+- `tools.php?page=noformat-logger[&tab=…]` redirects (301) to `tools.php?page=nf-logbook` with its tab and filters, next to the existing 1.0 and 0.x redirects.
+- `wp nflog install-mu-loader` installs `nf-logbook-loader.php` and removes an old `noformat-logger-loader.php` from mu-plugins.
+
+### Upgrade note
+
+- Sites on 1.1.x cannot auto-update across the rename (WordPress sees a different plugin). Once per site: deactivate Noformat Logger, remove `wp-content/plugins/noformat-logger/` **without** WordPress "Delete" (that runs `uninstall.php`, which drops the log tables when "delete data on uninstall" is set), install `nf-logbook.zip` and activate Noformat Logbook. The log, chain, key and settings carry over because the tables and options are unchanged. Details: `docs/UPDATES.md` → *Upgrading from 1.1.x*.
+
 ### Tests
 
+- Unit and integration tests use the new slug, folder and asset name; `setup.sh` links the plugin as `plugins/nf-logbook` (and drops a dangling `plugins/noformat-logger` link); `smoke-admin.sh` checks the 1.1 redirects; `smoke-errors.sh` checks that `install-mu-loader` removes the old loader file.
 - `tests/integration/smoke-update-private.sh` (in `run-all.sh`): the updater's private-repository (token) path end to end against a GitHub emulator mu-plugin (`tests/integration/github-emulator.php`, a `pre_http_request` filter; no network to GitHub, no real token): 404 without a token, 401 with a wrong one, 200 / ETag 304 with the right one, manifest and package through the asset API with the redirect to storage followed without `Authorization`, `wp plugin update` to 9.9.9, SHA-256 refusal of a tampered zip, and the token never printed or stored.
 
 ## [1.1.1] - 2026-11-02

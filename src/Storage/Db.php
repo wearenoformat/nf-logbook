@@ -141,7 +141,7 @@ final class Db {
 		$wpdb->last_error = $previousError;
 		$wpdb->last_query = $previousQuery;
 		if ( '' !== $error || false === $result ) {
-			throw new \RuntimeException( 'Database error in Noformat Logger storage' . ( '' !== $error ? ': ' . substr( $error, 0, 200 ) : '' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- never printed; caught by the logger.
+			throw new \RuntimeException( 'Database error in Noformat Logbook storage' . ( '' !== $error ? ': ' . substr( $error, 0, 200 ) : '' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- never printed; caught by the logger.
 		}
 		return $result;
 	}

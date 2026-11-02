@@ -71,11 +71,11 @@ final class Scheduler {
 		$schedules                 = is_array( $schedules ) ? $schedules : [];
 		$schedules['nflog_15min']  = [
 			'interval' => 15 * MINUTE_IN_SECONDS,
-			'display'  => 'Every 15 minutes (Noformat Logger)',
+			'display'  => 'Every 15 minutes (Noformat Logbook)',
 		];
 		$schedules['nflog_weekly'] = [
 			'interval' => WEEK_IN_SECONDS,
-			'display'  => 'Weekly (Noformat Logger)',
+			'display'  => 'Weekly (Noformat Logbook)',
 		];
 		return $schedules;
 	}

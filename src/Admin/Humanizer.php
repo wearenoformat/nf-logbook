@@ -200,7 +200,7 @@ final class Humanizer {
 		}
 		if ( str_starts_with( $field, 'location.' ) ) {
 			/* translators: %s: menu location slug */
-			return sprintf( __( 'Menu location %s', 'noformat-logger' ), substr( $field, 9 ) );
+			return sprintf( __( 'Menu location %s', 'nf-logbook' ), substr( $field, 9 ) );
 		}
 		$parts = explode( '.', $field );
 		if ( count( $parts ) > 1 ) {
@@ -221,99 +221,99 @@ final class Humanizer {
 			return null;
 		}
 		return match ( $field ) {
-			'title', 'post_title', 'title_hash' => __( 'Title', 'noformat-logger' ),
-			'slug', 'post_name'                 => __( 'Slug', 'noformat-logger' ),
-			'content', 'post_content'           => __( 'Content', 'noformat-logger' ),
-			'excerpt', 'post_excerpt'           => __( 'Excerpt', 'noformat-logger' ),
-			'status', 'post_status'             => __( 'Status', 'noformat-logger' ),
-			'author_id', 'post_author'          => __( 'Author', 'noformat-logger' ),
-			'parent_id', 'post_parent'          => __( 'Parent', 'noformat-logger' ),
-			'menu_order'                        => __( 'Order', 'noformat-logger' ),
-			'date', 'post_date'                 => __( 'Date', 'noformat-logger' ),
-			'comment_status'                    => __( 'Comments', 'noformat-logger' ),
-			'ping_status'                       => __( 'Pingbacks', 'noformat-logger' ),
-			'post_type'                         => __( 'Post type', 'noformat-logger' ),
-			'password', 'post_password'         => __( 'Password', 'noformat-logger' ),
-			'caption'                           => __( 'Caption', 'noformat-logger' ),
-			'description'                       => __( 'Description', 'noformat-logger' ),
-			'term_name', 'name', 'menu_name'    => __( 'Name', 'noformat-logger' ),
-			'role'                              => __( 'Role', 'noformat-logger' ),
-			'roles'                             => __( 'Roles', 'noformat-logger' ),
-			'version'                           => __( 'Version', 'noformat-logger' ),
-			'stylesheet'                        => __( 'Theme', 'noformat-logger' ),
-			'template'                          => __( 'Parent theme', 'noformat-logger' ),
-			'blogname'                          => __( 'Site title', 'noformat-logger' ),
-			'blogdescription'                   => __( 'Tagline', 'noformat-logger' ),
-			'admin_email'                       => __( 'Administration email address', 'noformat-logger' ),
-			'new_admin_email'                   => __( 'New administration email address', 'noformat-logger' ),
-			'users_can_register'                => __( 'Anyone can register', 'noformat-logger' ),
-			'default_role'                      => __( 'New user default role', 'noformat-logger' ),
-			'siteurl'                           => __( 'WordPress address (URL)', 'noformat-logger' ),
-			'home'                              => __( 'Site address (URL)', 'noformat-logger' ),
-			'timezone_string', 'gmt_offset'     => __( 'Timezone', 'noformat-logger' ),
-			'date_format'                       => __( 'Date format', 'noformat-logger' ),
-			'time_format'                       => __( 'Time format', 'noformat-logger' ),
-			'start_of_week'                     => __( 'Week starts on', 'noformat-logger' ),
-			'WPLANG'                            => __( 'Site language', 'noformat-logger' ),
-			'permalink_structure'               => __( 'Permalink structure', 'noformat-logger' ),
-			'category_base'                     => __( 'Category base', 'noformat-logger' ),
-			'tag_base'                          => __( 'Tag base', 'noformat-logger' ),
-			'show_on_front'                     => __( 'Your homepage displays', 'noformat-logger' ),
-			'page_on_front'                     => __( 'Homepage', 'noformat-logger' ),
-			'page_for_posts'                    => __( 'Posts page', 'noformat-logger' ),
-			'posts_per_page'                    => __( 'Blog pages show at most', 'noformat-logger' ),
-			'posts_per_rss'                     => __( 'Syndication feeds show the most recent', 'noformat-logger' ),
-			'rss_use_excerpt'                   => __( 'Feed item content', 'noformat-logger' ),
-			'blog_public'                       => __( 'Search engine visibility', 'noformat-logger' ),
-			'default_comment_status'            => __( 'Allow comments on new posts', 'noformat-logger' ),
-			'default_ping_status'               => __( 'Allow pingbacks on new posts', 'noformat-logger' ),
-			'comment_moderation'                => __( 'Comment must be manually approved', 'noformat-logger' ),
-			'comment_registration'              => __( 'Users must be logged in to comment', 'noformat-logger' ),
-			'comments_notify'                   => __( 'Email me when anyone posts a comment', 'noformat-logger' ),
-			'moderation_notify'                 => __( 'Email me when a comment is held for moderation', 'noformat-logger' ),
-			'show_avatars'                      => __( 'Show avatars', 'noformat-logger' ),
-			'active_plugins'                    => __( 'Active plugins', 'noformat-logger' ),
-			'wp_user_roles'                     => __( 'User roles and capabilities', 'noformat-logger' ),
-			'template_root', 'stylesheet_root'  => __( 'Theme directory', 'noformat-logger' ),
-			'user_url'                          => __( 'Website', 'noformat-logger' ),
-			'display_name'                      => __( 'Display name', 'noformat-logger' ),
-			'user_email'                        => __( 'Email', 'noformat-logger' ),
-			'user_pass'                         => __( 'Password', 'noformat-logger' ),
-			'user_nicename'                     => __( 'Profile slug', 'noformat-logger' ),
-			'user_login'                        => __( 'Username', 'noformat-logger' ),
-			'type'                              => __( 'Type', 'noformat-logger' ),
-			'object'                            => __( 'Links to', 'noformat-logger' ),
-			'object_id'                         => __( 'Linked item', 'noformat-logger' ),
-			'position'                          => __( 'Position', 'noformat-logger' ),
-			'url_host'                          => __( 'Link host', 'noformat-logger' ),
-			'url_hash'                          => __( 'Link', 'noformat-logger' ),
-			'target'                            => __( 'Open in', 'noformat-logger' ),
-			'widgets'                           => __( 'Widgets', 'noformat-logger' ),
-			'custom_css'                        => __( 'Additional CSS', 'noformat-logger' ),
-			'thumbnail_size_w'                  => __( 'Thumbnail width', 'noformat-logger' ),
-			'thumbnail_size_h'                  => __( 'Thumbnail height', 'noformat-logger' ),
-			'medium_size_w'                     => __( 'Medium width', 'noformat-logger' ),
-			'medium_size_h'                     => __( 'Medium height', 'noformat-logger' ),
-			'large_size_w'                      => __( 'Large width', 'noformat-logger' ),
-			'large_size_h'                      => __( 'Large height', 'noformat-logger' ),
-			'uploads_use_yearmonth_folders'     => __( 'Organise uploads into month- and year-based folders', 'noformat-logger' ),
-			'default_category'                  => __( 'Default post category', 'noformat-logger' ),
-			'default_post_format'               => __( 'Default post format', 'noformat-logger' ),
-			'site_icon'                         => __( 'Site icon', 'noformat-logger' ),
-			'wp_page_for_privacy_policy'        => __( 'Privacy policy page', 'noformat-logger' ),
-			'karma'                             => __( 'Karma', 'noformat-logger' ),
-			'user_id'                           => __( 'User', 'noformat-logger' ),
-			'post_id'                           => __( 'Post', 'noformat-logger' ),
-			'classes'                           => __( 'CSS classes', 'noformat-logger' ),
-			'xfn'                               => __( 'Link relationship (XFN)', 'noformat-logger' ),
-			'nickname'                          => __( 'Nickname', 'noformat-logger' ),
-			'first_name'                        => __( 'First name', 'noformat-logger' ),
-			'last_name'                         => __( 'Last name', 'noformat-logger' ),
-			'locale'                            => __( 'Language', 'noformat-logger' ),
-			'wpseo_title', '_yoast_wpseo_title' => __( 'SEO title', 'noformat-logger' ),
-			'wpseo_metadesc', '_yoast_wpseo_metadesc' => __( 'Meta description', 'noformat-logger' ),
-			'_yoast_wpseo_focuskw'              => __( 'Focus keyphrase', 'noformat-logger' ),
-			default                             => __( 'Title attribute', 'noformat-logger' ), // attr_title.
+			'title', 'post_title', 'title_hash' => __( 'Title', 'nf-logbook' ),
+			'slug', 'post_name'                 => __( 'Slug', 'nf-logbook' ),
+			'content', 'post_content'           => __( 'Content', 'nf-logbook' ),
+			'excerpt', 'post_excerpt'           => __( 'Excerpt', 'nf-logbook' ),
+			'status', 'post_status'             => __( 'Status', 'nf-logbook' ),
+			'author_id', 'post_author'          => __( 'Author', 'nf-logbook' ),
+			'parent_id', 'post_parent'          => __( 'Parent', 'nf-logbook' ),
+			'menu_order'                        => __( 'Order', 'nf-logbook' ),
+			'date', 'post_date'                 => __( 'Date', 'nf-logbook' ),
+			'comment_status'                    => __( 'Comments', 'nf-logbook' ),
+			'ping_status'                       => __( 'Pingbacks', 'nf-logbook' ),
+			'post_type'                         => __( 'Post type', 'nf-logbook' ),
+			'password', 'post_password'         => __( 'Password', 'nf-logbook' ),
+			'caption'                           => __( 'Caption', 'nf-logbook' ),
+			'description'                       => __( 'Description', 'nf-logbook' ),
+			'term_name', 'name', 'menu_name'    => __( 'Name', 'nf-logbook' ),
+			'role'                              => __( 'Role', 'nf-logbook' ),
+			'roles'                             => __( 'Roles', 'nf-logbook' ),
+			'version'                           => __( 'Version', 'nf-logbook' ),
+			'stylesheet'                        => __( 'Theme', 'nf-logbook' ),
+			'template'                          => __( 'Parent theme', 'nf-logbook' ),
+			'blogname'                          => __( 'Site title', 'nf-logbook' ),
+			'blogdescription'                   => __( 'Tagline', 'nf-logbook' ),
+			'admin_email'                       => __( 'Administration email address', 'nf-logbook' ),
+			'new_admin_email'                   => __( 'New administration email address', 'nf-logbook' ),
+			'users_can_register'                => __( 'Anyone can register', 'nf-logbook' ),
+			'default_role'                      => __( 'New user default role', 'nf-logbook' ),
+			'siteurl'                           => __( 'WordPress address (URL)', 'nf-logbook' ),
+			'home'                              => __( 'Site address (URL)', 'nf-logbook' ),
+			'timezone_string', 'gmt_offset'     => __( 'Timezone', 'nf-logbook' ),
+			'date_format'                       => __( 'Date format', 'nf-logbook' ),
+			'time_format'                       => __( 'Time format', 'nf-logbook' ),
+			'start_of_week'                     => __( 'Week starts on', 'nf-logbook' ),
+			'WPLANG'                            => __( 'Site language', 'nf-logbook' ),
+			'permalink_structure'               => __( 'Permalink structure', 'nf-logbook' ),
+			'category_base'                     => __( 'Category base', 'nf-logbook' ),
+			'tag_base'                          => __( 'Tag base', 'nf-logbook' ),
+			'show_on_front'                     => __( 'Your homepage displays', 'nf-logbook' ),
+			'page_on_front'                     => __( 'Homepage', 'nf-logbook' ),
+			'page_for_posts'                    => __( 'Posts page', 'nf-logbook' ),
+			'posts_per_page'                    => __( 'Blog pages show at most', 'nf-logbook' ),
+			'posts_per_rss'                     => __( 'Syndication feeds show the most recent', 'nf-logbook' ),
+			'rss_use_excerpt'                   => __( 'Feed item content', 'nf-logbook' ),
+			'blog_public'                       => __( 'Search engine visibility', 'nf-logbook' ),
+			'default_comment_status'            => __( 'Allow comments on new posts', 'nf-logbook' ),
+			'default_ping_status'               => __( 'Allow pingbacks on new posts', 'nf-logbook' ),
+			'comment_moderation'                => __( 'Comment must be manually approved', 'nf-logbook' ),
+			'comment_registration'              => __( 'Users must be logged in to comment', 'nf-logbook' ),
+			'comments_notify'                   => __( 'Email me when anyone posts a comment', 'nf-logbook' ),
+			'moderation_notify'                 => __( 'Email me when a comment is held for moderation', 'nf-logbook' ),
+			'show_avatars'                      => __( 'Show avatars', 'nf-logbook' ),
+			'active_plugins'                    => __( 'Active plugins', 'nf-logbook' ),
+			'wp_user_roles'                     => __( 'User roles and capabilities', 'nf-logbook' ),
+			'template_root', 'stylesheet_root'  => __( 'Theme directory', 'nf-logbook' ),
+			'user_url'                          => __( 'Website', 'nf-logbook' ),
+			'display_name'                      => __( 'Display name', 'nf-logbook' ),
+			'user_email'                        => __( 'Email', 'nf-logbook' ),
+			'user_pass'                         => __( 'Password', 'nf-logbook' ),
+			'user_nicename'                     => __( 'Profile slug', 'nf-logbook' ),
+			'user_login'                        => __( 'Username', 'nf-logbook' ),
+			'type'                              => __( 'Type', 'nf-logbook' ),
+			'object'                            => __( 'Links to', 'nf-logbook' ),
+			'object_id'                         => __( 'Linked item', 'nf-logbook' ),
+			'position'                          => __( 'Position', 'nf-logbook' ),
+			'url_host'                          => __( 'Link host', 'nf-logbook' ),
+			'url_hash'                          => __( 'Link', 'nf-logbook' ),
+			'target'                            => __( 'Open in', 'nf-logbook' ),
+			'widgets'                           => __( 'Widgets', 'nf-logbook' ),
+			'custom_css'                        => __( 'Additional CSS', 'nf-logbook' ),
+			'thumbnail_size_w'                  => __( 'Thumbnail width', 'nf-logbook' ),
+			'thumbnail_size_h'                  => __( 'Thumbnail height', 'nf-logbook' ),
+			'medium_size_w'                     => __( 'Medium width', 'nf-logbook' ),
+			'medium_size_h'                     => __( 'Medium height', 'nf-logbook' ),
+			'large_size_w'                      => __( 'Large width', 'nf-logbook' ),
+			'large_size_h'                      => __( 'Large height', 'nf-logbook' ),
+			'uploads_use_yearmonth_folders'     => __( 'Organise uploads into month- and year-based folders', 'nf-logbook' ),
+			'default_category'                  => __( 'Default post category', 'nf-logbook' ),
+			'default_post_format'               => __( 'Default post format', 'nf-logbook' ),
+			'site_icon'                         => __( 'Site icon', 'nf-logbook' ),
+			'wp_page_for_privacy_policy'        => __( 'Privacy policy page', 'nf-logbook' ),
+			'karma'                             => __( 'Karma', 'nf-logbook' ),
+			'user_id'                           => __( 'User', 'nf-logbook' ),
+			'post_id'                           => __( 'Post', 'nf-logbook' ),
+			'classes'                           => __( 'CSS classes', 'nf-logbook' ),
+			'xfn'                               => __( 'Link relationship (XFN)', 'nf-logbook' ),
+			'nickname'                          => __( 'Nickname', 'nf-logbook' ),
+			'first_name'                        => __( 'First name', 'nf-logbook' ),
+			'last_name'                         => __( 'Last name', 'nf-logbook' ),
+			'locale'                            => __( 'Language', 'nf-logbook' ),
+			'wpseo_title', '_yoast_wpseo_title' => __( 'SEO title', 'nf-logbook' ),
+			'wpseo_metadesc', '_yoast_wpseo_metadesc' => __( 'Meta description', 'nf-logbook' ),
+			'_yoast_wpseo_focuskw'              => __( 'Focus keyphrase', 'nf-logbook' ),
+			default                             => __( 'Title attribute', 'nf-logbook' ), // attr_title.
 		};
 	}
 
@@ -327,18 +327,18 @@ final class Humanizer {
 		$out = [];
 		foreach ( $fields as $field ) {
 			$word = match ( $field ) {
-				'user_url'      => __( 'website', 'noformat-logger' ),
-				'description'   => __( 'bio', 'noformat-logger' ),
-				'display_name'  => __( 'display name', 'noformat-logger' ),
-				'user_email'    => __( 'email address', 'noformat-logger' ),
-				'user_pass'     => __( 'password', 'noformat-logger' ),
-				'nickname'      => __( 'nickname', 'noformat-logger' ),
-				'first_name'    => __( 'first name', 'noformat-logger' ),
-				'last_name'     => __( 'last name', 'noformat-logger' ),
-				'locale'        => __( 'language', 'noformat-logger' ),
-				'user_nicename' => __( 'profile slug', 'noformat-logger' ),
-				'user_login'    => __( 'username', 'noformat-logger' ),
-				'rich_editing', 'syntax_highlighting', 'admin_color', 'comment_shortcuts', 'show_admin_bar_front' => __( 'preferences', 'noformat-logger' ),
+				'user_url'      => __( 'website', 'nf-logbook' ),
+				'description'   => __( 'bio', 'nf-logbook' ),
+				'display_name'  => __( 'display name', 'nf-logbook' ),
+				'user_email'    => __( 'email address', 'nf-logbook' ),
+				'user_pass'     => __( 'password', 'nf-logbook' ),
+				'nickname'      => __( 'nickname', 'nf-logbook' ),
+				'first_name'    => __( 'first name', 'nf-logbook' ),
+				'last_name'     => __( 'last name', 'nf-logbook' ),
+				'locale'        => __( 'language', 'nf-logbook' ),
+				'user_nicename' => __( 'profile slug', 'nf-logbook' ),
+				'user_login'    => __( 'username', 'nf-logbook' ),
+				'rich_editing', 'syntax_highlighting', 'admin_color', 'comment_shortcuts', 'show_admin_bar_front' => __( 'preferences', 'nf-logbook' ),
 				default         => function_exists( 'mb_strtolower' ) ? mb_strtolower( self::label( $field ) ) : strtolower( self::label( $field ) ),
 			};
 			if ( ! in_array( $word, $out, true ) ) {
@@ -368,10 +368,10 @@ final class Humanizer {
 	 */
 	public static function value( mixed $value ): string {
 		if ( null === $value || '' === $value ) {
-			return '<span class="nflog-empty-value">' . esc_html__( '(empty)', 'noformat-logger' ) . '</span>';
+			return '<span class="nflog-empty-value">' . esc_html__( '(empty)', 'nf-logbook' ) . '</span>';
 		}
 		if ( is_bool( $value ) ) {
-			return esc_html( $value ? __( 'Yes', 'noformat-logger' ) : __( 'No', 'noformat-logger' ) );
+			return esc_html( $value ? __( 'Yes', 'nf-logbook' ) : __( 'No', 'nf-logbook' ) );
 		}
 		if ( is_scalar( $value ) ) {
 			return esc_html( (string) $value );
@@ -380,19 +380,19 @@ final class Humanizer {
 			return '';
 		}
 		if ( true === ( $value['redacted'] ?? null ) ) {
-			return '<span class="nflog-lock" title="' . esc_attr( 'sha256_8 ' . self::scalar( $value['sha256_8'] ?? '' ) ) . '">' . esc_html__( 'hidden for privacy', 'noformat-logger' ) . '</span>';
+			return '<span class="nflog-lock" title="' . esc_attr( 'sha256_8 ' . self::scalar( $value['sha256_8'] ?? '' ) ) . '">' . esc_html__( 'hidden for privacy', 'nf-logbook' ) . '</span>';
 		}
 		if ( true === ( $value['truncated'] ?? null ) ) {
 			$preview = isset( $value['preview'] ) && is_string( $value['preview'] ) ? esc_html( $value['preview'] ) . '… ' : '';
 			return $preview . '<span class="nflog-marker">' . esc_html(
 				/* translators: %s: original length in characters */
-				sprintf( __( 'shortened, %s characters', 'noformat-logger' ), number_format_i18n( (int) ( $value['length'] ?? 0 ) ) )
+				sprintf( __( 'shortened, %s characters', 'nf-logbook' ), number_format_i18n( (int) ( $value['length'] ?? 0 ) ) )
 			) . '</span>';
 		}
 		if ( self::isContentSummary( $value ) ) {
 			return '<span class="nflog-marker">' . esc_html(
 				/* translators: %s: length in characters */
-				sprintf( _n( '%s character', '%s characters', (int) $value['length'], 'noformat-logger' ), number_format_i18n( (int) $value['length'] ) )
+				sprintf( _n( '%s character', '%s characters', (int) $value['length'], 'nf-logbook' ), number_format_i18n( (int) $value['length'] ) )
 			) . '</span>';
 		}
 		if ( array_is_list( $value ) && [] !== $value && count( array_filter( $value, 'is_scalar' ) ) === count( $value ) ) {
@@ -419,10 +419,10 @@ final class Humanizer {
 		$sign   = null === $delta ? '' : ( $delta > 0 ? '+' : ( $delta < 0 ? '−' : '±' ) ) . number_format_i18n( abs( (int) $delta ) );
 		if ( null === $before ) {
 			/* translators: %s: length in characters */
-			return sprintf( __( '%s characters', 'noformat-logger' ), number_format_i18n( $after ) );
+			return sprintf( __( '%s characters', 'nf-logbook' ), number_format_i18n( $after ) );
 		}
 		/* translators: 1: old length, 2: new length, 3: signed difference */
-		return sprintf( __( '%1$s → %2$s characters (%3$s)', 'noformat-logger' ), number_format_i18n( $before ), number_format_i18n( $after ), $sign );
+		return sprintf( __( '%1$s → %2$s characters (%3$s)', 'nf-logbook' ), number_format_i18n( $before ), number_format_i18n( $after ), $sign );
 	}
 
 	/**
@@ -478,52 +478,52 @@ final class Humanizer {
 				$status = self::scalar( $context['status'] ?? '' );
 				return 'draft' === $status || 'auto-draft' === $status
 					/* translators: 1: person, 2: item, e.g. the page Home */
-					? sprintf( __( '%1$s started a draft of %2$s', 'noformat-logger' ), $who, $it )
+					? sprintf( __( '%1$s started a draft of %2$s', 'nf-logbook' ), $who, $it )
 					/* translators: 1: person, 2: item */
-					: sprintf( __( '%1$s created %2$s', 'noformat-logger' ), $who, $it );
+					: sprintf( __( '%1$s created %2$s', 'nf-logbook' ), $who, $it );
 			case 'post.published':
 				/* translators: 1: person, 2: item */
-				return sprintf( __( '%1$s published %2$s', 'noformat-logger' ), $who, $it );
+				return sprintf( __( '%1$s published %2$s', 'nf-logbook' ), $who, $it );
 			case 'post.unpublished':
 				/* translators: 1: person, 2: item */
-				return sprintf( __( '%1$s unpublished %2$s', 'noformat-logger' ), $who, $it );
+				return sprintf( __( '%1$s unpublished %2$s', 'nf-logbook' ), $who, $it );
 			case 'post.trashed':
 				/* translators: 1: person, 2: item */
-				return sprintf( __( '%1$s moved %2$s to the trash', 'noformat-logger' ), $who, $it );
+				return sprintf( __( '%1$s moved %2$s to the trash', 'nf-logbook' ), $who, $it );
 			case 'post.restored':
 				/* translators: 1: person, 2: item */
-				return sprintf( __( '%1$s restored %2$s from the trash', 'noformat-logger' ), $who, $it );
+				return sprintf( __( '%1$s restored %2$s from the trash', 'nf-logbook' ), $who, $it );
 			case 'post.deleted':
 				/* translators: 1: person, 2: item */
-				return sprintf( __( '%1$s permanently deleted %2$s', 'noformat-logger' ), $who, $it );
+				return sprintf( __( '%1$s permanently deleted %2$s', 'nf-logbook' ), $who, $it );
 			case 'post.revision_restored':
 				/* translators: 1: person, 2: item */
-				return sprintf( __( '%1$s restored an earlier revision of %2$s', 'noformat-logger' ), $who, $it );
+				return sprintf( __( '%1$s restored an earlier revision of %2$s', 'nf-logbook' ), $who, $it );
 			case 'post.status_changed':
 				$change = self::change( $changes, 'status' );
 				if ( null !== $change ) {
 					/* translators: 1: person, 2: item, 3: old status, 4: new status */
-					return sprintf( __( '%1$s changed the status of %2$s from %3$s to %4$s', 'noformat-logger' ), $who, $it, self::status( $change['old'] ?? '' ), self::status( $change['new'] ?? '' ) );
+					return sprintf( __( '%1$s changed the status of %2$s from %3$s to %4$s', 'nf-logbook' ), $who, $it, self::status( $change['old'] ?? '' ), self::status( $change['new'] ?? '' ) );
 				}
 				/* translators: 1: person, 2: item */
-				return sprintf( __( '%1$s changed the status of %2$s', 'noformat-logger' ), $who, $it );
+				return sprintf( __( '%1$s changed the status of %2$s', 'nf-logbook' ), $who, $it );
 			case 'post.updated':
 				$fields = self::fieldsOf( $changes );
 				if ( [ 'content' ] === $fields ) {
 					/* translators: 1: person, 2: item */
-					return sprintf( __( '%1$s edited the content of %2$s', 'noformat-logger' ), $who, $it );
+					return sprintf( __( '%1$s edited the content of %2$s', 'nf-logbook' ), $who, $it );
 				}
 				if ( [] === $fields ) {
 					/* translators: 1: person, 2: item */
-					return sprintf( __( '%1$s updated %2$s', 'noformat-logger' ), $who, $it );
+					return sprintf( __( '%1$s updated %2$s', 'nf-logbook' ), $who, $it );
 				}
 				if ( count( $fields ) > 3 ) {
 					/* translators: 1: person, 2: number of fields, 3: item */
-					return sprintf( __( '%1$s updated %2$s fields of %3$s', 'noformat-logger' ), $who, number_format_i18n( count( $fields ) ), $it );
+					return sprintf( __( '%1$s updated %2$s fields of %3$s', 'nf-logbook' ), $who, number_format_i18n( count( $fields ) ), $it );
 				}
 				$names = array_map( static fn( string $f ): string => function_exists( 'mb_strtolower' ) ? mb_strtolower( self::label( $f ) ) : strtolower( self::label( $f ) ), $fields );
 				/* translators: 1: person, 2: list of fields, e.g. title and slug, 3: item */
-				return sprintf( __( '%1$s updated the %2$s of %3$s', 'noformat-logger' ), $who, esc_html( self::listing( $names ) ), $it );
+				return sprintf( __( '%1$s updated the %2$s of %3$s', 'nf-logbook' ), $who, esc_html( self::listing( $names ) ), $it );
 		}
 		return null;
 	}
@@ -543,23 +543,23 @@ final class Humanizer {
 		switch ( $action ) {
 			case 'meta.added':
 				/* translators: 1: person, 2: field name, 3: item */
-				return sprintf( __( '%1$s set the field %2$s on %3$s', 'noformat-logger' ), $who, $field, $on );
+				return sprintf( __( '%1$s set the field %2$s on %3$s', 'nf-logbook' ), $who, $field, $on );
 			case 'meta.updated':
 				/* translators: 1: person, 2: field name, 3: item */
-				return sprintf( __( '%1$s changed the field %2$s on %3$s', 'noformat-logger' ), $who, $field, $on );
+				return sprintf( __( '%1$s changed the field %2$s on %3$s', 'nf-logbook' ), $who, $field, $on );
 			case 'meta.deleted':
 				/* translators: 1: person, 2: field name, 3: item */
-				return sprintf( __( '%1$s removed the field %2$s from %3$s', 'noformat-logger' ), $who, $field, $on );
+				return sprintf( __( '%1$s removed the field %2$s from %3$s', 'nf-logbook' ), $who, $field, $on );
 			case 'acf.fields_saved':
 				/* translators: 1: person, 2: item */
-				return sprintf( __( '%1$s saved the custom fields of %2$s', 'noformat-logger' ), $who, $on );
+				return sprintf( __( '%1$s saved the custom fields of %2$s', 'nf-logbook' ), $who, $on );
 			case 'acf.options_saved':
 				/* translators: 1: person, 2: options page id */
-				return sprintf( __( '%1$s saved the options page %2$s', 'noformat-logger' ), $who, '<strong>' . esc_html( self::scalar( $row['object_id'] ?? '' ) ) . '</strong>' );
+				return sprintf( __( '%1$s saved the options page %2$s', 'nf-logbook' ), $who, '<strong>' . esc_html( self::scalar( $row['object_id'] ?? '' ) ) . '</strong>' );
 			case 'acf.field_group_changed':
 				$op = self::scalar( $context['operation'] ?? 'updated' );
 				/* translators: 1: person, 2: what happened (updated, duplicated, trashed, and so on), 3: field group */
-				return sprintf( __( '%1$s %2$s the field group %3$s', 'noformat-logger' ), $who, esc_html( self::verb( $op ) ), $this->postPhrase( $row, [], false ) );
+				return sprintf( __( '%1$s %2$s the field group %3$s', 'nf-logbook' ), $who, esc_html( self::verb( $op ) ), $this->postPhrase( $row, [], false ) );
 		}
 		return null;
 	}
@@ -578,23 +578,23 @@ final class Humanizer {
 			$added   = is_array( $context['added'] ?? null ) ? count( $context['added'] ) : 0;
 			$removed = is_array( $context['removed'] ?? null ) ? count( $context['removed'] ) : 0;
 			/* translators: 1: person, 2: taxonomy name (plural, e.g. categories), 3: item, 4: added count, 5: removed count */
-			return sprintf( __( '%1$s changed the %2$s of %3$s (+%4$s / −%5$s)', 'noformat-logger' ), $who, esc_html( self::taxonomyLabel( self::scalar( $row['object_subtype'] ?? '' ), true ) ), $this->postPhrase( array_merge( $row, [ 'object_subtype' => self::scalar( $context['post_type'] ?? '' ) ] ), [] ), number_format_i18n( $added ), number_format_i18n( $removed ) );
+			return sprintf( __( '%1$s changed the %2$s of %3$s (+%4$s / −%5$s)', 'nf-logbook' ), $who, esc_html( self::taxonomyLabel( self::scalar( $row['object_subtype'] ?? '' ), true ) ), $this->postPhrase( array_merge( $row, [ 'object_subtype' => self::scalar( $context['post_type'] ?? '' ) ] ), [] ), number_format_i18n( $added ), number_format_i18n( $removed ) );
 		}
 		$id   = Resolver::numericId( $row['object_id'] ?? null );
 		$name = null === $id ? null : $this->resolver->termName( $id );
 		$name = $name ?? ( is_string( $context['term_name'] ?? null ) ? $context['term_name'] : null );
 		$term = null === $name
 			/* translators: 1: taxonomy name, 2: term id */
-			? esc_html( sprintf( __( 'the %1$s #%2$s', 'noformat-logger' ), $taxonomy, (string) $id ) )
+			? esc_html( sprintf( __( 'the %1$s #%2$s', 'nf-logbook' ), $taxonomy, (string) $id ) )
 			/* translators: 1: taxonomy name, 2: term name */
-			: sprintf( __( 'the %1$s %2$s', 'noformat-logger' ), esc_html( $taxonomy ), '<em>' . esc_html( $name ) . '</em>' );
+			: sprintf( __( 'the %1$s %2$s', 'nf-logbook' ), esc_html( $taxonomy ), '<em>' . esc_html( $name ) . '</em>' );
 		return match ( $action ) {
 			/* translators: 1: person, 2: term */
-			'term.created' => sprintf( __( '%1$s created %2$s', 'noformat-logger' ), $who, $term ),
+			'term.created' => sprintf( __( '%1$s created %2$s', 'nf-logbook' ), $who, $term ),
 			/* translators: 1: person, 2: term */
-			'term.updated' => sprintf( __( '%1$s updated %2$s', 'noformat-logger' ), $who, $term ),
+			'term.updated' => sprintf( __( '%1$s updated %2$s', 'nf-logbook' ), $who, $term ),
 			/* translators: 1: person, 2: term */
-			'term.deleted' => sprintf( __( '%1$s deleted %2$s', 'noformat-logger' ), $who, $term ),
+			'term.deleted' => sprintf( __( '%1$s deleted %2$s', 'nf-logbook' ), $who, $term ),
 			default        => null,
 		};
 	}
@@ -610,29 +610,29 @@ final class Humanizer {
 	private function menu( string $action, string $who, array $row, array $context ): ?string {
 		if ( 'menu.locations_changed' === $action ) {
 			/* translators: %s: person */
-			return sprintf( __( '%s changed which menus appear in the theme locations', 'noformat-logger' ), $who );
+			return sprintf( __( '%s changed which menus appear in the theme locations', 'nf-logbook' ), $who );
 		}
 		if ( 'menu.item_updated' === $action || 'menu.item_deleted' === $action ) {
 			$item = $this->menuItemPhrase( $row );
 			$menu = $this->menuPhrase( Resolver::numericId( $context['menu_id'] ?? null ) );
 			if ( 'menu.item_deleted' === $action ) {
 				/* translators: 1: person, 2: menu item, 3: menu */
-				return sprintf( __( '%1$s removed %2$s from %3$s', 'noformat-logger' ), $who, $item, $menu );
+				return sprintf( __( '%1$s removed %2$s from %3$s', 'nf-logbook' ), $who, $item, $menu );
 			}
 			return true === ( $context['created'] ?? null )
 				/* translators: 1: person, 2: menu item, 3: menu */
-				? sprintf( __( '%1$s added %2$s to %3$s', 'noformat-logger' ), $who, $item, $menu )
+				? sprintf( __( '%1$s added %2$s to %3$s', 'nf-logbook' ), $who, $item, $menu )
 				/* translators: 1: person, 2: menu item, 3: menu */
-				: sprintf( __( '%1$s updated %2$s in %3$s', 'noformat-logger' ), $who, $item, $menu );
+				: sprintf( __( '%1$s updated %2$s in %3$s', 'nf-logbook' ), $who, $item, $menu );
 		}
 		$menu = $this->menuPhrase( Resolver::numericId( $row['object_id'] ?? null ), is_string( $context['menu_name'] ?? null ) ? $context['menu_name'] : null );
 		return match ( $action ) {
 			/* translators: 1: person, 2: menu */
-			'menu.created' => sprintf( __( '%1$s created %2$s', 'noformat-logger' ), $who, $menu ),
+			'menu.created' => sprintf( __( '%1$s created %2$s', 'nf-logbook' ), $who, $menu ),
 			/* translators: 1: person, 2: menu */
-			'menu.updated' => sprintf( __( '%1$s updated %2$s', 'noformat-logger' ), $who, $menu ),
+			'menu.updated' => sprintf( __( '%1$s updated %2$s', 'nf-logbook' ), $who, $menu ),
 			/* translators: 1: person, 2: menu */
-			'menu.deleted' => sprintf( __( '%1$s deleted %2$s', 'noformat-logger' ), $who, $menu ),
+			'menu.deleted' => sprintf( __( '%1$s deleted %2$s', 'nf-logbook' ), $who, $menu ),
 			default        => null,
 		};
 	}
@@ -663,22 +663,22 @@ final class Humanizer {
 			$facts = [] === $facts ? '' : ' (' . esc_html( implode( ', ', $facts ) ) . ')';
 			return null === $file
 				/* translators: 1: person, 2: an image, a video, a file, and so on, 3:  (PNG, 70 bytes) */
-				? sprintf( __( '%1$s uploaded %2$s%3$s', 'noformat-logger' ), $who, esc_html( $kind[0] ), $facts )
+				? sprintf( __( '%1$s uploaded %2$s%3$s', 'nf-logbook' ), $who, esc_html( $kind[0] ), $facts )
 				/* translators: 1: person, 2: image, video, file, and so on, 3: file title, 4:  (PNG, 70 bytes) */
-				: sprintf( __( '%1$s uploaded the %2$s %3$s%4$s', 'noformat-logger' ), $who, esc_html( $kind[1] ), $file, $facts );
+				: sprintf( __( '%1$s uploaded the %2$s %3$s%4$s', 'nf-logbook' ), $who, esc_html( $kind[1] ), $file, $facts );
 		}
 		$it = null === $file
 			/* translators: 1: image, video, file, and so on, 2: attachment id */
-			? esc_html( sprintf( __( 'the %1$s #%2$s', 'noformat-logger' ), $kind[1], (string) $id ) )
+			? esc_html( sprintf( __( 'the %1$s #%2$s', 'nf-logbook' ), $kind[1], (string) $id ) )
 			/* translators: 1: image, video, file, and so on, 2: title */
-			: sprintf( __( 'the %1$s %2$s', 'noformat-logger' ), esc_html( $kind[1] ), $file );
+			: sprintf( __( 'the %1$s %2$s', 'nf-logbook' ), esc_html( $kind[1] ), $file );
 		return match ( $action ) {
 			/* translators: 1: person, 2: file */
-			'media.updated'          => sprintf( __( '%1$s updated the details of %2$s', 'noformat-logger' ), $who, $it ),
+			'media.updated'          => sprintf( __( '%1$s updated the details of %2$s', 'nf-logbook' ), $who, $it ),
 			/* translators: 1: person, 2: file */
-			'media.metadata_updated' => sprintf( __( '%1$s regenerated the sizes of %2$s', 'noformat-logger' ), $who, $it ),
+			'media.metadata_updated' => sprintf( __( '%1$s regenerated the sizes of %2$s', 'nf-logbook' ), $who, $it ),
 			/* translators: 1: person, 2: file */
-			'media.deleted'          => sprintf( __( '%1$s deleted %2$s', 'noformat-logger' ), $who, $it ),
+			'media.deleted'          => sprintf( __( '%1$s deleted %2$s', 'nf-logbook' ), $who, $it ),
 			default                  => null,
 		};
 	}
@@ -701,7 +701,7 @@ final class Humanizer {
 		}
 		$on = null === $postId ? '' : ' ' . sprintf(
 			/* translators: %s: item the comment belongs to */
-			__( 'on %s', 'noformat-logger' ),
+			__( 'on %s', 'nf-logbook' ),
 			$this->postPhrase(
 				[
 					'object_type' => 'post',
@@ -713,28 +713,28 @@ final class Humanizer {
 		switch ( $action ) {
 			case 'comment.created':
 				/* translators: 1: person, 2:  on the post X or empty */
-				return sprintf( __( '%1$s added a comment%2$s', 'noformat-logger' ), $who, $on );
+				return sprintf( __( '%1$s added a comment%2$s', 'nf-logbook' ), $who, $on );
 			case 'comment.updated':
 				/* translators: 1: person, 2:  on the post X or empty */
-				return sprintf( __( '%1$s edited a comment%2$s', 'noformat-logger' ), $who, $on );
+				return sprintf( __( '%1$s edited a comment%2$s', 'nf-logbook' ), $who, $on );
 			case 'comment.spammed':
 				/* translators: 1: person, 2:  on the post X or empty */
-				return sprintf( __( '%1$s marked a comment%2$s as spam', 'noformat-logger' ), $who, $on );
+				return sprintf( __( '%1$s marked a comment%2$s as spam', 'nf-logbook' ), $who, $on );
 			case 'comment.deleted':
 				/* translators: 1: person, 2:  on the post X or empty */
-				return sprintf( __( '%1$s deleted a comment%2$s', 'noformat-logger' ), $who, $on );
+				return sprintf( __( '%1$s deleted a comment%2$s', 'nf-logbook' ), $who, $on );
 			case 'comment.status_changed':
 				$change = self::change( $changes, 'status' );
 				$new    = null === $change ? '' : self::scalar( $change['new'] ?? '' );
 				return match ( $new ) {
 					/* translators: 1: person, 2:  on the post X or empty */
-					'approved', '1' => sprintf( __( '%1$s approved a comment%2$s', 'noformat-logger' ), $who, $on ),
+					'approved', '1' => sprintf( __( '%1$s approved a comment%2$s', 'nf-logbook' ), $who, $on ),
 					/* translators: 1: person, 2:  on the post X or empty */
-					'unapproved', 'hold', '0' => sprintf( __( '%1$s unapproved a comment%2$s', 'noformat-logger' ), $who, $on ),
+					'unapproved', 'hold', '0' => sprintf( __( '%1$s unapproved a comment%2$s', 'nf-logbook' ), $who, $on ),
 					/* translators: 1: person, 2:  on the post X or empty */
-					'trash' => sprintf( __( '%1$s moved a comment%2$s to the trash', 'noformat-logger' ), $who, $on ),
+					'trash' => sprintf( __( '%1$s moved a comment%2$s to the trash', 'nf-logbook' ), $who, $on ),
 					/* translators: 1: person, 2:  on the post X or empty */
-					default => sprintf( __( '%1$s changed the status of a comment%2$s', 'noformat-logger' ), $who, $on ),
+					default => sprintf( __( '%1$s changed the status of a comment%2$s', 'nf-logbook' ), $who, $on ),
 				};
 		}
 		return null;
@@ -752,16 +752,16 @@ final class Humanizer {
 		$known   = self::knownLabel( $name );
 		$setting = null === $known
 			/* translators: %s: option name */
-			? sprintf( __( 'the option %s', 'noformat-logger' ), '<code class="nflog-key">' . esc_html( $name ) . '</code>' )
+			? sprintf( __( 'the option %s', 'nf-logbook' ), '<code class="nflog-key">' . esc_html( $name ) . '</code>' )
 			/* translators: %s: setting label, e.g. Tagline */
-			: sprintf( __( 'the setting %s', 'noformat-logger' ), '<strong>' . esc_html( $known ) . '</strong>' );
+			: sprintf( __( 'the setting %s', 'nf-logbook' ), '<strong>' . esc_html( $known ) . '</strong>' );
 		return match ( $action ) {
 			/* translators: 1: person, 2: setting */
-			'option.updated' => sprintf( __( '%1$s changed %2$s', 'noformat-logger' ), $who, $setting ),
+			'option.updated' => sprintf( __( '%1$s changed %2$s', 'nf-logbook' ), $who, $setting ),
 			/* translators: 1: person, 2: setting */
-			'option.added'   => sprintf( __( '%1$s added %2$s', 'noformat-logger' ), $who, $setting ),
+			'option.added'   => sprintf( __( '%1$s added %2$s', 'nf-logbook' ), $who, $setting ),
 			/* translators: 1: person, 2: setting */
-			'option.deleted' => sprintf( __( '%1$s deleted %2$s', 'noformat-logger' ), $who, $setting ),
+			'option.deleted' => sprintf( __( '%1$s deleted %2$s', 'nf-logbook' ), $who, $setting ),
 			default          => null,
 		};
 	}
@@ -785,28 +785,28 @@ final class Humanizer {
 		}
 		$thing = $plugin
 			/* translators: %s: plugin slug */
-			? sprintf( __( 'the plugin %s', 'noformat-logger' ), '<strong>' . esc_html( $name ) . '</strong>' )
+			? sprintf( __( 'the plugin %s', 'nf-logbook' ), '<strong>' . esc_html( $name ) . '</strong>' )
 			/* translators: %s: theme name */
-			: sprintf( __( 'the theme %s', 'noformat-logger' ), '<strong>' . esc_html( $name ) . '</strong>' );
+			: sprintf( __( 'the theme %s', 'nf-logbook' ), '<strong>' . esc_html( $name ) . '</strong>' );
 		$failed = isset( $context['error_code'] ) && '' !== $context['error_code'];
 		$verb   = substr( $action, (int) strpos( $action, '.' ) + 1 );
 		if ( $failed ) {
 			/* translators: 1: person, 2: install, update, delete, 3: plugin or theme */
-			return sprintf( __( '%1$s tried to %2$s %3$s, but it failed', 'noformat-logger' ), $who, esc_html( self::infinitive( $verb ) ), $thing );
+			return sprintf( __( '%1$s tried to %2$s %3$s, but it failed', 'nf-logbook' ), $who, esc_html( self::infinitive( $verb ) ), $thing );
 		}
 		if ( 'updated' === $verb ) {
 			$version = self::change( $changes, 'version' );
 			if ( null !== $version && is_scalar( $version['old'] ?? null ) && is_scalar( $version['new'] ?? null ) ) {
 				/* translators: 1: person, 2: plugin or theme, 3: old version, 4: new version */
-				return sprintf( __( '%1$s updated %2$s from %3$s to %4$s', 'noformat-logger' ), $who, $thing, esc_html( (string) $version['old'] ), esc_html( (string) $version['new'] ) );
+				return sprintf( __( '%1$s updated %2$s from %3$s to %4$s', 'nf-logbook' ), $who, $thing, esc_html( (string) $version['old'] ), esc_html( (string) $version['new'] ) );
 			}
 		}
 		if ( 'switched' === $verb ) {
 			/* translators: 1: person, 2: theme */
-			return sprintf( __( '%1$s switched to %2$s', 'noformat-logger' ), $who, $thing );
+			return sprintf( __( '%1$s switched to %2$s', 'nf-logbook' ), $who, $thing );
 		}
 		/* translators: 1: person, 2: what happened (activated, installed, and so on), 3: plugin or theme */
-		return sprintf( __( '%1$s %2$s %3$s', 'noformat-logger' ), $who, esc_html( self::verb( $verb ) ), $thing );
+		return sprintf( __( '%1$s %2$s %3$s', 'nf-logbook' ), $who, esc_html( self::verb( $verb ) ), $thing );
 	}
 
 	/**
@@ -822,33 +822,33 @@ final class Humanizer {
 			$version = self::change( $changes, 'version' );
 			return null !== $version && is_scalar( $version['old'] ?? null ) && is_scalar( $version['new'] ?? null )
 				/* translators: 1: person, 2: old version, 3: new version */
-				? sprintf( __( '%1$s updated WordPress from %2$s to %3$s', 'noformat-logger' ), $who, esc_html( (string) $version['old'] ), esc_html( (string) $version['new'] ) )
+				? sprintf( __( '%1$s updated WordPress from %2$s to %3$s', 'nf-logbook' ), $who, esc_html( (string) $version['old'] ), esc_html( (string) $version['new'] ) )
 				/* translators: %s: person */
-				: sprintf( __( '%s updated WordPress', 'noformat-logger' ), $who );
+				: sprintf( __( '%s updated WordPress', 'nf-logbook' ), $who );
 		}
 		if ( 'core.auto_updates_completed' === $action ) {
 			/* translators: %s: person */
-			return sprintf( __( '%s ran the automatic updates', 'noformat-logger' ), $who );
+			return sprintf( __( '%s ran the automatic updates', 'nf-logbook' ), $who );
 		}
 		if ( 'updates.pending' === $action ) {
 			$parts = [];
 			foreach ( [
 				/* translators: %s: number */
-				'core'    => _n_noop( '%s WordPress update', '%s WordPress updates', 'noformat-logger' ),
+				'core'    => _n_noop( '%s WordPress update', '%s WordPress updates', 'nf-logbook' ),
 				/* translators: %s: number */
-				'plugins' => _n_noop( '%s plugin update', '%s plugin updates', 'noformat-logger' ),
+				'plugins' => _n_noop( '%s plugin update', '%s plugin updates', 'nf-logbook' ),
 				/* translators: %s: number */
-				'themes'  => _n_noop( '%s theme update', '%s theme updates', 'noformat-logger' ),
+				'themes'  => _n_noop( '%s theme update', '%s theme updates', 'nf-logbook' ),
 			] as $key => $noop ) {
 				$n = isset( $context[ $key ] ) && is_numeric( $context[ $key ] ) ? (int) $context[ $key ] : 0;
 				if ( $n > 0 ) {
-					$parts[] = sprintf( translate_nooped_plural( $noop, $n, 'noformat-logger' ), number_format_i18n( $n ) );
+					$parts[] = sprintf( translate_nooped_plural( $noop, $n, 'nf-logbook' ), number_format_i18n( $n ) );
 				}
 			}
 			return [] === $parts
-				? esc_html__( 'Everything is up to date', 'noformat-logger' )
+				? esc_html__( 'Everything is up to date', 'nf-logbook' )
 				/* translators: %s: list such as 13 plugin updates and 1 theme update */
-				: esc_html( sprintf( __( '%s waiting to be installed', 'noformat-logger' ), self::listing( $parts ) ) );
+				: esc_html( sprintf( __( '%s waiting to be installed', 'nf-logbook' ), self::listing( $parts ) ) );
 		}
 		return null;
 	}
@@ -870,54 +870,54 @@ final class Humanizer {
 		switch ( $action ) {
 			case 'user.created':
 				/* translators: 1: person, 2: new user, 3: role */
-				return sprintf( __( '%1$s added the user %2$s as %3$s', 'noformat-logger' ), $who, $whom, $role );
+				return sprintf( __( '%1$s added the user %2$s as %3$s', 'nf-logbook' ), $who, $whom, $role );
 			case 'user.updated':
 				$fields = is_array( $context['changed_fields'] ?? null ) ? array_values( array_filter( $context['changed_fields'], 'is_string' ) ) : [];
-				$list   = esc_html( implode( _x( ', ', 'list separator', 'noformat-logger' ), self::profileFields( $fields ) ) );
+				$list   = esc_html( implode( _x( ', ', 'list separator', 'nf-logbook' ), self::profileFields( $fields ) ) );
 				if ( $self ) {
 					return [] === $fields
 						/* translators: %s: person */
-						? sprintf( __( '%s updated their profile', 'noformat-logger' ), $who )
+						? sprintf( __( '%s updated their profile', 'nf-logbook' ), $who )
 						/* translators: 1: person, 2: changed fields, e.g. website, bio */
-						: sprintf( __( '%1$s updated their profile: %2$s', 'noformat-logger' ), $who, $list );
+						: sprintf( __( '%1$s updated their profile: %2$s', 'nf-logbook' ), $who, $list );
 				}
 				return [] === $fields
 					/* translators: 1: person, 2: user */
-					? sprintf( __( '%1$s updated the profile of %2$s', 'noformat-logger' ), $who, $whom )
+					? sprintf( __( '%1$s updated the profile of %2$s', 'nf-logbook' ), $who, $whom )
 					/* translators: 1: person, 2: user, 3: changed fields, e.g. website, bio */
-					: sprintf( __( '%1$s updated the profile of %2$s: %3$s', 'noformat-logger' ), $who, $whom, $list );
+					: sprintf( __( '%1$s updated the profile of %2$s: %3$s', 'nf-logbook' ), $who, $whom, $list );
 			case 'user.role_changed':
 				$change = self::change( $changes, 'role' );
 				if ( null !== $change ) {
 					/* translators: 1: person, 2: user, 3: old role, 4: new role */
-					return sprintf( __( '%1$s changed the role of %2$s from %3$s to %4$s', 'noformat-logger' ), $who, $whom, esc_html( self::role( self::scalar( $change['old'] ?? '' ) ) ), esc_html( self::role( self::scalar( $change['new'] ?? '' ) ) ) );
+					return sprintf( __( '%1$s changed the role of %2$s from %3$s to %4$s', 'nf-logbook' ), $who, $whom, esc_html( self::role( self::scalar( $change['old'] ?? '' ) ) ), esc_html( self::role( self::scalar( $change['new'] ?? '' ) ) ) );
 				}
 				/* translators: 1: person, 2: user, 3: role */
-				return sprintf( __( '%1$s changed the role of %2$s to %3$s', 'noformat-logger' ), $who, $whom, $role );
+				return sprintf( __( '%1$s changed the role of %2$s to %3$s', 'nf-logbook' ), $who, $whom, $role );
 			case 'user.role_added':
 				/* translators: 1: person, 2: role, 3: user */
-				return sprintf( __( '%1$s gave the role %2$s to %3$s', 'noformat-logger' ), $who, esc_html( self::role( self::scalar( $context['role'] ?? ( $row['object_subtype'] ?? '' ) ) ) ), $whom );
+				return sprintf( __( '%1$s gave the role %2$s to %3$s', 'nf-logbook' ), $who, esc_html( self::role( self::scalar( $context['role'] ?? ( $row['object_subtype'] ?? '' ) ) ) ), $whom );
 			case 'user.role_removed':
 				/* translators: 1: person, 2: role, 3: user */
-				return sprintf( __( '%1$s removed the role %2$s from %3$s', 'noformat-logger' ), $who, esc_html( self::role( self::scalar( $context['role'] ?? ( $row['object_subtype'] ?? '' ) ) ) ), $whom );
+				return sprintf( __( '%1$s removed the role %2$s from %3$s', 'nf-logbook' ), $who, esc_html( self::role( self::scalar( $context['role'] ?? ( $row['object_subtype'] ?? '' ) ) ) ), $whom );
 			case 'user.deleted':
 				/* translators: 1: person, 2: user */
-				return sprintf( __( '%1$s deleted the user %2$s', 'noformat-logger' ), $who, $whom );
+				return sprintf( __( '%1$s deleted the user %2$s', 'nf-logbook' ), $who, $whom );
 			case 'user.super_admin_granted':
 				/* translators: 1: person, 2: user */
-				return sprintf( __( '%1$s made %2$s a super admin', 'noformat-logger' ), $who, $whom );
+				return sprintf( __( '%1$s made %2$s a super admin', 'nf-logbook' ), $who, $whom );
 			case 'user.super_admin_revoked':
 				/* translators: 1: person, 2: user */
-				return sprintf( __( '%1$s revoked super admin from %2$s', 'noformat-logger' ), $who, $whom );
+				return sprintf( __( '%1$s revoked super admin from %2$s', 'nf-logbook' ), $who, $whom );
 			case 'user.password_reset':
 				return $self
 					/* translators: %s: person */
-					? sprintf( __( '%s reset their password', 'noformat-logger' ), $who )
+					? sprintf( __( '%s reset their password', 'nf-logbook' ), $who )
 					/* translators: 1: person, 2: user */
-					: sprintf( __( '%1$s reset the password of %2$s', 'noformat-logger' ), $who, $whom );
+					: sprintf( __( '%1$s reset the password of %2$s', 'nf-logbook' ), $who, $whom );
 			case 'user.password_reset_requested':
 				/* translators: 1: person, 2: user */
-				return sprintf( __( '%1$s requested a password reset for %2$s', 'noformat-logger' ), $who, $whom );
+				return sprintf( __( '%1$s requested a password reset for %2$s', 'nf-logbook' ), $who, $whom );
 		}
 		return null;
 	}
@@ -935,17 +935,17 @@ final class Humanizer {
 		if ( 'widget.updated' === $action ) {
 			$op = self::scalar( $context['operation'] ?? 'updated' );
 			/* translators: 1: person, 2: added / updated / removed, 3: widget id */
-			return sprintf( __( '%1$s %2$s the widget %3$s', 'noformat-logger' ), $who, esc_html( self::verb( $op ) ), $id );
+			return sprintf( __( '%1$s %2$s the widget %3$s', 'nf-logbook' ), $who, esc_html( self::verb( $op ) ), $id );
 		}
 		if ( 'sidebar.updated' === $action ) {
 			/* translators: 1: person, 2: sidebar id */
-			return sprintf( __( '%1$s rearranged the widgets in %2$s', 'noformat-logger' ), $who, $id );
+			return sprintf( __( '%1$s rearranged the widgets in %2$s', 'nf-logbook' ), $who, $id );
 		}
 		if ( 'customizer.saved' === $action ) {
 			$setting = self::scalar( $row['object_id'] ?? '' );
 			$label   = self::knownLabel( $setting );
 			/* translators: 1: person, 2: Customizer setting */
-			return sprintf( __( '%1$s changed %2$s in the Customizer', 'noformat-logger' ), $who, null === $label ? $id : '<strong>' . esc_html( $label ) . '</strong>' );
+			return sprintf( __( '%1$s changed %2$s in the Customizer', 'nf-logbook' ), $who, null === $label ? $id : '<strong>' . esc_html( $label ) . '</strong>' );
 		}
 		return null;
 	}
@@ -959,18 +959,18 @@ final class Humanizer {
 	 * @param array<mixed> $context Context.
 	 */
 	private function privacy( string $action, string $who, array $row, array $context ): ?string {
-		$whom = 'user' === ( $row['object_type'] ?? '' ) ? $this->userPhrase( Resolver::numericId( $row['object_id'] ?? null ) ) : esc_html__( 'a person without an account', 'noformat-logger' );
+		$whom = 'user' === ( $row['object_type'] ?? '' ) ? $this->userPhrase( Resolver::numericId( $row['object_id'] ?? null ) ) : esc_html__( 'a person without an account', 'nf-logbook' );
 		return match ( $action ) {
 			/* translators: %s: person */
-			'privacy.export_started'          => sprintf( __( '%s exported the site content', 'noformat-logger' ), $who ),
+			'privacy.export_started'          => sprintf( __( '%s exported the site content', 'nf-logbook' ), $who ),
 			/* translators: 1: person, 2: importer */
-			'privacy.import_started'          => sprintf( __( '%1$s started an import (%2$s)', 'noformat-logger' ), $who, esc_html( self::scalar( $context['importer'] ?? '' ) ) ),
+			'privacy.import_started'          => sprintf( __( '%1$s started an import (%2$s)', 'nf-logbook' ), $who, esc_html( self::scalar( $context['importer'] ?? '' ) ) ),
 			/* translators: 1: person, 2: importer */
-			'privacy.import_finished'         => sprintf( __( '%1$s finished an import (%2$s)', 'noformat-logger' ), $who, esc_html( self::scalar( $context['importer'] ?? '' ) ) ),
+			'privacy.import_finished'         => sprintf( __( '%1$s finished an import (%2$s)', 'nf-logbook' ), $who, esc_html( self::scalar( $context['importer'] ?? '' ) ) ),
 			/* translators: 1: person, 2: user */
-			'privacy.personal_data_exported'  => sprintf( __( '%1$s exported the personal data of %2$s', 'noformat-logger' ), $who, $whom ),
+			'privacy.personal_data_exported'  => sprintf( __( '%1$s exported the personal data of %2$s', 'nf-logbook' ), $who, $whom ),
 			/* translators: 1: person, 2: user */
-			'privacy.personal_data_erased'    => sprintf( __( '%1$s erased the personal data of %2$s', 'noformat-logger' ), $who, $whom ),
+			'privacy.personal_data_erased'    => sprintf( __( '%1$s erased the personal data of %2$s', 'nf-logbook' ), $who, $whom ),
 			default                           => null,
 		};
 	}
@@ -994,14 +994,14 @@ final class Humanizer {
 		$clear = null !== $title && is_string( $title['new'] ?? null ) ? $title['new'] : null;
 		$coded = null !== $title && ( is_array( $title['new'] ?? null ) || is_array( $title['old'] ?? null ) );
 		if ( ( null !== $post && $post['private'] ) || ( null === $post && $coded ) ) {
-			return '<span class="nflog-private">' . esc_html__( 'a private item', 'noformat-logger' ) . '</span>';
+			return '<span class="nflog-private">' . esc_html__( 'a private item', 'nf-logbook' ) . '</span>';
 		}
 		if ( null === $post ) {
 			if ( null !== $clear && '' !== $clear ) {
 				$name = '<em>' . esc_html( $clear ) . '</em>';
 			} else {
 				/* translators: 1: post type name, 2: post id */
-				return esc_html( sprintf( __( 'the %1$s #%2$s', 'noformat-logger' ), $type, (string) $id ) );
+				return esc_html( sprintf( __( 'the %1$s #%2$s', 'nf-logbook' ), $type, (string) $id ) );
 			}
 		} else {
 			$name = self::linked( $post['title'], $post['url'] );
@@ -1010,7 +1010,7 @@ final class Humanizer {
 			return $name;
 		}
 		/* translators: 1: post type name, e.g. page, 2: title */
-		return sprintf( __( 'the %1$s %2$s', 'noformat-logger' ), esc_html( $type ), $name );
+		return sprintf( __( 'the %1$s %2$s', 'nf-logbook' ), esc_html( $type ), $name );
 	}
 
 	/**
@@ -1023,19 +1023,19 @@ final class Humanizer {
 		$id   = Resolver::numericId( $row['object_id'] ?? null );
 		if ( 'user' === $type ) {
 			if ( 'user' === ( $row['actor_type'] ?? '' ) && null !== $id && $id === Resolver::numericId( $row['actor_id'] ?? null ) ) {
-				return esc_html__( 'their profile', 'noformat-logger' );
+				return esc_html__( 'their profile', 'nf-logbook' );
 			}
 			/* translators: %s: user */
-			return sprintf( __( 'the user %s', 'noformat-logger' ), $this->userPhrase( $id ) );
+			return sprintf( __( 'the user %s', 'nf-logbook' ), $this->userPhrase( $id ) );
 		}
 		if ( 'term' === $type ) {
 			$name = null === $id ? null : $this->resolver->termName( $id );
 			/* translators: %s: term name or id */
-			return null === $name ? esc_html( sprintf( __( 'the term #%s', 'noformat-logger' ), (string) $id ) ) : sprintf( __( 'the term %s', 'noformat-logger' ), '<em>' . esc_html( $name ) . '</em>' );
+			return null === $name ? esc_html( sprintf( __( 'the term #%s', 'nf-logbook' ), (string) $id ) ) : sprintf( __( 'the term %s', 'nf-logbook' ), '<em>' . esc_html( $name ) . '</em>' );
 		}
 		if ( 'comment' === $type ) {
 			/* translators: %s: comment id */
-			return esc_html( sprintf( __( 'comment #%s', 'noformat-logger' ), (string) $id ) );
+			return esc_html( sprintf( __( 'comment #%s', 'nf-logbook' ), (string) $id ) );
 		}
 		if ( 'post' === $type ) {
 			return $this->postPhrase( [ 'object_id' => $row['object_id'] ?? null ], [] );
@@ -1062,7 +1062,7 @@ final class Humanizer {
 			}
 		}
 		/* translators: %s: menu item title */
-		return null === $name ? esc_html__( 'a menu item', 'noformat-logger' ) : sprintf( __( 'the menu item %s', 'noformat-logger' ), '<em>' . esc_html( $name ) . '</em>' );
+		return null === $name ? esc_html__( 'a menu item', 'nf-logbook' ) : sprintf( __( 'the menu item %s', 'nf-logbook' ), '<em>' . esc_html( $name ) . '</em>' );
 	}
 
 	/**
@@ -1076,10 +1076,10 @@ final class Humanizer {
 		$name = $name ?? $fallback;
 		if ( null === $name ) {
 			/* translators: %s: menu id */
-			return null === $id ? esc_html__( 'a menu', 'noformat-logger' ) : esc_html( sprintf( __( 'the menu #%s', 'noformat-logger' ), (string) $id ) );
+			return null === $id ? esc_html__( 'a menu', 'nf-logbook' ) : esc_html( sprintf( __( 'the menu #%s', 'nf-logbook' ), (string) $id ) );
 		}
 		/* translators: %s: menu name */
-		return sprintf( __( 'the menu %s', 'noformat-logger' ), '<strong>' . esc_html( $name ) . '</strong>' );
+		return sprintf( __( 'the menu %s', 'nf-logbook' ), '<strong>' . esc_html( $name ) . '</strong>' );
 	}
 
 	/**
@@ -1089,7 +1089,7 @@ final class Humanizer {
 	 */
 	private function userPhrase( ?int $id ): string {
 		if ( null === $id ) {
-			return esc_html__( 'an unknown user', 'noformat-logger' );
+			return esc_html__( 'an unknown user', 'nf-logbook' );
 		}
 		$user = $this->resolver->userInfo( $id );
 		return '<strong>' . esc_html( $user['name'] ) . '</strong>';
@@ -1120,9 +1120,9 @@ final class Humanizer {
 			}
 		}
 		return match ( $type ) {
-			'page'       => __( 'page', 'noformat-logger' ),
-			'post'       => __( 'post', 'noformat-logger' ),
-			'attachment' => __( 'file', 'noformat-logger' ),
+			'page'       => __( 'page', 'nf-logbook' ),
+			'post'       => __( 'post', 'nf-logbook' ),
+			'attachment' => __( 'file', 'nf-logbook' ),
 			default      => strtolower( self::humanize( $type ) ),
 		};
 	}
@@ -1145,9 +1145,9 @@ final class Humanizer {
 			}
 		}
 		return match ( $taxonomy ) {
-			'category' => $plural ? __( 'categories', 'noformat-logger' ) : __( 'category', 'noformat-logger' ),
-			'post_tag' => $plural ? __( 'tags', 'noformat-logger' ) : __( 'tag', 'noformat-logger' ),
-			''         => $plural ? __( 'terms', 'noformat-logger' ) : __( 'term', 'noformat-logger' ),
+			'category' => $plural ? __( 'categories', 'nf-logbook' ) : __( 'category', 'nf-logbook' ),
+			'post_tag' => $plural ? __( 'tags', 'nf-logbook' ) : __( 'tag', 'nf-logbook' ),
+			''         => $plural ? __( 'terms', 'nf-logbook' ) : __( 'term', 'nf-logbook' ),
 			default    => strtolower( self::humanize( $taxonomy ) ),
 		};
 	}
@@ -1159,7 +1159,7 @@ final class Humanizer {
 	 */
 	private static function role( string $role ): string {
 		if ( '' === $role ) {
-			return __( 'no role', 'noformat-logger' );
+			return __( 'no role', 'nf-logbook' );
 		}
 		$names = [];
 		foreach ( explode( ',', $role ) as $slug ) {
@@ -1182,13 +1182,13 @@ final class Humanizer {
 	private static function status( mixed $status ): string {
 		$status = self::scalar( $status );
 		$label  = match ( $status ) {
-			'publish' => __( 'published', 'noformat-logger' ),
-			'draft'   => __( 'draft', 'noformat-logger' ),
-			'pending' => __( 'pending review', 'noformat-logger' ),
-			'private' => __( 'private', 'noformat-logger' ),
-			'future'  => __( 'scheduled', 'noformat-logger' ),
-			'trash'   => __( 'trash', 'noformat-logger' ),
-			'new'     => __( 'new', 'noformat-logger' ),
+			'publish' => __( 'published', 'nf-logbook' ),
+			'draft'   => __( 'draft', 'nf-logbook' ),
+			'pending' => __( 'pending review', 'nf-logbook' ),
+			'private' => __( 'private', 'nf-logbook' ),
+			'future'  => __( 'scheduled', 'nf-logbook' ),
+			'trash'   => __( 'trash', 'nf-logbook' ),
+			'new'     => __( 'new', 'nf-logbook' ),
 			default   => $status,
 		};
 		return esc_html( $label );
@@ -1201,16 +1201,16 @@ final class Humanizer {
 	 */
 	private static function verb( string $op ): string {
 		return match ( $op ) {
-			'added'       => __( 'added', 'noformat-logger' ),
-			'removed'     => __( 'removed', 'noformat-logger' ),
-			'duplicated'  => __( 'duplicated', 'noformat-logger' ),
-			'trashed'     => __( 'trashed', 'noformat-logger' ),
-			'restored'    => __( 'restored', 'noformat-logger' ),
-			'deleted'     => __( 'deleted', 'noformat-logger' ),
-			'installed'   => __( 'installed', 'noformat-logger' ),
-			'activated'   => __( 'activated', 'noformat-logger' ),
-			'deactivated' => __( 'deactivated', 'noformat-logger' ),
-			default       => __( 'updated', 'noformat-logger' ),
+			'added'       => __( 'added', 'nf-logbook' ),
+			'removed'     => __( 'removed', 'nf-logbook' ),
+			'duplicated'  => __( 'duplicated', 'nf-logbook' ),
+			'trashed'     => __( 'trashed', 'nf-logbook' ),
+			'restored'    => __( 'restored', 'nf-logbook' ),
+			'deleted'     => __( 'deleted', 'nf-logbook' ),
+			'installed'   => __( 'installed', 'nf-logbook' ),
+			'activated'   => __( 'activated', 'nf-logbook' ),
+			'deactivated' => __( 'deactivated', 'nf-logbook' ),
+			default       => __( 'updated', 'nf-logbook' ),
 		};
 	}
 
@@ -1221,9 +1221,9 @@ final class Humanizer {
 	 */
 	private static function infinitive( string $op ): string {
 		return match ( $op ) {
-			'installed' => __( 'install', 'noformat-logger' ),
-			'deleted'   => __( 'delete', 'noformat-logger' ),
-			default     => __( 'update', 'noformat-logger' ),
+			'installed' => __( 'install', 'nf-logbook' ),
+			'deleted'   => __( 'delete', 'nf-logbook' ),
+			default     => __( 'update', 'nf-logbook' ),
 		};
 	}
 
@@ -1236,11 +1236,11 @@ final class Humanizer {
 	private static function mediaKind( string $mime ): array {
 		$major = strtolower( (string) strstr( $mime . '/', '/', true ) );
 		return match ( true ) {
-			'image' === $major            => [ __( 'an image', 'noformat-logger' ), __( 'image', 'noformat-logger' ) ],
-			'video' === $major            => [ __( 'a video', 'noformat-logger' ), __( 'video', 'noformat-logger' ) ],
-			'audio' === $major            => [ __( 'an audio file', 'noformat-logger' ), __( 'audio file', 'noformat-logger' ) ],
-			'application/pdf' === $mime   => [ __( 'a PDF', 'noformat-logger' ), __( 'PDF', 'noformat-logger' ) ],
-			default                       => [ __( 'a file', 'noformat-logger' ), __( 'file', 'noformat-logger' ) ],
+			'image' === $major            => [ __( 'an image', 'nf-logbook' ), __( 'image', 'nf-logbook' ) ],
+			'video' === $major            => [ __( 'a video', 'nf-logbook' ), __( 'video', 'nf-logbook' ) ],
+			'audio' === $major            => [ __( 'an audio file', 'nf-logbook' ), __( 'audio file', 'nf-logbook' ) ],
+			'application/pdf' === $mime   => [ __( 'a PDF', 'nf-logbook' ), __( 'PDF', 'nf-logbook' ) ],
+			default                       => [ __( 'a file', 'nf-logbook' ), __( 'file', 'nf-logbook' ) ],
 		};
 	}
 
@@ -1252,7 +1252,7 @@ final class Humanizer {
 	public static function bytes( int $bytes ): string {
 		if ( $bytes < 1024 ) {
 			/* translators: %s: number of bytes */
-			return sprintf( _n( '%s byte', '%s bytes', $bytes, 'noformat-logger' ), number_format_i18n( $bytes ) );
+			return sprintf( _n( '%s byte', '%s bytes', $bytes, 'nf-logbook' ), number_format_i18n( $bytes ) );
 		}
 		$units = [ 'KB', 'MB', 'GB', 'TB' ];
 		$value = (float) $bytes;
@@ -1278,7 +1278,7 @@ final class Humanizer {
 		}
 		$last = array_pop( $items );
 		/* translators: 1: comma separated items, 2: last item */
-		return sprintf( __( '%1$s and %2$s', 'noformat-logger' ), implode( _x( ', ', 'list separator', 'noformat-logger' ), $items ), $last );
+		return sprintf( __( '%1$s and %2$s', 'nf-logbook' ), implode( _x( ', ', 'list separator', 'nf-logbook' ), $items ), $last );
 	}
 
 	/**

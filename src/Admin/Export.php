@@ -59,7 +59,7 @@ final class Export {
 		$config  = $this->plugin->config();
 		$allowed = Scope::SYSTEM === $scope ? Access::canViewSystemLog( $config ) : Access::canViewEvents( $config );
 		if ( ! $allowed ) {
-			wp_die( esc_html__( 'You are not allowed to export the Noformat Logger event log.', 'noformat-logger' ), 403 );
+			wp_die( esc_html__( 'You are not allowed to export the Noformat Logbook event log.', 'nf-logbook' ), 403 );
 		}
 		$host = (string) wp_parse_url( home_url(), PHP_URL_HOST );
 		$name = 'nflog-' . ( Scope::SYSTEM === $scope ? 'system' : 'content' ) . '-' . sanitize_file_name( '' === $host ? 'site' : $host ) . '-' . gmdate( 'Ymd-His' ) . '.json';
@@ -162,7 +162,7 @@ final class Export {
 			'events_exported',
 			static fn() => $logger->log(
 				Event::make( Category::SYSTEM, 'logger.events_exported', Severity::NOTICE )
-					->object( 'plugin', 'noformat-logger' )
+					->object( 'plugin', 'nf-logbook' )
 					->summary( sprintf( 'Event log exported from wp-admin (%d events)', $count ) )
 					->context(
 						[
@@ -193,7 +193,7 @@ final class Export {
 			'events_viewed',
 			static fn() => $logger->log(
 				Event::make( Category::SYSTEM, 'logger.events_viewed', Severity::DEBUG )
-					->object( 'plugin', 'noformat-logger' )
+					->object( 'plugin', 'nf-logbook' )
 					->summary( 'Event log viewed in wp-admin' )
 					->context(
 						[

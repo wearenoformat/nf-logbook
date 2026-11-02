@@ -24,7 +24,7 @@ final class PathMapperTest extends TestCase {
 				'/srv/content/mu-plugins'       => 'wp-content/mu-plugins',
 				'/srv/content/themes'           => 'wp-content/themes',
 				'/home/dev/repos/my-plugin'     => 'wp-content/plugins/my-plugin',
-				'/home/dev/repos/noformat-log/' => 'wp-content/plugins/noformat-logger',
+				'/home/dev/repos/noformat-log/' => 'wp-content/plugins/nf-logbook',
 			],
 			'/home/dev/repos/noformat-log/src'
 		);
@@ -86,7 +86,7 @@ final class PathMapperTest extends TestCase {
 	public function test_own_files(): void {
 		$m = $this->mapper();
 		self::assertTrue( $m->isOwn( '/home/dev/repos/noformat-log/src/Logger.php' ) );
-		self::assertFalse( $m->isOwn( '/home/dev/repos/noformat-log/noformat-logger.php' ) );
+		self::assertFalse( $m->isOwn( '/home/dev/repos/noformat-log/nf-logbook.php' ) );
 		self::assertFalse( $m->isOwn( '/srv/www/wp-includes/load.php' ) );
 	}
 

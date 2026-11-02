@@ -187,24 +187,24 @@ final class Stories {
 		$nField = array_sum( $fields );
 		if ( $nField > 0 ) {
 			/* translators: %s: number of fields */
-			$parts[] = sprintf( _n( '%s field', '%s fields', $nField, 'noformat-logger' ), number_format_i18n( $nField ) );
+			$parts[] = sprintf( _n( '%s field', '%s fields', $nField, 'nf-logbook' ), number_format_i18n( $nField ) );
 		}
 		foreach ( $terms as $taxonomy => $count ) {
 			/* translators: 1: number, 2: taxonomy name (category, categories, tag, tags, …) */
-			$parts[] = sprintf( __( '%1$s %2$s', 'noformat-logger' ), number_format_i18n( $count ), Humanizer::taxonomyLabel( (string) $taxonomy, 1 !== $count ) );
+			$parts[] = sprintf( __( '%1$s %2$s', 'nf-logbook' ), number_format_i18n( $count ), Humanizer::taxonomyLabel( (string) $taxonomy, 1 !== $count ) );
 		}
 		if ( $files > 0 ) {
 			/* translators: %s: number of files */
-			$parts[] = sprintf( _n( '%s file', '%s files', $files, 'noformat-logger' ), number_format_i18n( $files ) );
+			$parts[] = sprintf( _n( '%s file', '%s files', $files, 'nf-logbook' ), number_format_i18n( $files ) );
 		}
 		if ( $other > 0 ) {
 			/* translators: %s: number of other changes */
-			$parts[] = sprintf( _n( '%s other change', '%s other changes', $other, 'noformat-logger' ), number_format_i18n( $other ) );
+			$parts[] = sprintf( _n( '%s other change', '%s other changes', $other, 'nf-logbook' ), number_format_i18n( $other ) );
 		}
 		$missing = $story['events'] - 1 - count( $story['secondary'] );
 		if ( $missing > 0 ) {
 			/* translators: %s: number of changes not loaded */
-			$parts[] = sprintf( _n( '%s more change', '%s more changes', $missing, 'noformat-logger' ), number_format_i18n( $missing ) );
+			$parts[] = sprintf( _n( '%s more change', '%s more changes', $missing, 'nf-logbook' ), number_format_i18n( $missing ) );
 		}
 		return $parts;
 	}
@@ -220,12 +220,12 @@ final class Stories {
 		if ( [] === $parts ) {
 			return '';
 		}
-		$list = implode( _x( ', ', 'list separator', 'noformat-logger' ), $parts );
+		$list = implode( _x( ', ', 'list separator', 'nf-logbook' ), $parts );
 		return self::onlyThings( $story )
 			/* translators: %s: list such as "5 fields" or "2 fields, 1 category" */
-			? sprintf( __( 'and %s changed', 'noformat-logger' ), $list )
+			? sprintf( __( 'and %s changed', 'nf-logbook' ), $list )
 			/* translators: %s: list such as "2 fields, 1 other change" */
-			: sprintf( __( 'and %s', 'noformat-logger' ), $list );
+			: sprintf( __( 'and %s', 'nf-logbook' ), $list );
 	}
 
 	/**

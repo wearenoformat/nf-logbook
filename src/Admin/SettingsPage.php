@@ -1,6 +1,6 @@
 <?php
 /**
- * Tools → Noformat Logger → Settings.
+ * Tools → Noformat Logbook → Settings.
  *
  * @package Noformat\Logger
  */
@@ -126,26 +126,26 @@ final class SettingsPage {
 	 */
 	public function render( string $tabs = '' ): void {
 		echo '<div class="wrap nflog-wrap"><div class="nflog-page nflog-page--settings">' . $tabs; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Menu::tabBar() escapes.
-		echo Ui::header( __( 'Settings', 'noformat-logger' ), __( 'Retention, privacy, access and what is recorded', 'noformat-logger' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+		echo Ui::header( __( 'Settings', 'nf-logbook' ), __( 'Retention, privacy, access and what is recorded', 'nf-logbook' ) ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 		if ( ! current_user_can( 'manage_options' ) ) {
-			echo '<div class="nflog-card">' . Ui::empty( __( 'Only administrators can change these settings.', 'noformat-logger' ), '' ) . '</div></div></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+			echo '<div class="nflog-card">' . Ui::empty( __( 'Only administrators can change these settings.', 'nf-logbook' ), '' ) . '</div></div></div>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 			return;
 		}
 		if ( isset( $_GET['settings-updated'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- display only.
-			echo Ui::notice( __( 'Settings saved.', 'noformat-logger' ), 'success' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
+			echo Ui::notice( __( 'Settings saved.', 'nf-logbook' ), 'success' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Ui escapes.
 		}
 		$config = $this->plugin->config();
 		echo '<form method="post" action="options.php" class="nflog-settings">';
 		settings_fields( self::GROUP );
 
 		$this->section(
-			__( 'Storage & retention', 'noformat-logger' ),
-			__( 'How long events are kept in this site\'s database.', 'noformat-logger' ),
+			__( 'Storage & retention', 'nf-logbook' ),
+			__( 'How long events are kept in this site\'s database.', 'nf-logbook' ),
 			function () use ( $config ): void {
 				$numbers = [
-					'retention_days' => [ __( 'Retention (days)', 'noformat-logger' ), __( 'Events older than this are pruned daily unless the Controlroom has not acknowledged them yet.', 'noformat-logger' ) ],
-					'hard_max_days'  => [ __( 'Hard maximum (days)', 'noformat-logger' ), __( 'Events older than this are pruned even if unacknowledged.', 'noformat-logger' ) ],
-					'max_rows'       => [ __( 'Maximum stored events', 'noformat-logger' ), __( 'When exceeded, the oldest acknowledged or low-severity events are pruned first.', 'noformat-logger' ) ],
+					'retention_days' => [ __( 'Retention (days)', 'nf-logbook' ), __( 'Events older than this are pruned daily unless the Controlroom has not acknowledged them yet.', 'nf-logbook' ) ],
+					'hard_max_days'  => [ __( 'Hard maximum (days)', 'nf-logbook' ), __( 'Events older than this are pruned even if unacknowledged.', 'nf-logbook' ) ],
+					'max_rows'       => [ __( 'Maximum stored events', 'nf-logbook' ), __( 'When exceeded, the oldest acknowledged or low-severity events are pruned first.', 'nf-logbook' ) ],
 				];
 				echo '<div class="nflog-grid nflog-grid--3">';
 				foreach ( $numbers as $name => [ $label, $description ] ) {
@@ -160,54 +160,54 @@ final class SettingsPage {
 					);
 				}
 				echo '</div>';
-				$this->toggle( 'log_debug', __( 'Debug events', 'noformat-logger' ), __( 'Also store debug-severity events, including technical fields such as login timestamps and screen preferences (noisy).', 'noformat-logger' ) );
-				$this->toggle( 'delete_data_on_uninstall', __( 'Delete data on uninstall', 'noformat-logger' ), __( 'Drop the log tables, settings and key when the plugin is deleted.', 'noformat-logger' ) );
+				$this->toggle( 'log_debug', __( 'Debug events', 'nf-logbook' ), __( 'Also store debug-severity events, including technical fields such as login timestamps and screen preferences (noisy).', 'nf-logbook' ) );
+				$this->toggle( 'delete_data_on_uninstall', __( 'Delete data on uninstall', 'nf-logbook' ), __( 'Drop the log tables, settings and key when the plugin is deleted.', 'nf-logbook' ) );
 			}
 		);
 
 		$this->section(
-			__( 'Privacy', 'noformat-logger' ),
-			__( 'The log keeps ids and hashes; names and titles are only looked up while you view it.', 'noformat-logger' ),
+			__( 'Privacy', 'nf-logbook' ),
+			__( 'The log keeps ids and hashes; names and titles are only looked up while you view it.', 'nf-logbook' ),
 			function (): void {
-				$this->toggle( 'full_content_diff', __( 'Full content diffs', 'noformat-logger' ), __( 'Store full text diffs of post content instead of a hash and size delta. Off by default for privacy.', 'noformat-logger' ) );
+				$this->toggle( 'full_content_diff', __( 'Full content diffs', 'nf-logbook' ), __( 'Store full text diffs of post content instead of a hash and size delta. Off by default for privacy.', 'nf-logbook' ) );
 			}
 		);
 
 		$this->section(
-			__( 'Access', 'noformat-logger' ),
-			__( 'Who can read the logs in wp-admin. The capability noformat_logger_view_events is assigned to no role on install.', 'noformat-logger' ),
+			__( 'Access', 'nf-logbook' ),
+			__( 'Who can read the logs in wp-admin. The capability noformat_logger_view_events is assigned to no role on install.', 'nf-logbook' ),
 			function () use ( $config ): void {
 				echo '<div class="nflog-grid nflog-grid--2">';
-				$this->accessChoice( 'events_visible_to', __( 'Content log, its export and the dashboard widget', 'noformat-logger' ), Access::mode( $config ), 'NOFORMAT_LOGGER_EVENTS_VISIBLE_TO' );
-				$this->accessChoice( 'system_log_visible_to', __( 'System log (developer console), its export and live tail', 'noformat-logger' ), Access::systemMode( $config ), 'NOFORMAT_LOGGER_SYSTEM_LOG_VISIBLE_TO' );
+				$this->accessChoice( 'events_visible_to', __( 'Content log, its export and the dashboard widget', 'nf-logbook' ), Access::mode( $config ), 'NOFORMAT_LOGGER_EVENTS_VISIBLE_TO' );
+				$this->accessChoice( 'system_log_visible_to', __( 'System log (developer console), its export and live tail', 'nf-logbook' ), Access::systemMode( $config ), 'NOFORMAT_LOGGER_SYSTEM_LOG_VISIBLE_TO' );
 				echo '</div>';
 			}
 		);
 
 		$this->section(
-			__( 'Controlroom API', 'noformat-logger' ),
-			__( 'The Noformat Controlroom reads the log through the signed API. Keys are managed on the Status page.', 'noformat-logger' ),
+			__( 'Controlroom API', 'nf-logbook' ),
+			__( 'The Noformat Controlroom reads the log through the signed API. Keys are managed on the Status page.', 'nf-logbook' ),
 			function () use ( $config ): void {
 				$settings = $config->all();
 				$allow    = is_array( $settings['ip_allowlist'] ?? null ) ? implode( "\n", $settings['ip_allowlist'] ) : '';
 				printf(
 					'<div class="nflog-field"><label class="nflog-label" for="nflog-ip">%1$s</label><textarea id="nflog-ip" rows="3" class="nflog-input nflog-input--mono nflog-textarea" aria-describedby="nflog-ip-description" name="%2$s[ip_allowlist]">%3$s</textarea><p class="nflog-help" id="nflog-ip-description">%4$s</p></div>',
-					esc_html__( 'API IP allowlist', 'noformat-logger' ),
+					esc_html__( 'API IP allowlist', 'nf-logbook' ),
 					esc_attr( Config::OPTION ),
 					esc_textarea( $allow ),
-					esc_html__( 'Addresses allowed to call the signed Controlroom API. One IP or CIDR per line; empty allows any IP (the signature is still required).', 'noformat-logger' )
+					esc_html__( 'Addresses allowed to call the signed Controlroom API. One IP or CIDR per line; empty allows any IP (the signature is still required).', 'nf-logbook' )
 				);
 			}
 		);
 
 		$this->section(
-			__( 'Modules', 'noformat-logger' ),
-			__( 'Untick to disable a listener on this site.', 'noformat-logger' ),
+			__( 'Modules', 'nf-logbook' ),
+			__( 'Untick to disable a listener on this site.', 'nf-logbook' ),
 			function () use ( $config ): void {
 				$modules = $this->plugin->modules();
 				foreach ( [
-					'content' => __( 'Content', 'noformat-logger' ),
-					'system'  => __( 'System', 'noformat-logger' ),
+					'content' => __( 'Content', 'nf-logbook' ),
+					'system'  => __( 'System', 'nf-logbook' ),
 				] as $scope => $heading ) {
 					echo '<h3 class="nflog-subheading">' . esc_html( $heading ) . '</h3><div class="nflog-modules">';
 					foreach ( $modules as $slug => $status ) {
@@ -223,7 +223,7 @@ final class SettingsPage {
 							disabled( $config->isPinned( 'module:' . $slug ), true, false ),
 							esc_html( self::moduleLabel( $slug ) ),
 							esc_html( self::moduleDescription( $slug ) ),
-							$status['available'] ? '' : '<span class="nflog-module__note">' . esc_html__( 'Not available on this site', 'noformat-logger' ) . '</span>'
+							$status['available'] ? '' : '<span class="nflog-module__note">' . esc_html__( 'Not available on this site', 'nf-logbook' ) . '</span>'
 						);
 					}
 					echo '</div>';
@@ -231,7 +231,7 @@ final class SettingsPage {
 			}
 		);
 
-		echo '<div class="nflog-settings__actions"><button type="submit" class="nflog-btn nflog-btn--primary" name="submit" id="submit">' . esc_html__( 'Save settings', 'noformat-logger' ) . '</button></div>';
+		echo '<div class="nflog-settings__actions"><button type="submit" class="nflog-btn nflog-btn--primary" name="submit" id="submit">' . esc_html__( 'Save settings', 'nf-logbook' ) . '</button></div>';
 		echo '</form></div></div>';
 	}
 
@@ -279,8 +279,8 @@ final class SettingsPage {
 	private function accessChoice( string $name, string $legend, string $mode, string $constant ): void {
 		$config  = $this->plugin->config();
 		$choices = [
-			Access::ADMINISTRATORS  => [ __( 'Administrators', 'noformat-logger' ), __( 'manage_options, plus anyone with the noformat_logger_view_events capability', 'noformat-logger' ) ],
-			Access::CAPABILITY_ONLY => [ __( 'Capability only', 'noformat-logger' ), __( 'only users with noformat_logger_view_events (client sites)', 'noformat-logger' ) ],
+			Access::ADMINISTRATORS  => [ __( 'Administrators', 'nf-logbook' ), __( 'manage_options, plus anyone with the noformat_logger_view_events capability', 'nf-logbook' ) ],
+			Access::CAPABILITY_ONLY => [ __( 'Capability only', 'nf-logbook' ), __( 'only users with noformat_logger_view_events (client sites)', 'nf-logbook' ) ],
 		];
 		echo '<fieldset class="nflog-radios"><legend class="nflog-label">' . esc_html( $legend ) . '</legend>';
 		foreach ( $choices as $value => [ $label, $help ] ) {
@@ -296,7 +296,7 @@ final class SettingsPage {
 			);
 		}
 		/* translators: %s: constant name */
-		echo '<p class="nflog-help">' . esc_html( sprintf( __( 'Constant: %s.', 'noformat-logger' ), $constant ) . $this->pinnedNote( $name ) ) . '</p></fieldset>';
+		echo '<p class="nflog-help">' . esc_html( sprintf( __( 'Constant: %s.', 'nf-logbook' ), $constant ) . $this->pinnedNote( $name ) ) . '</p></fieldset>';
 	}
 
 	/**
@@ -305,7 +305,7 @@ final class SettingsPage {
 	 * @param string $name Setting.
 	 */
 	private function pinnedNote( string $name ): string {
-		return $this->plugin->config()->isPinned( $name ) ? ' ' . __( 'Set in wp-config.php.', 'noformat-logger' ) : '';
+		return $this->plugin->config()->isPinned( $name ) ? ' ' . __( 'Set in wp-config.php.', 'nf-logbook' ) : '';
 	}
 
 	/**
@@ -315,33 +315,33 @@ final class SettingsPage {
 	 */
 	private static function moduleLabel( string $slug ): string {
 		return match ( $slug ) {
-			'PostListener'        => __( 'Posts and pages', 'noformat-logger' ),
-			'MetaListener'        => __( 'Custom fields (meta)', 'noformat-logger' ),
-			'TermListener'        => __( 'Categories and tags', 'noformat-logger' ),
-			'MenuListener'        => __( 'Menus', 'noformat-logger' ),
-			'MediaListener'       => __( 'Media library', 'noformat-logger' ),
-			'CommentListener'     => __( 'Comments', 'noformat-logger' ),
-			'WidgetListener'      => __( 'Widgets', 'noformat-logger' ),
-			'CustomizerListener'  => __( 'Customizer', 'noformat-logger' ),
-			'AcfListener'         => __( 'Advanced Custom Fields', 'noformat-logger' ),
-			'OptionListener'      => __( 'Settings', 'noformat-logger' ),
-			'PluginThemeListener' => __( 'Plugins and themes', 'noformat-logger' ),
-			'CoreListener'        => __( 'WordPress updates', 'noformat-logger' ),
-			'UserListener'        => __( 'Users', 'noformat-logger' ),
-			'PrivacyListener'     => __( 'Export, import and privacy', 'noformat-logger' ),
-			'ErrorHandler'        => __( 'PHP errors', 'noformat-logger' ),
-			'FatalHandler'        => __( 'Fatal errors', 'noformat-logger' ),
-			'DbErrorListener'     => __( 'Database errors', 'noformat-logger' ),
-			'DeprecationListener' => __( 'Deprecations', 'noformat-logger' ),
-			'HttpApiListener'     => __( 'Outbound HTTP', 'noformat-logger' ),
-			'MailListener'        => __( 'Mail', 'noformat-logger' ),
-			'AuthListener'        => __( 'Logins', 'noformat-logger' ),
-			'RestProbeListener'   => __( 'REST probing', 'noformat-logger' ),
-			'XmlRpcListener'      => __( 'XML-RPC', 'noformat-logger' ),
-			'ProbeListener'       => __( 'Suspicious requests', 'noformat-logger' ),
-			'ConfigAudit'         => __( 'Configuration audit', 'noformat-logger' ),
-			'IntegrityCheck'      => __( 'File integrity', 'noformat-logger' ),
-			'HealthReport'        => __( 'Health', 'noformat-logger' ),
+			'PostListener'        => __( 'Posts and pages', 'nf-logbook' ),
+			'MetaListener'        => __( 'Custom fields (meta)', 'nf-logbook' ),
+			'TermListener'        => __( 'Categories and tags', 'nf-logbook' ),
+			'MenuListener'        => __( 'Menus', 'nf-logbook' ),
+			'MediaListener'       => __( 'Media library', 'nf-logbook' ),
+			'CommentListener'     => __( 'Comments', 'nf-logbook' ),
+			'WidgetListener'      => __( 'Widgets', 'nf-logbook' ),
+			'CustomizerListener'  => __( 'Customizer', 'nf-logbook' ),
+			'AcfListener'         => __( 'Advanced Custom Fields', 'nf-logbook' ),
+			'OptionListener'      => __( 'Settings', 'nf-logbook' ),
+			'PluginThemeListener' => __( 'Plugins and themes', 'nf-logbook' ),
+			'CoreListener'        => __( 'WordPress updates', 'nf-logbook' ),
+			'UserListener'        => __( 'Users', 'nf-logbook' ),
+			'PrivacyListener'     => __( 'Export, import and privacy', 'nf-logbook' ),
+			'ErrorHandler'        => __( 'PHP errors', 'nf-logbook' ),
+			'FatalHandler'        => __( 'Fatal errors', 'nf-logbook' ),
+			'DbErrorListener'     => __( 'Database errors', 'nf-logbook' ),
+			'DeprecationListener' => __( 'Deprecations', 'nf-logbook' ),
+			'HttpApiListener'     => __( 'Outbound HTTP', 'nf-logbook' ),
+			'MailListener'        => __( 'Mail', 'nf-logbook' ),
+			'AuthListener'        => __( 'Logins', 'nf-logbook' ),
+			'RestProbeListener'   => __( 'REST probing', 'nf-logbook' ),
+			'XmlRpcListener'      => __( 'XML-RPC', 'nf-logbook' ),
+			'ProbeListener'       => __( 'Suspicious requests', 'nf-logbook' ),
+			'ConfigAudit'         => __( 'Configuration audit', 'nf-logbook' ),
+			'IntegrityCheck'      => __( 'File integrity', 'nf-logbook' ),
+			'HealthReport'        => __( 'Health', 'nf-logbook' ),
 			default               => $slug,
 		};
 	}
@@ -353,33 +353,33 @@ final class SettingsPage {
 	 */
 	private static function moduleDescription( string $slug ): string {
 		return match ( $slug ) {
-			'PostListener'        => __( 'Created, edited, published, trashed and deleted posts, pages and custom post types.', 'noformat-logger' ),
-			'MetaListener'        => __( 'Added, changed and removed meta values on posts, terms, users and comments.', 'noformat-logger' ),
-			'TermListener'        => __( 'Terms created, renamed and deleted, and which terms a post has.', 'noformat-logger' ),
-			'MenuListener'        => __( 'Menus, menu items and menu locations.', 'noformat-logger' ),
-			'MediaListener'       => __( 'Uploads, edited details, regenerated sizes and deleted files.', 'noformat-logger' ),
-			'CommentListener'     => __( 'New, edited, approved, spammed and deleted comments.', 'noformat-logger' ),
-			'WidgetListener'      => __( 'Widgets added, changed, removed or moved between sidebars.', 'noformat-logger' ),
-			'CustomizerListener'  => __( 'Settings saved in the Customizer, including Additional CSS.', 'noformat-logger' ),
-			'AcfListener'         => __( 'Field values, options pages and field group changes.', 'noformat-logger' ),
-			'OptionListener'      => __( 'Changes to site settings; critical options such as the site address are flagged.', 'noformat-logger' ),
-			'PluginThemeListener' => __( 'Installed, activated, updated and deleted plugins and themes, and file editor use.', 'noformat-logger' ),
-			'CoreListener'        => __( 'Core updates and the results of automatic updates.', 'noformat-logger' ),
-			'UserListener'        => __( 'New and deleted users, role changes, application passwords and password resets.', 'noformat-logger' ),
-			'PrivacyListener'     => __( 'Content exports and imports, personal data exports and erasures.', 'noformat-logger' ),
-			'ErrorHandler'        => __( 'Warnings, notices and deprecations, aggregated by file, line and message.', 'noformat-logger' ),
-			'FatalHandler'        => __( 'Fatal errors and uncaught exceptions that stop a request.', 'noformat-logger' ),
-			'DbErrorListener'     => __( 'Failed database queries (normalised, without values).', 'noformat-logger' ),
-			'DeprecationListener' => __( 'Deprecated functions, hooks, arguments and incorrect usage notices.', 'noformat-logger' ),
-			'HttpApiListener'     => __( 'Failed requests to other servers (host and status only).', 'noformat-logger' ),
-			'MailListener'        => __( 'E-mails WordPress could not send.', 'noformat-logger' ),
-			'AuthListener'        => __( 'Logins, logouts, failed logins and bursts of failures.', 'noformat-logger' ),
-			'RestProbeListener'   => __( 'User enumeration and REST authentication errors.', 'noformat-logger' ),
-			'XmlRpcListener'      => __( 'XML-RPC calls, including multicall login attempts.', 'noformat-logger' ),
-			'ProbeListener'       => __( '404s matching known attack patterns (wp-config, .env, backups …).', 'noformat-logger' ),
-			'ConfigAudit'         => __( 'Risky settings such as debug display or file editing, checked daily.', 'noformat-logger' ),
-			'IntegrityCheck'      => __( 'Core and plugin files compared with the official checksums, weekly.', 'noformat-logger' ),
-			'HealthReport'        => __( 'Versions, cron, pending updates and Site Health for the Controlroom.', 'noformat-logger' ),
+			'PostListener'        => __( 'Created, edited, published, trashed and deleted posts, pages and custom post types.', 'nf-logbook' ),
+			'MetaListener'        => __( 'Added, changed and removed meta values on posts, terms, users and comments.', 'nf-logbook' ),
+			'TermListener'        => __( 'Terms created, renamed and deleted, and which terms a post has.', 'nf-logbook' ),
+			'MenuListener'        => __( 'Menus, menu items and menu locations.', 'nf-logbook' ),
+			'MediaListener'       => __( 'Uploads, edited details, regenerated sizes and deleted files.', 'nf-logbook' ),
+			'CommentListener'     => __( 'New, edited, approved, spammed and deleted comments.', 'nf-logbook' ),
+			'WidgetListener'      => __( 'Widgets added, changed, removed or moved between sidebars.', 'nf-logbook' ),
+			'CustomizerListener'  => __( 'Settings saved in the Customizer, including Additional CSS.', 'nf-logbook' ),
+			'AcfListener'         => __( 'Field values, options pages and field group changes.', 'nf-logbook' ),
+			'OptionListener'      => __( 'Changes to site settings; critical options such as the site address are flagged.', 'nf-logbook' ),
+			'PluginThemeListener' => __( 'Installed, activated, updated and deleted plugins and themes, and file editor use.', 'nf-logbook' ),
+			'CoreListener'        => __( 'Core updates and the results of automatic updates.', 'nf-logbook' ),
+			'UserListener'        => __( 'New and deleted users, role changes, application passwords and password resets.', 'nf-logbook' ),
+			'PrivacyListener'     => __( 'Content exports and imports, personal data exports and erasures.', 'nf-logbook' ),
+			'ErrorHandler'        => __( 'Warnings, notices and deprecations, aggregated by file, line and message.', 'nf-logbook' ),
+			'FatalHandler'        => __( 'Fatal errors and uncaught exceptions that stop a request.', 'nf-logbook' ),
+			'DbErrorListener'     => __( 'Failed database queries (normalised, without values).', 'nf-logbook' ),
+			'DeprecationListener' => __( 'Deprecated functions, hooks, arguments and incorrect usage notices.', 'nf-logbook' ),
+			'HttpApiListener'     => __( 'Failed requests to other servers (host and status only).', 'nf-logbook' ),
+			'MailListener'        => __( 'E-mails WordPress could not send.', 'nf-logbook' ),
+			'AuthListener'        => __( 'Logins, logouts, failed logins and bursts of failures.', 'nf-logbook' ),
+			'RestProbeListener'   => __( 'User enumeration and REST authentication errors.', 'nf-logbook' ),
+			'XmlRpcListener'      => __( 'XML-RPC calls, including multicall login attempts.', 'nf-logbook' ),
+			'ProbeListener'       => __( '404s matching known attack patterns (wp-config, .env, backups …).', 'nf-logbook' ),
+			'ConfigAudit'         => __( 'Risky settings such as debug display or file editing, checked daily.', 'nf-logbook' ),
+			'IntegrityCheck'      => __( 'Core and plugin files compared with the official checksums, weekly.', 'nf-logbook' ),
+			'HealthReport'        => __( 'Versions, cron, pending updates and Site Health for the Controlroom.', 'nf-logbook' ),
 			default               => '',
 		};
 	}

@@ -22,8 +22,8 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Release {
 
-	public const SLUG     = 'noformat-logger';
-	public const ZIP      = 'noformat-logger.zip';
+	public const SLUG     = 'nf-logbook';
+	public const ZIP      = 'nf-logbook.zip';
 	public const MANIFEST = 'manifest.json';
 
 	/** Semantic version, optional pre-release / build suffix. */
@@ -156,7 +156,7 @@ final class Release {
 			throw new \UnexpectedValueException( 'manifest.json is not a JSON object.' );
 		}
 		if ( self::SLUG !== ( $data['slug'] ?? null ) ) {
-			throw new \UnexpectedValueException( 'manifest.json is invalid: slug must be "noformat-logger".' );
+			throw new \UnexpectedValueException( 'manifest.json is invalid: slug must be "nf-logbook".' );
 		}
 		if ( ! self::isVersion( $data['version'] ?? null ) ) {
 			throw new \UnexpectedValueException( 'manifest.json is invalid: version is missing or not a version.' );
@@ -179,7 +179,7 @@ final class Release {
 		return [
 			'version'        => $version,
 			'tag'            => 'v' . $version,
-			'name'           => '' === $name ? 'Noformat Logger' : $name,
+			'name'           => '' === $name ? 'Noformat Logbook' : $name,
 			'url'            => '',
 			'package'        => $download,
 			'sha256'         => $sha,

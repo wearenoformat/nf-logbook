@@ -1,5 +1,5 @@
 /**
- * Noformat Logger System log console.
+ * Noformat Logbook System log console.
  *
  * One renderer for every line: the initial page (JSON in
  * #nflog-console-data), follow mode (admin-ajax nflog_tail with `after`) and

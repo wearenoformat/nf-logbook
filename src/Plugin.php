@@ -188,7 +188,7 @@ final class Plugin {
 	 * Load translations.
 	 */
 	public function loadTextDomain(): void {
-		load_plugin_textdomain( 'noformat-logger', false, dirname( plugin_basename( NOFORMAT_LOGGER_FILE ) ) . '/languages' );
+		load_plugin_textdomain( 'nf-logbook', false, dirname( plugin_basename( NOFORMAT_LOGGER_FILE ) ) . '/languages' );
 	}
 
 	/**
@@ -226,8 +226,8 @@ final class Plugin {
 			if ( null !== $plugin ) {
 				$plugin->logger->logNow(
 					Event::make( Category::SYSTEM, 'logger.activated', Severity::NOTICE )
-						->object( 'plugin', 'noformat-logger' )
-						->summary( 'Noformat Logger activated' )
+						->object( 'plugin', 'nf-logbook' )
+						->summary( 'Noformat Logbook activated' )
 						->context( [ 'schema' => Schema::VERSION ] )
 				);
 			}
@@ -245,8 +245,8 @@ final class Plugin {
 			if ( null !== $plugin ) {
 				$plugin->logger->logNow(
 					Event::make( Category::SYSTEM, 'logger.deactivated', Severity::WARNING )
-						->object( 'plugin', 'noformat-logger' )
-						->summary( 'Noformat Logger deactivated' )
+						->object( 'plugin', 'nf-logbook' )
+						->summary( 'Noformat Logbook deactivated' )
 				);
 			}
 		} catch ( \Throwable $e ) {
@@ -320,8 +320,8 @@ final class Plugin {
 		}
 		$this->logger->log(
 			Event::make( Category::SYSTEM, 'logger.settings_changed', Severity::NOTICE )
-				->object( 'plugin', 'noformat-logger' )
-				->summary( 'Noformat Logger settings changed: ' . implode( ', ', array_slice( $names, 0, 10 ) ) . ( count( $names ) > 10 ? ', …' : '' ) )
+				->object( 'plugin', 'nf-logbook' )
+				->summary( 'Noformat Logbook settings changed: ' . implode( ', ', array_slice( $names, 0, 10 ) ) . ( count( $names ) > 10 ? ', …' : '' ) )
 				->context( [ 'settings' => $names ] )
 		);
 	}
@@ -349,7 +349,7 @@ final class Plugin {
 					$this->logger->log(
 						Event::make( Category::SECURITY, 'logger.key_' . $what, Severity::NOTICE )
 						->object( 'api_key', $keyId )
-						->summary( sprintf( 'Noformat Logger API key %s%s', $what, null === $keyId ? '' : ' (' . $keyId . ')' ) )
+						->summary( sprintf( 'Noformat Logbook API key %s%s', $what, null === $keyId ? '' : ' (' . $keyId . ')' ) )
 						->context( $context )
 					);
 			}

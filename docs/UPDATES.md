@@ -1,17 +1,17 @@
 # Updates
 
-Noformat Logger updates like any other plugin: it appears in **Dashboard →
+Noformat Logbook updates like any other plugin: it appears in **Dashboard →
 Updates** and on the **Plugins** screen with *update now*, supports the
-auto-update toggle, `wp plugin update noformat-logger` and the *View details*
+auto-update toggle, `wp plugin update nf-logbook` and the *View details*
 modal. There is no update server of our own: the source of truth is the
 **GitHub Releases** of the repository named by `NOFORMAT_LOGGER_UPDATE_REPO`
-(default `wearenoformat/wp-noformat-logger`).
+(default `wearenoformat/nf-logbook`).
 
 Code: `src/Update/` (`Updater`, `ReleaseClient`, `Release`, `Changelog`).
 
 ## How a site finds and installs an update
 
-1. The plugin header carries `Update URI: https://github.com/wearenoformat/wp-noformat-logger`.
+1. The plugin header carries `Update URI: https://github.com/wearenoformat/nf-logbook`.
    WordPress therefore never asks wordpress.org about this plugin; instead it
    calls the filter `update_plugins_github.com` (WordPress 5.8+) whenever it
    refreshes its plugin update list (twice a day by cron, and on the Updates
@@ -22,26 +22,26 @@ Code: `src/Update/` (`Updater`, `ReleaseClient`, `Release`, `Changelog`).
    User-Agent naming the plugin, its version and the site host, and a 10 s
    timeout. `/releases/latest` never returns drafts or pre-releases (both are
    also refused if they ever appear).
-3. The release must carry two assets: `noformat-logger.zip` and `manifest.json`.
+3. The release must carry two assets: `nf-logbook.zip` and `manifest.json`.
    The manifest is downloaded only when the release changed:
 
    ```json
    {
-     "name": "Noformat Logger",
-     "slug": "noformat-logger",
+     "name": "Noformat Logbook",
+     "slug": "nf-logbook",
      "version": "1.1.0",
      "requires": "6.4",
      "requires_php": "8.1",
      "tested": "7.1",
      "released_at": "2026-11-02T10:00:00Z",
-     "download_url": "https://github.com/wearenoformat/wp-noformat-logger/releases/download/v1.1.0/noformat-logger.zip",
-     "sha256": "<64 hex characters: SHA-256 of noformat-logger.zip>",
+     "download_url": "https://github.com/wearenoformat/nf-logbook/releases/download/v1.1.0/nf-logbook.zip",
+     "sha256": "<64 hex characters: SHA-256 of nf-logbook.zip>",
      "changelog": "<the CHANGELOG.md section of this version, Markdown>"
    }
    ```
 
    The manifest's version must equal the tag's (`v1.1.0` → `1.1.0`), the slug
-   must be `noformat-logger` and `sha256` must be 64 hex characters.
+   must be `nf-logbook` and `sha256` must be 64 hex characters.
 4. The answer is cached in the transient `noformat_logger_update`: fresh for
    **6 hours**, kept for 7 days so that the next check sends the stored ETag
    (`If-None-Match`); GitHub then answers 304, which keeps the cached answer
@@ -56,22 +56,22 @@ Code: `src/Update/` (`Updater`, `ReleaseClient`, `Release`, `Changelog`).
    its SHA-256. A package whose digest differs from the manifest is deleted and
    the update is refused with:
 
-   > The Noformat Logger 1.2.0 package failed the SHA-256 check (manifest 3f2a…, download 9c41…). The update was refused.
+   > The Noformat Logbook 1.2.0 package failed the SHA-256 check (manifest 3f2a…, download 9c41…). The update was refused.
 
 7. `upgrader_source_selection` renames the unpacked folder to the installed
-   one (`noformat-logger`) whatever the zip's top folder is (GitHub's
-   "Source code" zips are `wp-noformat-logger-1.2.0/`), and refuses a package
-   without `noformat-logger.php`.
+   one (`nf-logbook`) whatever the zip's top folder is (GitHub's
+   "Source code" zips are `nf-logbook-1.2.0/`), and refuses a package
+   without `nf-logbook.php`.
 8. `upgrader_process_complete` clears the cache. The update is logged as
    `plugin.updated` (with the version change) by `PluginThemeListener`; when
    that module is switched off, the updater logs it itself.
 
 Nothing in the updater can break the site: every failure means "no update"
-and is shown on **Tools → Noformat Logger → Status → Updates**, e.g.
+and is shown on **Tools → Noformat Logbook → Status → Updates**, e.g.
 
 ```
-Updates: 1.1.0 installed · latest 1.1.0 · source GitHub wearenoformat/wp-noformat-logger · last check 2026-11-02 10:00:00 UTC · ok
-Updates: 1.1.0 installed · latest unknown · source GitHub wearenoformat/wp-noformat-logger · last check … · error: GitHub answered 404: the repository is private or the name is wrong (or it has no published release yet)
+Updates: 1.1.0 installed · latest 1.1.0 · source GitHub wearenoformat/nf-logbook · last check 2026-11-02 10:00:00 UTC · ok
+Updates: 1.1.0 installed · latest unknown · source GitHub wearenoformat/nf-logbook · last check … · error: GitHub answered 404: the repository is private or the name is wrong (or it has no published release yet)
 ```
 
 On 403, 429 and 404 (and network errors) the previously cached release is kept
@@ -89,7 +89,7 @@ wp nflog update-check --format=json
 
 | Constant | Default | Purpose |
 | --- | --- | --- |
-| `NOFORMAT_LOGGER_UPDATE_REPO` | `wearenoformat/wp-noformat-logger` | `owner/name` of the repository whose releases are used |
+| `NOFORMAT_LOGGER_UPDATE_REPO` | `wearenoformat/nf-logbook` | `owner/name` of the repository whose releases are used |
 | `NOFORMAT_LOGGER_UPDATE_TOKEN` | — | Optional token for a **private** repository (see below) |
 | `NOFORMAT_LOGGER_UPDATE_MANIFEST` | — | Self-hosted mode: a direct manifest URL (`https://…`, or `http://127.0.0.1…` for local tests). GitHub is not contacted; `download_url` in that manifest is the package. |
 
@@ -117,7 +117,7 @@ Prerequisites: a clean `main`, `composer install`, the GitHub CLI logged in
 with push rights.
 
 1. Bump the version in the plugin header (`Version:`) and
-   `NOFORMAT_LOGGER_VERSION` in `noformat-logger.php`, and add a
+   `NOFORMAT_LOGGER_VERSION` in `nf-logbook.php`, and add a
    `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md`. Commit.
 2. Run:
 
@@ -127,11 +127,11 @@ with push rights.
 
    It checks that the header, the constant, the CHANGELOG section and the tag
    agree (and that `v1.2.0` does not exist), runs `composer check`, builds
-   `noformat-logger.zip` (top folder `noformat-logger/`) from `git archive HEAD`
+   `nf-logbook.zip` (top folder `nf-logbook/`) from `git archive HEAD`
    honouring `.distignore` (no `vendor`, `tests`, `tools`, `composer.*`,
    `PLAN.md`, dot files …), computes its SHA-256, writes `manifest.json`
    (changelog = that version's CHANGELOG section), tags `v1.2.0`, pushes the tag
-   and runs `gh release create v1.2.0 --notes-file … noformat-logger.zip manifest.json`.
+   and runs `gh release create v1.2.0 --notes-file … nf-logbook.zip manifest.json`.
 
 `.github/workflows/release.yml` does the same on a pushed `v*` tag (PHP 8.3,
 `composer install`, `composer check`, `tools/release.sh --ci`), so a tag pushed
@@ -158,25 +158,53 @@ tampered zip, and that the token is never printed or stored.
 ## Verifying a release
 
 ```sh
-gh release view v1.2.0 --repo wearenoformat/wp-noformat-logger
-gh release download v1.2.0 --repo wearenoformat/wp-noformat-logger -p noformat-logger.zip -p manifest.json -D /tmp/nflog-v1.2.0
+gh release view v1.2.0 --repo wearenoformat/nf-logbook
+gh release download v1.2.0 --repo wearenoformat/nf-logbook -p nf-logbook.zip -p manifest.json -D /tmp/nflog-v1.2.0
 cd /tmp/nflog-v1.2.0
-shasum -a 256 noformat-logger.zip                 # must equal:
+shasum -a 256 nf-logbook.zip                 # must equal:
 php -r 'echo json_decode(file_get_contents("manifest.json"))->sha256, "\n";'
-unzip -l noformat-logger.zip | head               # every path starts with noformat-logger/
+unzip -l nf-logbook.zip | head               # every path starts with nf-logbook/
 ```
 
 ## How client sites get updates
 
 - Sites running 1.1.0 or later check by themselves; an available update shows
   in Dashboard → Updates, on the Plugins screen and on the Status tab.
-- Auto-updates: Plugins screen → *Enable auto-updates* on the Noformat Logger
-  row (per site), or for a fleet: `wp plugin auto-updates enable noformat-logger`,
-  or `add_filter( 'auto_update_plugin', fn( $u, $item ) => 'noformat-logger' === ( $item->slug ?? '' ) ? true : $u, 10, 2 );`
+- Auto-updates: Plugins screen → *Enable auto-updates* on the Noformat Logbook
+  row (per site), or for a fleet: `wp plugin auto-updates enable nf-logbook`,
+  or `add_filter( 'auto_update_plugin', fn( $u, $item ) => 'nf-logbook' === ( $item->slug ?? '' ) ? true : $u, 10, 2 );`
   in a site's mu-plugin. WordPress then installs the release within about 12
   hours of the next check, through the same SHA-256 check.
 - Sites on 1.0.x have no updater: install 1.1.0 once by hand (upload the zip of
-  the release); from then on updates arrive by themselves.
-- The update keeps the folder `noformat-logger`, the settings, the key and the
-  event tables; the MU loader (`wp-content/mu-plugins/noformat-logger-loader.php`)
+  the release); from then on updates arrive by themselves. Sites on 1.0.x or
+  1.1.x move to 1.2.0 by hand once, see below.
+- The update keeps the folder `nf-logbook`, the settings, the key and the
+  event tables; the MU loader (`wp-content/mu-plugins/nf-logbook-loader.php`)
   is independent of the plugin folder and keeps working.
+
+## Upgrading from 1.1.x (the rename)
+
+1.2.0 renames the plugin from **Noformat Logger** (`noformat-logger/noformat-logger.php`,
+asset `noformat-logger.zip`) to **Noformat Logbook** (`nf-logbook/nf-logbook.php`,
+asset `nf-logbook.zip`). WordPress identifies a plugin by its folder and main
+file, so a site on 1.1.x is **not** offered 1.2.0 (its updater looks for
+`noformat-logger.zip` and a manifest with slug `noformat-logger`) and cannot
+auto-update across the rename. Do it once per site:
+
+1. Deactivate **Noformat Logger** (Plugins screen, or `wp plugin deactivate noformat-logger`).
+2. Remove its folder **without** WordPress "Delete": *Delete* runs `uninstall.php`,
+   which drops the log tables and settings when "delete data on uninstall" is on.
+   Remove `wp-content/plugins/noformat-logger/` over SFTP/SSH instead
+   (`rm -rf wp-content/plugins/noformat-logger`).
+3. Install `nf-logbook.zip` of the 1.2.0 release (Plugins → Add New → Upload, or
+   `wp plugin install nf-logbook.zip`) and activate **Noformat Logbook**
+   (`wp plugin activate nf-logbook`).
+
+The log, the hash chain, the API key and the settings carry over: the tables
+(`{prefix}nflog_*`), options, constants and the REST namespace
+(`noformat-logger/v1`) are unchanged, so the Controlroom keeps pulling with the
+same key. An installed MU loader (`noformat-logger-loader.php`) keeps working;
+`wp nflog install-mu-loader --force` replaces it with `nf-logbook-loader.php` and
+removes the old file. Bookmarks to `tools.php?page=noformat-logger[&tab=…]`
+redirect to `tools.php?page=nf-logbook`. From 1.2.0 on, updates arrive by
+themselves again.

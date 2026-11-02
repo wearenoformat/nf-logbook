@@ -20,10 +20,10 @@ require_once dirname( __DIR__ ) . '/Stubs/RestRequest.php';
 
 final class UpdaterTest extends TestCase {
 
-	private const REPO = 'wearenoformat/wp-noformat-logger';
-	private const API  = 'https://api.github.com/repos/wearenoformat/wp-noformat-logger/releases/latest';
-	private const ZIP  = 'https://github.com/wearenoformat/wp-noformat-logger/releases/download/v1.2.0/noformat-logger.zip';
-	private const MAN  = 'https://github.com/wearenoformat/wp-noformat-logger/releases/download/v1.2.0/manifest.json';
+	private const REPO = 'wearenoformat/nf-logbook';
+	private const API  = 'https://api.github.com/repos/wearenoformat/nf-logbook/releases/latest';
+	private const ZIP  = 'https://github.com/wearenoformat/nf-logbook/releases/download/v1.2.0/nf-logbook.zip';
+	private const MAN  = 'https://github.com/wearenoformat/nf-logbook/releases/download/v1.2.0/manifest.json';
 
 	/** @var array<string, mixed> */
 	private array $transients = [];
@@ -59,7 +59,7 @@ final class UpdaterTest extends TestCase {
 		Functions\when( 'wp_remote_retrieve_response_code' )->alias( static fn( $r ) => is_array( $r ) ? ( $r['response']['code'] ?? '' ) : '' );
 		Functions\when( 'wp_remote_retrieve_body' )->alias( static fn( $r ) => is_array( $r ) ? ( $r['body'] ?? '' ) : '' );
 		Functions\when( 'wp_remote_retrieve_header' )->alias( static fn( $r, $name ) => is_array( $r ) ? ( $r['headers'][ strtolower( (string) $name ) ] ?? '' ) : '' );
-		Functions\when( 'plugin_basename' )->justReturn( 'noformat-logger/noformat-logger.php' );
+		Functions\when( 'plugin_basename' )->justReturn( 'nf-logbook/nf-logbook.php' );
 		Functions\when( 'wp_tempnam' )->alias(
 			function (): string {
 				$file        = (string) tempnam( sys_get_temp_dir(), 'nflog-upd' );
@@ -117,8 +117,8 @@ final class UpdaterTest extends TestCase {
 	 */
 	private static function manifest( string $version = '1.2.0', string $sha = '' ): array {
 		return [
-			'name'         => 'Noformat Logger',
-			'slug'         => 'noformat-logger',
+			'name'         => 'Noformat Logbook',
+			'slug'         => 'nf-logbook',
 			'version'      => $version,
 			'requires'     => '6.4',
 			'requires_php' => '8.1',
@@ -138,17 +138,17 @@ final class UpdaterTest extends TestCase {
 			'tag_name'     => $tag,
 			'draft'        => false,
 			'prerelease'   => false,
-			'html_url'     => 'https://github.com/wearenoformat/wp-noformat-logger/releases/tag/' . $tag,
+			'html_url'     => 'https://github.com/wearenoformat/nf-logbook/releases/tag/' . $tag,
 			'published_at' => '2026-11-02T10:01:00Z',
 			'assets'       => [
 				[
-					'name'                 => 'noformat-logger.zip',
-					'url'                  => 'https://api.github.com/repos/wearenoformat/wp-noformat-logger/releases/assets/11',
+					'name'                 => 'nf-logbook.zip',
+					'url'                  => 'https://api.github.com/repos/wearenoformat/nf-logbook/releases/assets/11',
 					'browser_download_url' => self::ZIP,
 				],
 				[
 					'name'                 => 'manifest.json',
-					'url'                  => 'https://api.github.com/repos/wearenoformat/wp-noformat-logger/releases/assets/12',
+					'url'                  => 'https://api.github.com/repos/wearenoformat/nf-logbook/releases/assets/12',
 					'browser_download_url' => self::MAN,
 				],
 			],
@@ -188,7 +188,7 @@ final class UpdaterTest extends TestCase {
 		self::assertSame( self::ZIP, $public['zip'] );
 		self::assertSame( self::MAN, $public['manifest'] );
 		$token = Release::parseGitHubRelease( self::githubRelease(), true );
-		self::assertSame( 'https://api.github.com/repos/wearenoformat/wp-noformat-logger/releases/assets/11', $token['zip'], 'asset API URLs with a token' );
+		self::assertSame( 'https://api.github.com/repos/wearenoformat/nf-logbook/releases/assets/11', $token['zip'], 'asset API URLs with a token' );
 
 		$draft          = self::githubRelease();
 		$draft['draft'] = true;
@@ -265,7 +265,7 @@ final class UpdaterTest extends TestCase {
 		self::assertArrayNotHasKey( 'Authorization', ( new ReleaseClient( self::REPO ) )->assetHeaders() );
 		self::assertArrayNotHasKey( 'Authorization', ( new ReleaseClient( self::REPO, 'tok', 'https://example.org/m.json' ) )->headers( 'application/json' ), 'never sent to a manifest host' );
 
-		$asset                     = 'https://api.github.com/repos/wearenoformat/wp-noformat-logger/releases/assets/12';
+		$asset                     = 'https://api.github.com/repos/wearenoformat/nf-logbook/releases/assets/12';
 		$signed                    = 'https://objects.githubusercontent.com/signed?x=1';
 		$this->routes[ self::API ] = self::response( 200, (string) json_encode( self::githubRelease() ) );
 		$this->routes[ $asset ]    = function ( array $args ) use ( $signed ): array {
@@ -279,7 +279,7 @@ final class UpdaterTest extends TestCase {
 		};
 		$state = $client->state( true, 5000 );
 		self::assertSame( '', $state['error'] );
-		self::assertSame( 'https://api.github.com/repos/wearenoformat/wp-noformat-logger/releases/assets/11', $state['release']['package'] ?? null );
+		self::assertSame( 'https://api.github.com/repos/wearenoformat/nf-logbook/releases/assets/11', $state['release']['package'] ?? null );
 		self::assertSame( 'GitHub ' . self::REPO . ' (with token)', $client->sourceLabel() );
 	}
 
@@ -325,13 +325,13 @@ final class UpdaterTest extends TestCase {
 		$this->publicRelease();
 		$updater = new Updater( null, new ReleaseClient( self::REPO ) );
 		self::assertSame( 'kept', $updater->updateFor( 'kept', [], 'other/other.php' ), 'other plugins untouched' );
-		$update = $updater->updateFor( false, [], 'noformat-logger/noformat-logger.php' );
+		$update = $updater->updateFor( false, [], 'nf-logbook/nf-logbook.php' );
 		self::assertIsArray( $update );
 		foreach ( [ 'id', 'slug', 'version', 'url', 'package', 'requires', 'requires_php', 'tested', 'upgrade_notice' ] as $key ) {
 			self::assertArrayHasKey( $key, $update );
 		}
 		self::assertSame( Updater::UPDATE_URI, $update['id'] );
-		self::assertSame( 'noformat-logger', $update['slug'] );
+		self::assertSame( 'nf-logbook', $update['slug'] );
 		self::assertSame( '1.2.0', $update['version'] );
 		self::assertSame( self::ZIP, $update['package'] );
 		self::assertSame( '8.1', $update['requires_php'] );
@@ -339,15 +339,15 @@ final class UpdaterTest extends TestCase {
 
 		$this->transients = [];
 		$this->routes     = [];
-		self::assertFalse( ( new Updater( null, new ReleaseClient( self::REPO ) ) )->updateFor( false, [], 'noformat-logger/noformat-logger.php' ), 'no release: no update, no fatal' );
+		self::assertFalse( ( new Updater( null, new ReleaseClient( self::REPO ) ) )->updateFor( false, [], 'nf-logbook/nf-logbook.php' ), 'no release: no update, no fatal' );
 	}
 
 	public function test_details_modal(): void {
 		$this->publicRelease();
 		$updater = new Updater( null, new ReleaseClient( self::REPO ) );
 		self::assertSame( 'x', $updater->details( 'x', 'plugin_information', (object) [ 'slug' => 'akismet' ] ) );
-		self::assertSame( 'x', $updater->details( 'x', 'query_plugins', (object) [ 'slug' => 'noformat-logger' ] ) );
-		$info = $updater->details( false, 'plugin_information', (object) [ 'slug' => 'noformat-logger' ] );
+		self::assertSame( 'x', $updater->details( 'x', 'query_plugins', (object) [ 'slug' => 'nf-logbook' ] ) );
+		$info = $updater->details( false, 'plugin_information', (object) [ 'slug' => 'nf-logbook' ] );
 		self::assertIsObject( $info );
 		self::assertSame( '1.2.0', $info->version );
 		self::assertSame( '2026-11-02T10:00:00Z', $info->last_updated );
@@ -392,7 +392,7 @@ final class UpdaterTest extends TestCase {
 	public function test_manifest_mode_allows_loopback_only_for_itself(): void {
 		$url                 = 'http://127.0.0.1:8899/manifest.json';
 		$m                   = self::manifest( '9.9.9' );
-		$m['download_url']   = 'http://127.0.0.1:8899/noformat-logger.zip';
+		$m['download_url']   = 'http://127.0.0.1:8899/nf-logbook.zip';
 		$this->routes[ $url ] = self::response( 200, (string) json_encode( $m ) );
 		$client              = new ReleaseClient( self::REPO, 'tok', $url );
 		$state               = $client->state( true, 10 );
@@ -412,23 +412,23 @@ final class UpdaterTest extends TestCase {
 	public function test_folder_rename(): void {
 		$fs   = new FakeFilesystem();
 		$root = sys_get_temp_dir() . '/nflog-src-' . bin2hex( random_bytes( 4 ) );
-		mkdir( $root . '/wp-noformat-logger-1.2.0', 0777, true );
-		touch( $root . '/wp-noformat-logger-1.2.0/noformat-logger.php' );
-		self::assertSame( $root . '/noformat-logger/', Updater::renameSource( $root . '/wp-noformat-logger-1.2.0/', $root . '/', 'noformat-logger', $fs ) );
-		self::assertFileExists( $root . '/noformat-logger/noformat-logger.php' );
-		self::assertSame( $root . '/noformat-logger/', Updater::renameSource( $root . '/noformat-logger/', $root, 'noformat-logger', $fs ), 'already right' );
+		mkdir( $root . '/nf-logbook-1.2.0', 0777, true );
+		touch( $root . '/nf-logbook-1.2.0/nf-logbook.php' );
+		self::assertSame( $root . '/nf-logbook/', Updater::renameSource( $root . '/nf-logbook-1.2.0/', $root . '/', 'nf-logbook', $fs ) );
+		self::assertFileExists( $root . '/nf-logbook/nf-logbook.php' );
+		self::assertSame( $root . '/nf-logbook/', Updater::renameSource( $root . '/nf-logbook/', $root, 'nf-logbook', $fs ), 'already right' );
 
 		$flat = $root . '-flat';
 		mkdir( $flat . '/src', 0777, true );
-		touch( $flat . '/noformat-logger.php' );
-		self::assertSame( $flat . '/noformat-logger/', Updater::renameSource( $flat, $flat, 'noformat-logger', $fs ) );
-		self::assertFileExists( $flat . '/noformat-logger/noformat-logger.php' );
-		self::assertDirectoryExists( $flat . '/noformat-logger/src' );
+		touch( $flat . '/nf-logbook.php' );
+		self::assertSame( $flat . '/nf-logbook/', Updater::renameSource( $flat, $flat, 'nf-logbook', $fs ) );
+		self::assertFileExists( $flat . '/nf-logbook/nf-logbook.php' );
+		self::assertDirectoryExists( $flat . '/nf-logbook/src' );
 
 		$other = $root . '-other';
 		mkdir( $other . '/something', 0777, true );
-		$refused = Updater::renameSource( $other . '/something', $other, 'noformat-logger', $fs );
-		self::assertInstanceOf( \WP_Error::class, $refused, 'a package without noformat-logger.php is refused' );
+		$refused = Updater::renameSource( $other . '/something', $other, 'nf-logbook', $fs );
+		self::assertInstanceOf( \WP_Error::class, $refused, 'a package without nf-logbook.php is refused' );
 
 		$updater = new Updater( null, new ReleaseClient( self::REPO ) );
 		self::assertSame( '/x/src/', $updater->sourceSelection( '/x/src/', '/x/', null, [ 'plugin' => 'akismet/akismet.php' ] ), 'other plugins untouched' );
@@ -438,14 +438,14 @@ final class UpdaterTest extends TestCase {
 	}
 
 	public function test_own_update_detection_and_status_line(): void {
-		self::assertTrue( Updater::isOwnUpdate( [ 'type' => 'plugin', 'action' => 'update', 'plugins' => [ 'a/a.php', 'noformat-logger/noformat-logger.php' ] ] ) );
-		self::assertTrue( Updater::isOwnUpdate( [ 'type' => 'plugin', 'action' => 'update', 'plugin' => 'noformat-logger/noformat-logger.php' ] ) );
-		self::assertFalse( Updater::isOwnUpdate( [ 'type' => 'plugin', 'action' => 'install', 'plugin' => 'noformat-logger/noformat-logger.php' ] ) );
+		self::assertTrue( Updater::isOwnUpdate( [ 'type' => 'plugin', 'action' => 'update', 'plugins' => [ 'a/a.php', 'nf-logbook/nf-logbook.php' ] ] ) );
+		self::assertTrue( Updater::isOwnUpdate( [ 'type' => 'plugin', 'action' => 'update', 'plugin' => 'nf-logbook/nf-logbook.php' ] ) );
+		self::assertFalse( Updater::isOwnUpdate( [ 'type' => 'plugin', 'action' => 'install', 'plugin' => 'nf-logbook/nf-logbook.php' ] ) );
 		self::assertFalse( Updater::isOwnUpdate( [ 'type' => 'theme', 'action' => 'update' ] ) );
 
 		$this->transients[ ReleaseClient::TRANSIENT ] = [ 'source' => 'x' ];
-		Functions\when( 'plugin_basename' )->justReturn( 'noformat-logger/noformat-logger.php' );
-		( new Updater( null, new ReleaseClient( self::REPO ) ) )->processComplete( null, [ 'type' => 'plugin', 'action' => 'update', 'plugins' => [ 'noformat-logger/noformat-logger.php' ] ] );
+		Functions\when( 'plugin_basename' )->justReturn( 'nf-logbook/nf-logbook.php' );
+		( new Updater( null, new ReleaseClient( self::REPO ) ) )->processComplete( null, [ 'type' => 'plugin', 'action' => 'update', 'plugins' => [ 'nf-logbook/nf-logbook.php' ] ] );
 		self::assertArrayNotHasKey( ReleaseClient::TRANSIENT, $this->transients, 'cache cleared after our own update' );
 
 		$ok = Updater::summary(
@@ -455,10 +455,10 @@ final class UpdaterTest extends TestCase {
 				'release'    => [ 'version' => '1.2.0' ],
 			],
 			'1.1.0',
-			'GitHub wearenoformat/wp-noformat-logger'
+			'GitHub wearenoformat/nf-logbook'
 		);
 		self::assertTrue( $ok['update_available'] );
-		self::assertSame( 'Updates: 1.1.0 installed · latest 1.2.0 (update available) · source GitHub wearenoformat/wp-noformat-logger · last check 2026-11-02 10:00 UTC · ok', Updater::line( $ok, '2026-11-02 10:00 UTC' ) );
+		self::assertSame( 'Updates: 1.1.0 installed · latest 1.2.0 (update available) · source GitHub wearenoformat/nf-logbook · last check 2026-11-02 10:00 UTC · ok', Updater::line( $ok, '2026-11-02 10:00 UTC' ) );
 		$err = Updater::summary(
 			[
 				'checked_at' => 5,

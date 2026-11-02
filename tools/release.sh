@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Cut a Noformat Logger release from GitHub Releases' point of view.
+# Cut a Noformat Logbook release from GitHub Releases' point of view.
 #
 #   tools/release.sh <version>
 #       Checks that the plugin header version, NOFORMAT_LOGGER_VERSION and the
 #       CHANGELOG.md section agree with <version> and that tag v<version> does not
-#       exist yet, runs `composer check`, builds noformat-logger.zip (top folder
-#       noformat-logger/) from a clean `git archive HEAD` honouring .distignore,
+#       exist yet, runs `composer check`, builds nf-logbook.zip (top folder
+#       nf-logbook/) from a clean `git archive HEAD` honouring .distignore,
 #       writes manifest.json (sha256 of the zip, changelog = that version's
 #       CHANGELOG section), tags v<version>, pushes the tag and creates the GitHub
 #       release with both assets.
@@ -20,12 +20,12 @@
 #       GitHub. A <version> different from the header is written into the built
 #       copy (integration tests use 9.9.9). --check also runs `composer check`.
 #
-# Environment: NOFORMAT_LOGGER_UPDATE_REPO (default wearenoformat/wp-noformat-logger).
+# Environment: NOFORMAT_LOGGER_UPDATE_REPO (default wearenoformat/nf-logbook).
 # Requires: bash, php, perl, rsync, zip, shasum or sha256sum; git and gh unless --local-only.
 set -euo pipefail
 
 PLUGIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-REPO="${NOFORMAT_LOGGER_UPDATE_REPO:-wearenoformat/wp-noformat-logger}"
+REPO="${NOFORMAT_LOGGER_UPDATE_REPO:-wearenoformat/nf-logbook}"
 MODE="release"
 VERSION=""
 OUT=""
@@ -53,7 +53,7 @@ done
 VERSION="${VERSION#v}"
 [[ "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]] || die "usage: tools/release.sh <x.y.z> (got '${VERSION}')"
 TAG="v${VERSION}"
-MAIN="${PLUGIN_DIR}/noformat-logger.php"
+MAIN="${PLUGIN_DIR}/nf-logbook.php"
 
 header() { # header <Field name>
   sed -n "s/^[ *]*$1:[[:space:]]*//p" "${MAIN}" | head -1 | tr -d '\r'
@@ -102,40 +102,40 @@ mkdir -p "${OUT}"
 OUT="$(cd "${OUT}" && pwd)"
 
 echo "==> Exporting ${TAG} (honouring .distignore)"
-mkdir -p "${WORK}/raw" "${WORK}/build/noformat-logger"
+mkdir -p "${WORK}/raw" "${WORK}/build/nf-logbook"
 if [ "${MODE}" = "local" ]; then
   rsync -a --exclude .git "${PLUGIN_DIR}/" "${WORK}/raw/"
 else
   git -C "${PLUGIN_DIR}" archive --format=tar HEAD | tar -x -C "${WORK}/raw"
 fi
-rsync -a --exclude-from="${WORK}/raw/.distignore" "${WORK}/raw/" "${WORK}/build/noformat-logger/"
-BUILT_MAIN="${WORK}/build/noformat-logger/noformat-logger.php"
-[ -f "${BUILT_MAIN}" ] || die "the export has no noformat-logger.php"
+rsync -a --exclude-from="${WORK}/raw/.distignore" "${WORK}/raw/" "${WORK}/build/nf-logbook/"
+BUILT_MAIN="${WORK}/build/nf-logbook/nf-logbook.php"
+[ -f "${BUILT_MAIN}" ] || die "the export has no nf-logbook.php"
 if [ "${HEADER_VERSION}" != "${VERSION}" ]; then
   echo "    (writing version ${VERSION} into the built copy; the source says ${HEADER_VERSION})"
   V="${VERSION}" perl -pi -e 's/^( \* Version:\s+)\S+/$1$ENV{V}/; s/define\( '\''NOFORMAT_LOGGER_VERSION'\'', '\''[^'\'']*'\'' \);/define( '\''NOFORMAT_LOGGER_VERSION'\'', '\''$ENV{V}'\'' );/' "${BUILT_MAIN}"
 fi
 for forbidden in vendor tests tools .git .github .local PLAN.md composer.json; do
-  [ ! -e "${WORK}/build/noformat-logger/${forbidden}" ] || die "${forbidden} leaked into the package"
+  [ ! -e "${WORK}/build/nf-logbook/${forbidden}" ] || die "${forbidden} leaked into the package"
 done
 
-echo "==> Building noformat-logger.zip"
-rm -f "${OUT}/noformat-logger.zip" "${OUT}/manifest.json"
-(cd "${WORK}/build" && find noformat-logger -exec touch -t 202601010000 {} + && zip -r -X -q "${OUT}/noformat-logger.zip" noformat-logger)
+echo "==> Building nf-logbook.zip"
+rm -f "${OUT}/nf-logbook.zip" "${OUT}/manifest.json"
+(cd "${WORK}/build" && find nf-logbook -exec touch -t 202601010000 {} + && zip -r -X -q "${OUT}/nf-logbook.zip" nf-logbook)
 if command -v sha256sum > /dev/null; then
-  SHA="$(sha256sum "${OUT}/noformat-logger.zip" | awk '{print $1}')"
+  SHA="$(sha256sum "${OUT}/nf-logbook.zip" | awk '{print $1}')"
 else
-  SHA="$(shasum -a 256 "${OUT}/noformat-logger.zip" | awk '{print $1}')"
+  SHA="$(shasum -a 256 "${OUT}/nf-logbook.zip" | awk '{print $1}')"
 fi
-[ -n "${DOWNLOAD_URL}" ] || DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${TAG}/noformat-logger.zip"
+[ -n "${DOWNLOAD_URL}" ] || DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${TAG}/nf-logbook.zip"
 
 printf '%s' "${CHANGES}" > "${WORK}/notes.md"
-NAME="Noformat Logger" VERSION="${VERSION}" REQUIRES="$(header 'Requires at least')" REQUIRES_PHP="$(header 'Requires PHP')" \
+NAME="Noformat Logbook" VERSION="${VERSION}" REQUIRES="$(header 'Requires at least')" REQUIRES_PHP="$(header 'Requires PHP')" \
 TESTED="$(header 'Tested up to')" RELEASED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)" DOWNLOAD_URL="${DOWNLOAD_URL}" SHA="${SHA}" NOTES="${WORK}/notes.md" \
 php -r '
   $m = [
     "name"         => getenv("NAME"),
-    "slug"         => "noformat-logger",
+    "slug"         => "nf-logbook",
     "version"      => getenv("VERSION"),
     "requires"     => getenv("REQUIRES"),
     "requires_php" => getenv("REQUIRES_PHP"),
@@ -147,7 +147,7 @@ php -r '
   ];
   echo json_encode($m, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), "\n";
 ' > "${OUT}/manifest.json"
-echo "    ${OUT}/noformat-logger.zip  sha256 ${SHA}"
+echo "    ${OUT}/nf-logbook.zip  sha256 ${SHA}"
 echo "    ${OUT}/manifest.json"
 
 if [ "${MODE}" = "local" ]; then
@@ -156,7 +156,7 @@ fi
 
 if [ "${MODE}" = "release" ]; then
   echo "==> Tagging ${TAG} and pushing it"
-  git -C "${PLUGIN_DIR}" tag -a "${TAG}" -m "Noformat Logger ${VERSION}"
+  git -C "${PLUGIN_DIR}" tag -a "${TAG}" -m "Noformat Logbook ${VERSION}"
   git -C "${PLUGIN_DIR}" push origin "${TAG}"
 fi
 
@@ -165,6 +165,6 @@ if gh release view "${TAG}" --repo "${REPO}" > /dev/null 2>&1; then
   exit 0
 fi
 echo "==> Creating the GitHub release ${TAG} on ${REPO}"
-gh release create "${TAG}" --repo "${REPO}" --title "Noformat Logger ${VERSION}" --notes-file "${WORK}/notes.md" --verify-tag \
-  "${OUT}/noformat-logger.zip" "${OUT}/manifest.json"
+gh release create "${TAG}" --repo "${REPO}" --title "Noformat Logbook ${VERSION}" --notes-file "${WORK}/notes.md" --verify-tag \
+  "${OUT}/nf-logbook.zip" "${OUT}/manifest.json"
 gh release view "${TAG}" --repo "${REPO}" --json url,assets --jq '.url, (.assets[] | "  " + .name + " " + (.size|tostring) + " bytes")'

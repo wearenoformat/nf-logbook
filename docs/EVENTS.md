@@ -82,17 +82,17 @@ console). The split is display only (filter `noformat_logger/content_categories`
 
 | Action | Category | Severity | Object | Fingerprint | Listener |
 | --- | --- | --- | --- | --- | --- |
-| `logger.activated` | system | notice | `plugin / noformat-logger` | — | Plugin |
-| `logger.deactivated` | system | warning | `plugin / noformat-logger` | — | Plugin |
+| `logger.activated` | system | notice | `plugin / nf-logbook` | — | Plugin |
+| `logger.deactivated` | system | warning | `plugin / nf-logbook` | — | Plugin |
 | `logger.test_event` | system | per `--severity` (info) | — | — | CLI |
 | `logger.pruned` | system | info | — | — | Scheduler |
-| `logger.settings_changed` | system | notice | `plugin / noformat-logger` | — | Plugin (status page, CLI, any update of `nflog_settings`) |
+| `logger.settings_changed` | system | notice | `plugin / nf-logbook` | — | Plugin (status page, CLI, any update of `nflog_settings`) |
 | `logger.key_generated` | security | notice | `api_key / <key id>` | — | Status page, CLI |
 | `logger.key_rotated` | security | notice | `api_key / <new key id>` | — | Status page, CLI |
 | `logger.key_revoked` | security | notice | `api_key / <revoked key id>` | — | Status page, CLI |
 | `logger.key_unreadable` | security | error | `api_key / <key id>` | — (at most once per hour) | KeyStore via Plugin |
-| `logger.events_exported` | system | notice | `plugin / noformat-logger` | — | wp-admin Content log / System log (Export JSON) |
-| `logger.events_viewed` | system | debug (dropped unless `log_debug`) | `plugin / noformat-logger` | — | wp-admin Content log / System log |
+| `logger.events_exported` | system | notice | `plugin / nf-logbook` | — | wp-admin Content log / System log (Export JSON) |
+| `logger.events_viewed` | system | debug (dropped unless `log_debug`) | `plugin / nf-logbook` | — | wp-admin Content log / System log |
 | `system.buffer_overflow` | system | warning | — | — | Logger |
 | `system.flood` | security | warning | — | `system.flood` (60 s window) | Logger |
 | `api.auth_failed` | security | warning (rate limited: notice) | `api_key / <key id>` when the key is known, else `api_key / null` | reason + ip hash (+ key id when known) | Authenticator |
@@ -796,7 +796,7 @@ outside cron / WP-CLI and their previous state is carried over (no spurious
     "status": "ok",            // ok | mismatch | partial | deferred (core pass unfinished)
     "checked": 1,
     "verified": ["sqlite-database-integration"],
-    "skipped": ["noformat-logger"],                  // not on wordpress.org, no checksum file (404, cached per slug@version), network error
+    "skipped": ["nf-logbook"],                  // not on wordpress.org, no checksum file (404, cached per slug@version), network error
     "mismatches": { "<slug>": { "version": "1.2.3", "algo": "sha256", "modified": ["wp-content/plugins/<slug>/…"], "missing": [] } }
   },
   "chain": { "ok": true, "checked": 100, "from": 1, "to": 100, "break": null }  // last 1 000 events

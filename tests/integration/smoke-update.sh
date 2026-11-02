@@ -23,15 +23,15 @@ WP_DIR="${NFLOG_WP_DIR:-$PWD/.local/wp}"
 # shellcheck disable=SC1091
 source "${WP_DIR}/.nflog-env"
 WP="wp --path=${WP_DIR}"
-PLUGIN_PATH="${WP_DIR}/wp-content/plugins/noformat-logger"
+PLUGIN_PATH="${WP_DIR}/wp-content/plugins/nf-logbook"
 OUT="$(mktemp -d "${TMPDIR:-/tmp}/nflog-smoke-update.XXXXXX")"
 SRV="${OUT}/srv"
 UPD_PORT="${NFLOG_UPDATE_PORT:-$((NFLOG_PORT + 111))}"
 BASE="http://127.0.0.1:${UPD_PORT}"
-SOURCE_VERSION="$(sed -n "s/^define( 'NOFORMAT_LOGGER_VERSION', '\([^']*\)' );/\1/p" "${PLUGIN_DIR}/noformat-logger.php")"
+SOURCE_VERSION="$(sed -n "s/^define( 'NOFORMAT_LOGGER_VERSION', '\([^']*\)' );/\1/p" "${PLUGIN_DIR}/nf-logbook.php")"
 PASS=0
 FAIL=0
-# WP-CLI caches plugin packages by slug and version (~/.wp-cli/cache/plugin/noformat-logger-9.9.9.zip)
+# WP-CLI caches plugin packages by slug and version (~/.wp-cli/cache/plugin/nf-logbook-9.9.9.zip)
 # and serves them through pre_http_request; a private cache keeps every run honest.
 export WP_CLI_CACHE_DIR="${OUT}/wp-cli-cache"
 
@@ -48,7 +48,7 @@ install_copy() {
   mkdir -p "${PLUGIN_PATH}"
   rsync -a --exclude .git --exclude-from="${PLUGIN_DIR}/.distignore" "${PLUGIN_DIR}/" "${PLUGIN_PATH}/"
   [ ! -L "${PLUGIN_PATH}" ] || { echo "plugin folder is still a symlink, refusing to continue" >&2; exit 1; }
-  ${WP} plugin activate noformat-logger > /dev/null 2>&1 || true
+  ${WP} plugin activate nf-logbook > /dev/null 2>&1 || true
 }
 
 cleanup() {
@@ -58,7 +58,7 @@ cleanup() {
     rm -rf "${PLUGIN_PATH}"
     ln -sfn "${PLUGIN_DIR}" "${PLUGIN_PATH}"
   fi
-  ${WP} plugin activate noformat-logger > /dev/null 2>&1 || true
+  ${WP} plugin activate nf-logbook > /dev/null 2>&1 || true
   ${WP} transient delete noformat_logger_update > /dev/null 2>&1 || true
   ${WP} transient delete update_plugins --network > /dev/null 2>&1 || true
   rm -rf "${OUT}"
@@ -66,13 +66,13 @@ cleanup() {
 trap cleanup EXIT
 
 echo "==> Building release assets (tools/release.sh --local-only --version 9.9.9)"
-"${PLUGIN_DIR}/tools/release.sh" --local-only --version 9.9.9 --out "${SRV}" --download-url "${BASE}/noformat-logger.zip" > "${OUT}/build.log" 2>&1 \
+"${PLUGIN_DIR}/tools/release.sh" --local-only --version 9.9.9 --out "${SRV}" --download-url "${BASE}/nf-logbook.zip" > "${OUT}/build.log" 2>&1 \
   && ok "assets built" || { fail "release.sh --local-only"; cat "${OUT}/build.log"; exit 1; }
 SHA="$(php -r 'echo json_decode(file_get_contents($argv[1]), true)["sha256"];' "${SRV}/manifest.json")"
-[ "$(shasum -a 256 "${SRV}/noformat-logger.zip" | awk '{print $1}')" = "${SHA}" ] && ok "manifest sha256 matches the zip" || fail "manifest sha256"
-unzip -Z1 "${SRV}/noformat-logger.zip" | awk -F/ '{print $1}' | sort -u > "${OUT}/top.txt"
-[ "$(cat "${OUT}/top.txt")" = "noformat-logger" ] && ok "zip top-level folder is noformat-logger/" || { fail "zip top folder"; cat "${OUT}/top.txt"; }
-unzip -Z1 "${SRV}/noformat-logger.zip" | grep -Eq '^noformat-logger/(vendor|tests|tools|\.git|PLAN\.md|composer\.)' \
+[ "$(shasum -a 256 "${SRV}/nf-logbook.zip" | awk '{print $1}')" = "${SHA}" ] && ok "manifest sha256 matches the zip" || fail "manifest sha256"
+unzip -Z1 "${SRV}/nf-logbook.zip" | awk -F/ '{print $1}' | sort -u > "${OUT}/top.txt"
+[ "$(cat "${OUT}/top.txt")" = "nf-logbook" ] && ok "zip top-level folder is nf-logbook/" || { fail "zip top folder"; cat "${OUT}/top.txt"; }
+unzip -Z1 "${SRV}/nf-logbook.zip" | grep -Eq '^nf-logbook/(vendor|tests|tools|\.git|PLAN\.md|composer\.)' \
   && fail "zip honours .distignore" || ok "zip honours .distignore (no vendor, tests, tools, PLAN.md, composer files)"
 
 echo "==> Serving them on ${BASE}"
@@ -86,29 +86,29 @@ done
 echo "==> Plugin folder as a copy, NOFORMAT_LOGGER_UPDATE_MANIFEST set"
 install_copy
 ${WP} config set NOFORMAT_LOGGER_UPDATE_MANIFEST "${BASE}/manifest.json" --type=constant
-[ "$(${WP} plugin get noformat-logger --field=version)" = "${SOURCE_VERSION}" ] && ok "installed ${SOURCE_VERSION} from a copy" || fail "baseline version"
+[ "$(${WP} plugin get nf-logbook --field=version)" = "${SOURCE_VERSION}" ] && ok "installed ${SOURCE_VERSION} from a copy" || fail "baseline version"
 
 ${WP} nflog update-check > "${OUT}/check.txt" 2>&1 || true
 grep -q "source manifest ${BASE}/manifest.json" "${OUT}/check.txt" && grep -q "latest 9.9.9 (update available)" "${OUT}/check.txt" && grep -q '· ok$' "${OUT}/check.txt" \
   && ok "wp nflog update-check: source, latest 9.9.9, ok" || { fail "update-check"; cat "${OUT}/check.txt"; }
 
 ${WP} plugin list --update=available --format=json > "${OUT}/available.json" 2>/dev/null || echo '[]' > "${OUT}/available.json"
-php -r '$l = json_decode(file_get_contents($argv[1]), true); foreach ((array) $l as $p) { if ($p["name"] === "noformat-logger" && $p["update_version"] === "9.9.9") exit(0); } exit(1);' "${OUT}/available.json" \
-  && ok "wp plugin list --update=available shows noformat-logger -> 9.9.9" || { fail "plugin list --update=available"; cat "${OUT}/available.json"; }
-${WP} eval '$t = get_site_transient( "update_plugins" ); $r = $t->response["noformat-logger/noformat-logger.php"] ?? null; echo $r && "noformat-logger" === $r->slug && "https://github.com/wearenoformat/wp-noformat-logger" === $r->id ? "yes" : "no";' > "${OUT}/transient.txt" 2>&1 || true
+php -r '$l = json_decode(file_get_contents($argv[1]), true); foreach ((array) $l as $p) { if ($p["name"] === "nf-logbook" && $p["update_version"] === "9.9.9") exit(0); } exit(1);' "${OUT}/available.json" \
+  && ok "wp plugin list --update=available shows nf-logbook -> 9.9.9" || { fail "plugin list --update=available"; cat "${OUT}/available.json"; }
+${WP} eval '$t = get_site_transient( "update_plugins" ); $r = $t->response["nf-logbook/nf-logbook.php"] ?? null; echo $r && "nf-logbook" === $r->slug && "https://github.com/wearenoformat/nf-logbook" === $r->id ? "yes" : "no";' > "${OUT}/transient.txt" 2>&1 || true
 [ "$(cat "${OUT}/transient.txt")" = "yes" ] && ok "update_plugins transient: response entry with slug and Update URI id" || { fail "update_plugins transient"; cat "${OUT}/transient.txt"; }
-${WP} eval 'require_once ABSPATH . "wp-admin/includes/plugin-install.php"; $i = plugins_api( "plugin_information", [ "slug" => "noformat-logger" ] ); echo is_object( $i ) && "9.9.9" === $i->version && isset( $i->sections["changelog"] ) ? "yes" : "no";' > "${OUT}/details.txt" 2>&1 || true
+${WP} eval 'require_once ABSPATH . "wp-admin/includes/plugin-install.php"; $i = plugins_api( "plugin_information", [ "slug" => "nf-logbook" ] ); echo is_object( $i ) && "9.9.9" === $i->version && isset( $i->sections["changelog"] ) ? "yes" : "no";' > "${OUT}/details.txt" 2>&1 || true
 [ "$(cat "${OUT}/details.txt")" = "yes" ] && ok "plugins_api (View details): version and changelog" || { fail "plugins_api"; cat "${OUT}/details.txt"; }
 
-echo "==> wp plugin update noformat-logger"
-${WP} plugin update noformat-logger > "${OUT}/update.txt" 2>&1 && ok "wp plugin update exits 0" || { fail "wp plugin update"; cat "${OUT}/update.txt"; }
-[ "$(${WP} plugin get noformat-logger --field=version 2>/dev/null)" = "9.9.9" ] && ok "version 9.9.9 installed" || fail "version after update"
-[ -d "${PLUGIN_PATH}" ] && [ ! -L "${PLUGIN_PATH}" ] && [ -f "${PLUGIN_PATH}/noformat-logger.php" ] && ok "folder is still noformat-logger" || fail "plugin folder after update"
-ls "${WP_DIR}/wp-content/plugins" | grep -E '^noformat-logger.' > "${OUT}/strays.txt" && { fail "stray plugin folders"; cat "${OUT}/strays.txt"; } || ok "no stray noformat-logger-* folder"
-[ "$(${WP} plugin get noformat-logger --field=status 2>/dev/null)" = "active" ] && ok "plugin still active" || fail "plugin active after update"
+echo "==> wp plugin update nf-logbook"
+${WP} plugin update nf-logbook > "${OUT}/update.txt" 2>&1 && ok "wp plugin update exits 0" || { fail "wp plugin update"; cat "${OUT}/update.txt"; }
+[ "$(${WP} plugin get nf-logbook --field=version 2>/dev/null)" = "9.9.9" ] && ok "version 9.9.9 installed" || fail "version after update"
+[ -d "${PLUGIN_PATH}" ] && [ ! -L "${PLUGIN_PATH}" ] && [ -f "${PLUGIN_PATH}/nf-logbook.php" ] && ok "folder is still nf-logbook" || fail "plugin folder after update"
+ls "${WP_DIR}/wp-content/plugins" | grep -E '^nf-logbook.' > "${OUT}/strays.txt" && { fail "stray plugin folders"; cat "${OUT}/strays.txt"; } || ok "no stray nf-logbook-* folder"
+[ "$(${WP} plugin get nf-logbook --field=status 2>/dev/null)" = "active" ] && ok "plugin still active" || fail "plugin active after update"
 ${WP} nflog status > "${OUT}/status.txt" 2>&1 && grep -Eq 'version[[:space:]]+9\.9\.9' "${OUT}/status.txt" && grep -Eq 'storage[[:space:]]+available' "${OUT}/status.txt" \
   && ok "wp nflog status healthy on 9.9.9" || { fail "nflog status"; head -20 "${OUT}/status.txt"; }
-${WP} eval 'foreach ( \Noformat\Logger\Plugin::instance()->repository()->latest( 50 ) as $e ) { if ( "plugin.updated" === $e["action"] && "noformat-logger" === $e["object_id"] ) { echo $e["changes"]; break; } }' > "${OUT}/event.txt" 2>&1 || true
+${WP} eval 'foreach ( \Noformat\Logger\Plugin::instance()->repository()->latest( 50 ) as $e ) { if ( "plugin.updated" === $e["action"] && "nf-logbook" === $e["object_id"] ) { echo $e["changes"]; break; } }' > "${OUT}/event.txt" 2>&1 || true
 grep -q '9.9.9' "${OUT}/event.txt" && grep -q "${SOURCE_VERSION}" "${OUT}/event.txt" && ok "plugin.updated logged (${SOURCE_VERSION} -> 9.9.9)" || { fail "plugin.updated event"; cat "${OUT}/event.txt"; }
 ${WP} nflog verify > /dev/null 2>&1 && ok "chain intact after the update" || fail "chain after update"
 
@@ -116,13 +116,13 @@ echo "==> Tampered package (one byte flipped, same manifest)"
 install_copy
 rm -rf "${WP_CLI_CACHE_DIR}"   # the verified 9.9.9 zip from the first update would be served again
 ${WP} transient delete noformat_logger_update > /dev/null 2>&1 || true
-php -r '$f = $argv[1]; $b = file_get_contents($f); $i = intdiv(strlen($b), 2); $b[$i] = chr(ord($b[$i]) ^ 0x01); file_put_contents($f, $b);' "${SRV}/noformat-logger.zip"
-[ "$(shasum -a 256 "${SRV}/noformat-logger.zip" | awk '{print $1}')" != "${SHA}" ] && ok "zip tampered" || fail "tamper"
+php -r '$f = $argv[1]; $b = file_get_contents($f); $i = intdiv(strlen($b), 2); $b[$i] = chr(ord($b[$i]) ^ 0x01); file_put_contents($f, $b);' "${SRV}/nf-logbook.zip"
+[ "$(shasum -a 256 "${SRV}/nf-logbook.zip" | awk '{print $1}')" != "${SHA}" ] && ok "zip tampered" || fail "tamper"
 ${WP} nflog update-check > "${OUT}/check2.txt" 2>&1 || true
 grep -q "latest 9.9.9 (update available)" "${OUT}/check2.txt" && ok "update offered again from ${SOURCE_VERSION}" || { fail "update-check before tampered update"; cat "${OUT}/check2.txt"; }
-${WP} plugin update noformat-logger > "${OUT}/update2.txt" 2>&1 && fail "tampered update refused (exit status)" || ok "tampered update: wp plugin update fails"
+${WP} plugin update nf-logbook > "${OUT}/update2.txt" 2>&1 && fail "tampered update refused (exit status)" || ok "tampered update: wp plugin update fails"
 grep -q 'failed the SHA-256 check' "${OUT}/update2.txt" && ok "refused with the sha256 error" || { fail "sha256 error message"; cat "${OUT}/update2.txt"; }
-[ "$(${WP} plugin get noformat-logger --field=version 2>/dev/null)" = "${SOURCE_VERSION}" ] && [ "$(${WP} plugin get noformat-logger --field=status 2>/dev/null)" = "active" ] \
+[ "$(${WP} plugin get nf-logbook --field=version 2>/dev/null)" = "${SOURCE_VERSION}" ] && [ "$(${WP} plugin get nf-logbook --field=status 2>/dev/null)" = "active" ] \
   && ok "still ${SOURCE_VERSION}, active, folder intact" || fail "state after the refused update"
 
 echo "==> update-check prints the source and never fatals"

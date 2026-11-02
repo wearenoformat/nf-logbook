@@ -57,7 +57,7 @@ SECRET="$(${WP} config get NOFORMAT_LOGGER_SECRET)"
 
 if ! ${WP} core is-installed 2>/dev/null; then
   echo "==> Installing site at ${URL}"
-  ${WP} core install --url="${URL}" --title="Noformat Logger smoke" --admin_user=admin \
+  ${WP} core install --url="${URL}" --title="Noformat Logbook smoke" --admin_user=admin \
     --admin_password="$(php -r 'echo bin2hex(random_bytes(12));')" --admin_email=admin@example.com --skip-email
 fi
 ${WP} option update home "${URL}"
@@ -69,8 +69,11 @@ if [ -z "$(ls -A "${THEME_DIR}" 2>/dev/null)" ]; then
   ${WP} theme install twentytwentyfour --activate || true
 fi
 
-ln -sfn "${PLUGIN_DIR}" "${WP_DIR}/wp-content/plugins/noformat-logger"
-${WP} plugin activate noformat-logger
+# Before 1.2.0 the plugin folder was noformat-logger: drop a dangling symlink of that name.
+OLD_LINK="${WP_DIR}/wp-content/plugins/noformat-logger"
+if [ -L "${OLD_LINK}" ] && [ ! -e "${OLD_LINK}" ]; then rm -f "${OLD_LINK}"; fi
+ln -sfn "${PLUGIN_DIR}" "${WP_DIR}/wp-content/plugins/nf-logbook"
+${WP} plugin activate nf-logbook
 
 cat > "${WP_DIR}/.nflog-env" <<ENV
 NFLOG_SITE=${URL}

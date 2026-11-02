@@ -1,5 +1,5 @@
 {
-    "name": "noformat/wp-noformat-logger",
+    "name": "noformat/nf-logbook",
     "description": "Tamper-evident, privacy-preserving activity, error and security log for WordPress, read by the Noformat Controlroom over a signed API.",
     "type": "wordpress-plugin",
     "license": "GPL-2.0-or-later",

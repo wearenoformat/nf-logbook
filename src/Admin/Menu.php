@@ -1,6 +1,6 @@
 <?php
 /**
- * Tools → Noformat Logger.
+ * Tools → Noformat Logbook.
  *
  * @package Noformat\Logger
  */
@@ -14,7 +14,7 @@ use Noformat\Logger\Plugin;
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Registers one page under Tools (`tools.php?page=noformat-logger`) whose
+ * Registers one page under Tools (`tools.php?page=nf-logbook`) whose
  * screens are in-page tabs (Content log, System log, Status, Settings), routes
  * the load-{hook} work to the tab's page object, enqueues the stylesheet and
  * scripts on that page only and redirects the 1.0 top-level menu URLs.
@@ -24,7 +24,7 @@ defined( 'ABSPATH' ) || exit;
 final class Menu {
 
 	/** Page slug under Tools. */
-	public const PAGE = 'noformat-logger';
+	public const PAGE = 'nf-logbook';
 
 	/** Parent screen. */
 	public const PARENT = 'tools.php';
@@ -45,7 +45,12 @@ final class Menu {
 	];
 
 	/**
-	 * Page hook suffix (tools_page_noformat-logger).
+	 * Page slug under Tools before the rename to Noformat Logbook (1.1.x).
+	 */
+	public const LEGACY_PAGE = 'noformat-logger';
+
+	/**
+	 * Page hook suffix (tools_page_nf-logbook).
 	 *
 	 * @var string
 	 */
@@ -142,10 +147,10 @@ final class Menu {
 	 */
 	public static function labels(): array {
 		return [
-			self::CONTENT  => __( 'Content log', 'noformat-logger' ),
-			self::SYSTEM   => __( 'System log', 'noformat-logger' ),
-			self::STATUS   => __( 'Status', 'noformat-logger' ),
-			self::SETTINGS => __( 'Settings', 'noformat-logger' ),
+			self::CONTENT  => __( 'Content log', 'nf-logbook' ),
+			self::SYSTEM   => __( 'System log', 'nf-logbook' ),
+			self::STATUS   => __( 'Status', 'nf-logbook' ),
+			self::SETTINGS => __( 'Settings', 'nf-logbook' ),
 		];
 	}
 
@@ -173,13 +178,13 @@ final class Menu {
 	 */
 	public static function actionLinks( array $links ): array {
 		if ( current_user_can( 'manage_options' ) ) {
-			array_unshift( $links, '<a href="' . esc_url( self::url( self::SETTINGS ) ) . '">' . esc_html__( 'Settings', 'noformat-logger' ) . '</a>' );
+			array_unshift( $links, '<a href="' . esc_url( self::url( self::SETTINGS ) ) . '">' . esc_html__( 'Settings', 'nf-logbook' ) . '</a>' );
 		}
 		return $links;
 	}
 
 	/**
-	 * Register Tools → Noformat Logger.
+	 * Register Tools → Noformat Logbook.
 	 */
 	public function register(): void {
 		if ( [] === Access::tabs( $this->plugin->config() ) ) {
@@ -187,8 +192,8 @@ final class Menu {
 		}
 		$hook = add_submenu_page(
 			self::PARENT,
-			__( 'Noformat Logger', 'noformat-logger' ),
-			__( 'Noformat Logger', 'noformat-logger' ),
+			__( 'Noformat Logbook', 'nf-logbook' ),
+			__( 'Noformat Logbook', 'nf-logbook' ),
 			Access::menuCapability(),
 			self::PAGE,
 			[ $this, 'render' ]
@@ -206,7 +211,7 @@ final class Menu {
 		$visible = Access::tabs( $this->plugin->config() );
 		$tab     = self::resolveTab( self::requestedTab(), $visible );
 		if ( null === $tab ) {
-			wp_die( esc_html__( 'Sorry, you are not allowed to access this page.', 'noformat-logger' ), 403 );
+			wp_die( esc_html__( 'Sorry, you are not allowed to access this page.', 'nf-logbook' ), 403 );
 		}
 		$this->tab = $tab;
 		match ( $tab ) {
@@ -226,8 +231,9 @@ final class Menu {
 
 	/**
 	 * Old links go to the tabs, filters kept (301):
-	 * admin.php?page=noformat-logger[-system|-status|-settings] (1.0) and
-	 * tools.php?page=noformat-logger&tab=events (0.x).
+	 * admin.php?page=noformat-logger[-system|-status|-settings] (1.0),
+	 * tools.php?page=noformat-logger[&tab=…] (1.1, before the rename) and
+	 * tools.php?page=…&tab=events (0.x).
 	 */
 	public function redirectLegacy(): void {
 		global $pagenow;
@@ -262,15 +268,22 @@ final class Menu {
 		if ( 'admin.php' === $pagenow && isset( self::LEGACY[ $page ] ) ) {
 			return self::LEGACY[ $page ];
 		}
-		if ( 'tools.php' === $pagenow && self::PAGE === $page && 'events' === ( $get['tab'] ?? '' ) ) {
+		if ( 'tools.php' !== $pagenow || ( self::PAGE !== $page && self::LEGACY_PAGE !== $page ) ) {
+			return null;
+		}
+		$tab = $get['tab'] ?? '';
+		if ( 'events' === $tab ) {
 			$filters = EventFilters::clean( $get );
 			return isset( $filters['category'] ) && Scope::SYSTEM === Scope::of( $filters['category'] ) ? self::SYSTEM : self::CONTENT;
+		}
+		if ( self::LEGACY_PAGE === $page ) {
+			return is_string( $tab ) && in_array( $tab, [ self::CONTENT, self::SYSTEM, self::STATUS, self::SETTINGS ], true ) ? $tab : self::CONTENT;
 		}
 		return null;
 	}
 
 	/**
-	 * Stylesheet and scripts on Tools → Noformat Logger only.
+	 * Stylesheet and scripts on Tools → Noformat Logbook only.
 	 *
 	 * @param string $hook Current admin page hook.
 	 */
@@ -300,8 +313,8 @@ final class Menu {
 	 */
 	public static function tabBar( string $current, array $visible ): string {
 		$labels = self::labels();
-		$html   = '<nav class="nflog-tabs" aria-label="' . esc_attr__( 'Noformat Logger', 'noformat-logger' ) . '">';
-		$html  .= '<span class="nflog-tabs__brand">' . self::brandIcon() . '<span>' . esc_html__( 'Noformat Logger', 'noformat-logger' ) . '</span></span>';
+		$html   = '<nav class="nflog-tabs" aria-label="' . esc_attr__( 'Noformat Logbook', 'nf-logbook' ) . '">';
+		$html  .= '<span class="nflog-tabs__brand">' . self::brandIcon() . '<span>' . esc_html__( 'Noformat Logbook', 'nf-logbook' ) . '</span></span>';
 		$html  .= '<span class="nflog-tabs__list">';
 		foreach ( $visible as $tab ) {
 			$active = $tab === $current;

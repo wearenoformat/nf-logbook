@@ -69,14 +69,14 @@ final class Access {
 	}
 
 	/**
-	 * Capability for Tools → Noformat Logger (the Status tab stays reachable for administrators).
+	 * Capability for Tools → Noformat Logbook (the Status tab stays reachable for administrators).
 	 */
 	public static function menuCapability(): string {
 		return current_user_can( 'manage_options' ) ? 'manage_options' : Plugin::CAP_VIEW_EVENTS;
 	}
 
 	/**
-	 * Tabs of Tools → Noformat Logger the current user may open, in display order.
+	 * Tabs of Tools → Noformat Logbook the current user may open, in display order.
 	 *
 	 * Content log per `events_visible_to`, System log per `system_log_visible_to`,
 	 * Status for everyone who may open the page (key actions need manage_options),

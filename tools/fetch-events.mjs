@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Reference client for the Noformat Logger pull API. Zero dependencies, Node 18+.
+// Reference client for the Noformat Logbook pull API. Zero dependencies, Node 18+.
 //
 //   node tools/fetch-events.mjs --site https://example.com --key nfk_… --secret … \
 //        [--endpoint manifest|events|event|summary|health|verify|marker] [--after N] [--limit N] [--verify]

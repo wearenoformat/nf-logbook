@@ -30,7 +30,7 @@ defined( 'ABSPATH' ) || exit;
  * - `upgrader_pre_download`: downloads our package with our headers (HTTPS only)
  *   and refuses it unless its SHA-256 matches the release's manifest.json.
  * - `upgrader_source_selection`: the unpacked folder is renamed to the
- *   installed folder (`noformat-logger`) whatever the zip's top folder is.
+ *   installed folder (`nf-logbook`) whatever the zip's top folder is.
  * - `upgrader_process_complete`: clears the cache after our own update and logs
  *   `plugin.updated` when PluginThemeListener (which normally logs it) is off.
  *
@@ -38,7 +38,7 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Updater {
 
-	public const UPDATE_URI   = 'https://github.com/wearenoformat/wp-noformat-logger';
+	public const UPDATE_URI   = 'https://github.com/wearenoformat/nf-logbook';
 	public const CHECK_NONCE  = 'nflog_update_check';
 	public const DOWNLOAD_MAX = 300;
 
@@ -73,14 +73,14 @@ final class Updater {
 	}
 
 	/**
-	 * Plugin basename (noformat-logger/noformat-logger.php).
+	 * Plugin basename (nf-logbook/nf-logbook.php).
 	 */
 	public static function basename(): string {
-		return function_exists( 'plugin_basename' ) ? plugin_basename( NOFORMAT_LOGGER_FILE ) : Release::SLUG . '/noformat-logger.php';
+		return function_exists( 'plugin_basename' ) ? plugin_basename( NOFORMAT_LOGGER_FILE ) : Release::SLUG . '/nf-logbook.php';
 	}
 
 	/**
-	 * Folder the plugin must keep (the installed one, normally noformat-logger).
+	 * Folder the plugin must keep (the installed one, normally nf-logbook).
 	 */
 	public static function folder(): string {
 		$dir = dirname( self::basename() );
@@ -148,7 +148,7 @@ final class Updater {
 			? '<p>' . htmlspecialchars( '' === $error ? 'No release notes.' : 'No release information: ' . $error, ENT_QUOTES ) . '</p>'
 			: Changelog::toHtml( $release['changelog'] );
 		return [
-			'name'           => null === $release ? 'Noformat Logger' : $release['name'],
+			'name'           => null === $release ? 'Noformat Logbook' : $release['name'],
 			'slug'           => Release::SLUG,
 			'version'        => null === $release ? $installed : $release['version'],
 			'author'         => '<a href="https://noformat.com">Noformat</a>',
@@ -189,7 +189,7 @@ final class Updater {
 			}
 			return $this->download( $release );
 		} catch ( \Throwable $e ) {
-			return new \WP_Error( 'nflog_update_download', 'The Noformat Logger update could not be downloaded: ' . $e->getMessage() );
+			return new \WP_Error( 'nflog_update_download', 'The Noformat Logbook update could not be downloaded: ' . $e->getMessage() );
 		}
 	}
 
@@ -202,11 +202,11 @@ final class Updater {
 	public function download( array $release ): string|\WP_Error {
 		$url = $release['package'];
 		if ( ! Release::isAllowedUrl( $url, $this->client->allowsLoopback() ) ) {
-			return new \WP_Error( 'nflog_update_insecure', 'Refusing to download the Noformat Logger update: the package URL is not HTTPS.' );
+			return new \WP_Error( 'nflog_update_insecure', 'Refusing to download the Noformat Logbook update: the package URL is not HTTPS.' );
 		}
 		$file = wp_tempnam( Release::ZIP );
 		if ( ! is_string( $file ) || '' === $file ) {
-			return new \WP_Error( 'nflog_update_download', 'The Noformat Logger update could not be downloaded: no temporary file.' );
+			return new \WP_Error( 'nflog_update_download', 'The Noformat Logbook update could not be downloaded: no temporary file.' );
 		}
 		$response = $this->client->get(
 			$url,
@@ -220,12 +220,12 @@ final class Updater {
 		);
 		if ( is_wp_error( $response ) ) {
 			wp_delete_file( $file );
-			return new \WP_Error( 'nflog_update_download', 'The Noformat Logger update could not be downloaded: ' . $response->get_error_message() );
+			return new \WP_Error( 'nflog_update_download', 'The Noformat Logbook update could not be downloaded: ' . $response->get_error_message() );
 		}
 		$code = (int) wp_remote_retrieve_response_code( $response );
 		if ( 200 !== $code ) {
 			wp_delete_file( $file );
-			return new \WP_Error( 'nflog_update_download', sprintf( 'The Noformat Logger update could not be downloaded (HTTP %d).', $code ) );
+			return new \WP_Error( 'nflog_update_download', sprintf( 'The Noformat Logbook update could not be downloaded (HTTP %d).', $code ) );
 		}
 		$verified = self::verify( $file, $release['sha256'], $release['version'] );
 		if ( is_wp_error( $verified ) ) {
@@ -249,7 +249,7 @@ final class Updater {
 			return new \WP_Error(
 				'nflog_update_checksum',
 				sprintf(
-					'The Noformat Logger %1$s package failed the SHA-256 check (manifest %2$s, download %3$s). The update was refused.',
+					'The Noformat Logbook %1$s package failed the SHA-256 check (manifest %2$s, download %3$s). The update was refused.',
 					$version,
 					substr( $expected, 0, 12 ) . '…',
 					is_string( $actual ) ? substr( $actual, 0, 12 ) . '…' : 'unreadable'
@@ -277,7 +277,7 @@ final class Updater {
 		try {
 			return self::renameSource( $source, $remoteSource, self::folder(), $wp_filesystem );
 		} catch ( \Throwable $e ) {
-			return new \WP_Error( 'nflog_update_source', 'The Noformat Logger package could not be prepared: ' . $e->getMessage() );
+			return new \WP_Error( 'nflog_update_source', 'The Noformat Logbook package could not be prepared: ' . $e->getMessage() );
 		}
 	}
 
@@ -294,10 +294,10 @@ final class Updater {
 		$source = rtrim( $source, '/\\' );
 		$remote = rtrim( $remote, '/\\' );
 		if ( ! is_object( $fs ) ) {
-			return new \WP_Error( 'nflog_update_source', 'The Noformat Logger package could not be prepared: no filesystem access.' );
+			return new \WP_Error( 'nflog_update_source', 'The Noformat Logbook package could not be prepared: no filesystem access.' );
 		}
-		if ( ! $fs->exists( $source . '/noformat-logger.php' ) ) {
-			return new \WP_Error( 'nflog_update_source', 'The package does not contain noformat-logger.php; the update was refused.' );
+		if ( ! $fs->exists( $source . '/nf-logbook.php' ) ) {
+			return new \WP_Error( 'nflog_update_source', 'The package does not contain nf-logbook.php; the update was refused.' );
 		}
 		if ( basename( $source ) === $folder ) {
 			return $source . '/';
@@ -307,11 +307,11 @@ final class Updater {
 			// Flat zip: the files are in the working directory itself.
 			$entries = $fs->dirlist( $remote );
 			if ( ! is_array( $entries ) || ! $fs->mkdir( $target ) ) {
-				return new \WP_Error( 'nflog_update_source', 'The Noformat Logger package could not be prepared.' );
+				return new \WP_Error( 'nflog_update_source', 'The Noformat Logbook package could not be prepared.' );
 			}
 			foreach ( array_keys( $entries ) as $name ) {
 				if ( $folder !== $name && ! $fs->move( $remote . '/' . $name, $target . '/' . $name ) ) {
-					return new \WP_Error( 'nflog_update_source', 'The Noformat Logger package could not be prepared.' );
+					return new \WP_Error( 'nflog_update_source', 'The Noformat Logbook package could not be prepared.' );
 				}
 			}
 			return $target . '/';

@@ -35,12 +35,12 @@ final class Ui {
 	 */
 	public static function severityLabel( Severity $severity ): string {
 		return match ( $severity ) {
-			Severity::CRITICAL => __( 'Critical', 'noformat-logger' ),
-			Severity::ERROR    => __( 'Error', 'noformat-logger' ),
-			Severity::WARNING  => __( 'Warning', 'noformat-logger' ),
-			Severity::NOTICE   => __( 'Notice', 'noformat-logger' ),
-			Severity::INFO     => __( 'Info', 'noformat-logger' ),
-			Severity::DEBUG    => __( 'Debug', 'noformat-logger' ),
+			Severity::CRITICAL => __( 'Critical', 'nf-logbook' ),
+			Severity::ERROR    => __( 'Error', 'nf-logbook' ),
+			Severity::WARNING  => __( 'Warning', 'nf-logbook' ),
+			Severity::NOTICE   => __( 'Notice', 'nf-logbook' ),
+			Severity::INFO     => __( 'Info', 'nf-logbook' ),
+			Severity::DEBUG    => __( 'Debug', 'nf-logbook' ),
 		};
 	}
 
@@ -51,18 +51,18 @@ final class Ui {
 	 */
 	public static function sourceLabel( string $source ): string {
 		return match ( $source ) {
-			'admin'        => __( 'Admin', 'noformat-logger' ),
-			'rest'         => __( 'REST', 'noformat-logger' ),
-			'ajax'         => __( 'Ajax', 'noformat-logger' ),
-			'xmlrpc'       => __( 'XML-RPC', 'noformat-logger' ),
-			'cron'         => __( 'Cron', 'noformat-logger' ),
-			'cli'          => __( 'WP-CLI', 'noformat-logger' ),
-			'frontend'     => __( 'Frontend', 'noformat-logger' ),
-			'app_password' => __( 'App password', 'noformat-logger' ),
-			'webhook'      => __( 'Webhook', 'noformat-logger' ),
-			'studio'       => __( 'Studio', 'noformat-logger' ),
-			'build'        => __( 'Build', 'noformat-logger' ),
-			''             => __( 'Unknown', 'noformat-logger' ),
+			'admin'        => __( 'Admin', 'nf-logbook' ),
+			'rest'         => __( 'REST', 'nf-logbook' ),
+			'ajax'         => __( 'Ajax', 'nf-logbook' ),
+			'xmlrpc'       => __( 'XML-RPC', 'nf-logbook' ),
+			'cron'         => __( 'Cron', 'nf-logbook' ),
+			'cli'          => __( 'WP-CLI', 'nf-logbook' ),
+			'frontend'     => __( 'Frontend', 'nf-logbook' ),
+			'app_password' => __( 'App password', 'nf-logbook' ),
+			'webhook'      => __( 'Webhook', 'nf-logbook' ),
+			'studio'       => __( 'Studio', 'nf-logbook' ),
+			'build'        => __( 'Build', 'nf-logbook' ),
+			''             => __( 'Unknown', 'nf-logbook' ),
 			default        => $source,
 		};
 	}

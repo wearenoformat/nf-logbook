@@ -1,4 +1,4 @@
-# Noformat Logger (WordPress)
+# Noformat Logbook (WordPress)
 
 Site-side logging for websites Noformat builds and maintains. The plugin keeps a
 tamper-evident, privacy-preserving log of every change made through WordPress
@@ -63,10 +63,22 @@ CONTRACT §2, enforced in code and asserted by the integration tests:
   `events_visible_to = capability_only` (see
   [Reading the log in wp-admin](#reading-the-log-in-wp-admin)).
 
+## Name and identifiers
+
+The plugin was called **Noformat Logger** (slug and folder `noformat-logger`)
+up to 1.1.x and is **Noformat Logbook** (`nf-logbook/nf-logbook.php`, text
+domain `nf-logbook`) from 1.2.0. Only the user-visible name, the folder, the
+main file, the admin page slug and the release asset changed. The wire and
+storage identifiers did not: REST namespace `noformat-logger/v1`, producer name
+`wp-noformat-logger`, tables `{prefix}nflog_*`, options `nflog_*` /
+`noformat_logger_*`, constants `NOFORMAT_LOGGER_*`, hooks `noformat_logger/*`,
+capabilities, cron hooks, the PHP namespace `Noformat\Logger` and `wp nflog`.
+Upgrading a 1.1.x site: see [docs/UPDATES.md](docs/UPDATES.md#upgrading-from-11x-the-rename).
+
 ## Installation
 
-1. Upload the plugin to `wp-content/plugins/noformat-logger/` (no `vendor/`
-   needed) and activate it (`wp plugin activate noformat-logger`). Activation
+1. Upload the plugin to `wp-content/plugins/nf-logbook/` (no `vendor/`
+   needed) and activate it (`wp plugin activate nf-logbook`). Activation
    creates four tables (`{prefix}nflog_events`, `nflog_fingerprints`,
    `nflog_nonces`, `nflog_meta`) and schedules the cron jobs.
 2. Create an API key and print the `wp-config.php` lines:
@@ -85,14 +97,14 @@ CONTRACT §2, enforced in code and asserted by the integration tests:
 
    Without constants the generated key stays in the database, encrypted with
    libsodium `secretbox` under a key derived from `wp_salt('auth')`; it can also
-   be generated under **Tools → Noformat Logger → Status**. The secret is shown once.
+   be generated under **Tools → Noformat Logbook → Status**. The secret is shown once.
    When constants are set, `wp nflog key generate --print-config` prints a fresh
    pair without storing it (for rotation).
 4. Optional, recommended: install the MU loader so PHP errors raised while
    other plugins bootstrap are caught too:
 
    ```sh
-   wp nflog install-mu-loader     # copies mu-loader/noformat-logger-loader.php to wp-content/mu-plugins/
+   wp nflog install-mu-loader     # copies mu-loader/nf-logbook-loader.php to wp-content/mu-plugins/
    ```
 
    The loader is a small chained error handler that buffers up to 100 early
@@ -106,11 +118,11 @@ the production constants.
 ## Updates
 
 From 1.1.0 the plugin updates like any other plugin (Dashboard → Updates,
-*update now*, auto-update toggle, `wp plugin update noformat-logger`, *View
-details*) from the **GitHub Releases** of `wearenoformat/wp-noformat-logger`,
+*update now*, auto-update toggle, `wp plugin update nf-logbook`, *View
+details*) from the **GitHub Releases** of `wearenoformat/nf-logbook`,
 with no update server of our own: the `Update URI` header routes WordPress to
 the `update_plugins_github.com` filter, the release's `manifest.json` carries
-the version, requirements, changelog and the SHA-256 of `noformat-logger.zip`,
+the version, requirements, changelog and the SHA-256 of `nf-logbook.zip`,
 and a package whose digest differs is refused. Checks are cached for 6 hours
 (ETag reused) and never break the site; the result is on the Status tab
 (*Check now*) and in `wp nflog update-check`. Optional constants:
@@ -161,18 +173,19 @@ shared fixtures in `tests/fixtures/`.
 
 ## Settings and module toggles
 
-**Tools → Noformat Logger** is one page with four tabs:
+**Tools → Noformat Logbook** is one page with four tabs:
 **Content log** (who changed what, see [below](#reading-the-log-in-wp-admin)),
 **System log** (the developer console), **Status** (connection, key id and
 source, last pull, ack cursor, storage, chain head with an inline *Verify
 chain*, health, scheduled jobs, plugin updates; generate/rotate/revoke a
 database key) and **Settings** (administrators: the settings and module
-toggles below). URLs: `tools.php?page=noformat-logger&tab=content`
+toggles below). URLs: `tools.php?page=nf-logbook&tab=content`
 (`system`, `status`, `settings`); without `tab` the first tab the user may
 open is shown, and a tab the user may not open is not in the bar and answers
-403. The 1.0 menu URLs (`admin.php?page=noformat-logger`, `…-system`,
-`…-status`, `…-settings`) and the older `tools.php?page=noformat-logger&tab=events`
-redirect there (301) with their filters. The Plugins screen has a *Settings*
+403. The URLs from before the rename to Noformat Logbook
+(`tools.php?page=noformat-logger[&tab=…]`, 1.1), the 1.0 menu URLs
+(`admin.php?page=noformat-logger`, `…-system`, `…-status`, `…-settings`) and the
+older `…&tab=events` redirect there (301) with their tab and filters. The Plugins screen has a *Settings*
 link for administrators. Users with `noformat_logger_view_events` but without
 `manage_options` see the logs and a read-only Status tab.
 

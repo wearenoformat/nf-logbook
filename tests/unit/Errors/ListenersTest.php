@@ -25,12 +25,12 @@ final class ListenersTest extends TestCase {
 	}
 
 	private function mapper(): PathMapper {
-		return new PathMapper( [ '/srv/www/' => '' ], '/srv/www/wp-content/plugins/noformat-logger/src' );
+		return new PathMapper( [ '/srv/www/' => '' ], '/srv/www/wp-content/plugins/nf-logbook/src' );
 	}
 
 	public function test_deprecation_caller_skips_core_and_logger(): void {
 		$frames = [
-			[ 'file' => '/srv/www/wp-content/plugins/noformat-logger/src/Errors/DeprecationListener.php', 'line' => 1 ],
+			[ 'file' => '/srv/www/wp-content/plugins/nf-logbook/src/Errors/DeprecationListener.php', 'line' => 1 ],
 			[ 'file' => '/srv/www/wp-includes/class-wp-hook.php', 'line' => 324 ],
 			[ 'file' => '/srv/www/wp-includes/functions.php', 'line' => 5500 ],
 			[ 'file' => '/srv/www/wp-includes/deprecated.php', 'line' => 10 ],

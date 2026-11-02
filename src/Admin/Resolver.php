@@ -134,9 +134,9 @@ final class Resolver {
 	private function postLabel( int $id ): string {
 		$post = get_post( $id );
 		if ( ! is_object( $post ) ) {
-			return '#' . esc_html( (string) $id ) . ' <span class="nflog-muted">(' . esc_html__( 'deleted', 'noformat-logger' ) . ')</span>';
+			return '#' . esc_html( (string) $id ) . ' <span class="nflog-muted">(' . esc_html__( 'deleted', 'nf-logbook' ) . ')</span>';
 		}
-		$title = '' === trim( (string) $post->post_title ) ? __( '(no title)', 'noformat-logger' ) : (string) $post->post_title;
+		$title = '' === trim( (string) $post->post_title ) ? __( '(no title)', 'nf-logbook' ) : (string) $post->post_title;
 		$text  = esc_html( $title ) . ' <span class="nflog-muted">#' . esc_html( (string) $id ) . '</span>';
 		if ( current_user_can( 'edit_post', $id ) ) {
 			$link = get_edit_post_link( $id, 'raw' );
@@ -154,11 +154,11 @@ final class Resolver {
 	 */
 	private function userLabel( int $id ): string {
 		if ( ! $this->canListUsers() ) {
-			return esc_html( sprintf( /* translators: %d: user id */ __( 'user #%d', 'noformat-logger' ), $id ) );
+			return esc_html( sprintf( /* translators: %d: user id */ __( 'user #%d', 'nf-logbook' ), $id ) );
 		}
 		$user = get_userdata( $id );
 		if ( ! is_object( $user ) || ! isset( $user->display_name ) ) {
-			return '#' . esc_html( (string) $id ) . ' <span class="nflog-muted">(' . esc_html__( 'deleted', 'noformat-logger' ) . ')</span>';
+			return '#' . esc_html( (string) $id ) . ' <span class="nflog-muted">(' . esc_html__( 'deleted', 'nf-logbook' ) . ')</span>';
 		}
 		$name = (string) $user->display_name;
 		$link = get_edit_user_link( $id );
@@ -188,11 +188,11 @@ final class Resolver {
 			];
 		}
 		$words = [
-			'cli'       => __( 'WP-CLI', 'noformat-logger' ),
-			'cron'      => __( 'Cron', 'noformat-logger' ),
-			'system'    => __( 'System', 'noformat-logger' ),
-			'anonymous' => __( 'A visitor', 'noformat-logger' ),
-			'app'       => __( 'An app', 'noformat-logger' ),
+			'cli'       => __( 'WP-CLI', 'nf-logbook' ),
+			'cron'      => __( 'Cron', 'nf-logbook' ),
+			'system'    => __( 'System', 'nf-logbook' ),
+			'anonymous' => __( 'A visitor', 'nf-logbook' ),
+			'app'       => __( 'An app', 'nf-logbook' ),
 		];
 		return [
 			'kind'    => isset( $words[ $type ] ) ? $type : 'system',
@@ -213,7 +213,7 @@ final class Resolver {
 			return [
 				'kind' => 'user_hidden',
 				/* translators: %d: user id */
-				'name' => sprintf( __( 'User #%d', 'noformat-logger' ), $id ),
+				'name' => sprintf( __( 'User #%d', 'nf-logbook' ), $id ),
 				'url'  => '',
 			];
 		}
@@ -222,7 +222,7 @@ final class Resolver {
 			return [
 				'kind' => 'user_deleted',
 				/* translators: %d: user id */
-				'name' => sprintf( __( 'Deleted user #%d', 'noformat-logger' ), $id ),
+				'name' => sprintf( __( 'Deleted user #%d', 'nf-logbook' ), $id ),
 				'url'  => '',
 			];
 		}
@@ -259,7 +259,7 @@ final class Resolver {
 		}
 		$title = trim( is_scalar( $fields['post_title'] ?? null ) ? (string) $fields['post_title'] : '' );
 		return [
-			'title'   => '' === $title ? __( '(no title)', 'noformat-logger' ) : $title,
+			'title'   => '' === $title ? __( '(no title)', 'nf-logbook' ) : $title,
 			'url'     => $url,
 			'type'    => $type,
 			'private' => ! $viewable && ! $canEdit,

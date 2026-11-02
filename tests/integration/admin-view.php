@@ -40,8 +40,8 @@ $check  = static function ( string $name, bool $ok, string $detail = '' ) use ( 
 
 require_once ABSPATH . 'wp-admin/includes/admin.php';
 $_SERVER['HTTP_HOST']   = (string) wp_parse_url( home_url(), PHP_URL_HOST ) . ':' . (string) wp_parse_url( home_url(), PHP_URL_PORT );
-$_SERVER['REQUEST_URI'] = '/wp-admin/tools.php?page=noformat-logger&tab=content';
-set_current_screen( 'tools_page_noformat-logger' );
+$_SERVER['REQUEST_URI'] = '/wp-admin/tools.php?page=nf-logbook&tab=content';
+set_current_screen( 'tools_page_nf-logbook' );
 
 $plugin = Plugin::instance();
 if ( null === $plugin ) {
@@ -106,7 +106,7 @@ if ( 'admin' === $mode ) {
 	$check( 'content log default period is 30 days', 1 === preg_match( '#class="nflog-chip is-active"[^>]*>30 days<#', $html ) );
 	$check( 'content log has the export link with nonce', str_contains( $html, 'nflog_export=json' ) && str_contains( $html, '_wpnonce=' ) );
 	$check( 'content log shows no system events', ! str_contains( $html, 'Test event from WP-CLI' ) && ! str_contains( $html, 'Failed login' ) );
-	$check( 'needs-attention strip links to the System log', str_contains( $html, 'nflog-attention' ) && 1 === preg_match( '#tools\.php\?page=noformat-logger(&|&\#038;|&amp;)tab=system#', $html ) );
+	$check( 'needs-attention strip links to the System log', str_contains( $html, 'nflog-attention' ) && 1 === preg_match( '#tools\.php\?page=nf-logbook(&|&\#038;|&amp;)tab=system#', $html ) );
 
 	$postId  = (int) ( $opt['post'] ?? 0 );
 	$title   = (string) ( $opt['post_title'] ?? '' );
@@ -184,7 +184,7 @@ if ( 'admin' === $mode ) {
 
 	$status = $render( 'status', [], $admin );
 	$check( 'status page: cards, key management and verify button', str_contains( $status, 'nflog-status-card' ) && str_contains( $status, 'Plugin version' ) && str_contains( $status, 'data-nflog-verify' ) && str_contains( $status, 'Scheduled jobs' ) );
-	$check( 'status page: Updates card with source and Check now (administrator)', str_contains( $status, '>Updates</h2>' ) && str_contains( $status, 'GitHub wearenoformat/wp-noformat-logger' ) && str_contains( $status, 'name="nflog_update_check"' ) );
+	$check( 'status page: Updates card with source and Check now (administrator)', str_contains( $status, '>Updates</h2>' ) && str_contains( $status, 'GitHub wearenoformat/nf-logbook' ) && str_contains( $status, 'name="nflog_update_check"' ) );
 	$settings = $render( 'settings', [], $admin );
 	$check( 'settings page: options.php form with both access settings and modules', str_contains( $settings, 'action="options.php"' ) && str_contains( $settings, '[events_visible_to]' ) && str_contains( $settings, '[system_log_visible_to]' ) && str_contains( $settings, '[modules][PostListener]' ) && str_contains( $settings, 'option_page' ) );
 	$check( 'settings page uses human labels, option names unchanged', str_contains( $settings, 'Retention (days)' ) && str_contains( $settings, 'Maximum stored events' ) && str_contains( $settings, 'Delete data on uninstall' ) && str_contains( $settings, '[max_rows]' ) && str_contains( $settings, 'inputmode="numeric"' ) );
@@ -216,7 +216,7 @@ if ( 'restricted' === $mode ) {
 	wp_set_current_user( $admin );
 	$check( 'administrator tabs: System log, Status, Settings (no Content log)', [ Menu::SYSTEM, Menu::STATUS, Menu::SETTINGS ] === Access::tabs( $plugin->config() ), implode( ',', Access::tabs( $plugin->config() ) ) );
 	$html = $content( [], $admin );
-	$check( 'administrator without the capability gets the no-permission view', str_contains( $html, 'You do not have permission to view the Noformat Logger event log.' ) && [] === $entries( $html ) && ! str_contains( $html, 'nflog_export=json' ) );
+	$check( 'administrator without the capability gets the no-permission view', str_contains( $html, 'You do not have permission to view the Noformat Logbook event log.' ) && [] === $entries( $html ) && ! str_contains( $html, 'nflog_export=json' ) );
 	$check( 'administrator widget: nothing rendered', '' === trim( $widget( $admin ) ) );
 	$check( 'administrator keeps the System log (separate setting)', Access::canViewSystemLog( $plugin->config() ) );
 
