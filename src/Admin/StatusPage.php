@@ -13,13 +13,14 @@ use Noformat\Logger\Cron\Scheduler;
 use Noformat\Logger\Plugin;
 use Noformat\Logger\Rest\KeyStore;
 use Noformat\Logger\Storage\Schema;
+use Noformat\Logger\Update\Updater;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
  * Status cards: Controlroom connection (and key management for
- * administrators), storage and the hash chain (verify inline), site health
- * and the plugin's scheduled jobs. Readable by everyone who may open the menu;
+ * administrators), storage and the hash chain (verify inline), site health,
+ * the plugin's scheduled jobs and its updates (Check now for administrators). Readable by everyone who may open the menu;
  * key actions need manage_options.
  */
 final class StatusPage {
@@ -36,6 +37,8 @@ final class StatusPage {
 	private string $notice = '';
 
 	private string $noticeType = 'success';
+
+	private ?Updater $updater = null;
 
 	/**
 	 * Constructor.
@@ -57,6 +60,31 @@ final class StatusPage {
 	 */
 	public function load(): void {
 		$this->handleKeyAction();
+		$this->handleUpdateCheck();
+	}
+
+	/**
+	 * "Check now" on the Updates card: forget the cached release and check GitHub again.
+	 */
+	public function handleUpdateCheck(): void {
+		if ( ! isset( $_POST['nflog_update_check'] ) ) {
+			return;
+		}
+		check_admin_referer( Updater::CHECK_NONCE );
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You are not allowed to check for Noformat Logger updates.', 'noformat-logger' ), 403 );
+		}
+		$state            = $this->updater()->checkNow();
+		$this->notice     = '' === $state['error'] ? __( 'Update check done.', 'noformat-logger' ) : __( 'Update check failed:', 'noformat-logger' ) . ' ' . $state['error'];
+		$this->noticeType = '' === $state['error'] ? 'success' : 'error';
+		nocache_headers();
+	}
+
+	/**
+	 * The updater (lazily).
+	 */
+	private function updater(): Updater {
+		return $this->updater ??= new Updater( $this->plugin );
 	}
 
 	/**
@@ -123,6 +151,7 @@ final class StatusPage {
 		$this->storage( $manifest );
 		$this->health();
 		$this->jobs();
+		$this->updates( $canManage );
 		echo '</div></div></div>';
 	}
 
@@ -290,6 +319,38 @@ final class StatusPage {
 			);
 		}
 		echo '</tbody></table></section>';
+	}
+
+	/**
+	 * Updates card (cached state only: rendering never calls GitHub).
+	 *
+	 * @param bool $canManage manage_options.
+	 */
+	private function updates( bool $canManage ): void {
+		$client  = $this->updater()->client();
+		$summary = Updater::summary( $client->cached() ?? [], NOFORMAT_LOGGER_VERSION, $client->sourceLabel() );
+		$state   = 0 === $summary['checked_at'] ? [ 'idle', __( 'Not checked yet', 'noformat-logger' ) ] : ( ! $summary['ok'] ? [ 'error', __( 'Check failed', 'noformat-logger' ) ] : ( $summary['update_available'] ? [ 'warning', __( 'Update available', 'noformat-logger' ) ] : [ 'ok', __( 'Up to date', 'noformat-logger' ) ] ) );
+		$this->cardOpen( __( 'Updates', 'noformat-logger' ), 'download', $state );
+		$latest = null === $summary['latest'] ? '<span class="nflog-muted">' . esc_html__( 'unknown', 'noformat-logger' ) . '</span>' : esc_html( $summary['latest'] );
+		if ( $summary['update_available'] && current_user_can( 'update_plugins' ) ) {
+			$latest .= ' · <a href="' . esc_url( admin_url( 'update-core.php' ) ) . '">' . esc_html__( 'Update in Dashboard → Updates', 'noformat-logger' ) . '</a>';
+		}
+		$rows = [
+			__( 'Installed', 'noformat-logger' )  => esc_html( $summary['installed'] ),
+			__( 'Latest', 'noformat-logger' )     => $latest,
+			__( 'Source', 'noformat-logger' )     => esc_html( $summary['source'] ),
+			__( 'Last check', 'noformat-logger' ) => 0 === $summary['checked_at'] ? esc_html__( 'never', 'noformat-logger' ) : self::ago( $summary['checked_at'] ),
+			__( 'Result', 'noformat-logger' )     => 0 === $summary['checked_at'] ? '—' : ( $summary['ok'] ? self::pill( 'ok', __( 'ok', 'noformat-logger' ) ) : '<span class="nflog-update-error">' . esc_html( $summary['error'] ) . '</span>' ),
+		];
+		self::kv( $rows );
+		if ( $canManage ) {
+			echo '<form method="post" class="nflog-card__actions" action="' . esc_url( self::url() ) . '">';
+			wp_nonce_field( Updater::CHECK_NONCE );
+			echo '<button type="submit" class="nflog-btn nflog-btn--secondary" name="nflog_update_check" value="1">' . Ui::icon( 'refresh' ) . '<span>' . esc_html__( 'Check now', 'noformat-logger' ) . '</span></button>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- static SVG.
+			echo '<p class="nflog-help">' . esc_html__( 'Releases are checked every 6 hours; WordPress installs them like any other plugin update.', 'noformat-logger' ) . '</p>';
+			echo '</form>';
+		}
+		echo '</section>';
 	}
 
 	/**

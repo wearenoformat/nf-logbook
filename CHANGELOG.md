@@ -2,7 +2,18 @@
 
 All notable changes to this plugin. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.1.0] - 2026-11-02
+
+### Added (updates)
+
+- The plugin updates like any other plugin, from the **GitHub Releases** of `wearenoformat/wp-noformat-logger` (constant `NOFORMAT_LOGGER_UPDATE_REPO`), with no update server of our own: Dashboard → Updates and the Plugins screen show *update now*, the auto-update toggle works, `wp plugin update noformat-logger` works, and *View details* shows the release notes (`src/Update/`, `docs/UPDATES.md`).
+- `Update URI: https://github.com/wearenoformat/wp-noformat-logger` (was `false`); `update_plugins_github.com` returns the latest release's update array, `plugins_api` the details modal.
+- Release discovery: one `GET /repos/{repo}/releases/latest` per check, cached 6 hours in the transient `noformat_logger_update` with the ETag reused (304 keeps the cache); the release's `manifest.json` (version, requirements, changelog, `sha256`) is read only when the release changed. On 403/429/404 or network errors the cached answer is kept and a human reason recorded ("GitHub answered 404: the repository is private or the name is wrong …").
+- Every package is downloaded over HTTPS by the plugin and its SHA-256 compared with the manifest; a mismatch refuses the update ("… failed the SHA-256 check …"). The unpacked folder is always renamed to `noformat-logger`. Our own update clears the cache and is logged as `plugin.updated` (by the updater itself when PluginThemeListener is off).
+- Optional constants `NOFORMAT_LOGGER_UPDATE_TOKEN` (fine-grained read-only token for a private repository; it would live in every site's wp-config, a public repository or releases-only mirror is recommended) and `NOFORMAT_LOGGER_UPDATE_MANIFEST` (self-hosted manifest URL, bypasses GitHub).
+- Status tab: **Updates** card (installed, latest, source, last check, result) with **Check now** for administrators; `wp nflog update-check [--cached] [--format=json]` prints the same line.
+- Packaging: `.distignore`, `tools/release.sh <version>` (version / CHANGELOG / tag checks, `composer check`, zip with top folder `noformat-logger/`, `manifest.json`, tag, `gh release create`; `--local-only` for tests) and `.github/workflows/release.yml` (same on a pushed `v*` tag).
+- Integration: `tests/integration/smoke-update.sh` (in `run-all.sh`) updates the test site from a locally served 9.9.9 release through WP-CLI and checks that a tampered zip is refused.
 
 ### Changed (wp-admin)
 

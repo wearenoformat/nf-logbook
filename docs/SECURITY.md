@@ -53,6 +53,13 @@
 
 ## Operational notes
 
+- Plugin updates come from GitHub Releases (`docs/UPDATES.md`). Packages are
+  downloaded over HTTPS only and installed only when their SHA-256 matches the
+  release's `manifest.json`. The optional `NOFORMAT_LOGGER_UPDATE_TOKEN` (private
+  repositories) would sit in wp-config.php on every site; prefer a public
+  repository or a public releases-only mirror. The token is never stored in the
+  database, logged, or shown (error messages are redacted).
+
 - Events are readable in wp-admin (Tools → Noformat Logger → Content log / System log,
   dashboard widget, JSON export, the System log live tail) by administrators (`manage_options`) and by users with
   the `noformat_logger_view_events` capability, which is assigned to no role.

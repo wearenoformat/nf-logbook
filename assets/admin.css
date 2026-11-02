@@ -260,6 +260,7 @@
 .nflog-kv { margin: 0; padding: 4px var(--nflog-s5); }
 .nflog-kv > div { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: var(--nflog-s3); align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--nflog-border); }
 .nflog-kv > div:last-child { border-bottom: 0; }
+.nflog-update-error { color: var(--nflog-critical); overflow-wrap: anywhere; }
 .nflog-kv dt { margin: 0; color: var(--nflog-muted); font-size: 13px; }
 .nflog-kv dd { margin: 0; min-width: 0; color: var(--nflog-text); overflow-wrap: anywhere; }
 

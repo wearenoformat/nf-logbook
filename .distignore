@@ -1,0 +1,16 @@
+.git*
+.github
+.local
+.phpunit.cache
+.DS_Store
+vendor
+node_modules
+tests
+tools
+composer.*
+phpcs.xml.dist
+phpstan.neon.dist
+phpunit.xml.dist
+PLAN.md
+.distignore
+*.zip

@@ -32,7 +32,7 @@ fi
 mkdir -p "${LOG_DIR}"
 
 declare -a NAMES=() RESULTS=() LINES=()
-for script in smoke.sh smoke-content.sh smoke-privacy.sh smoke-system.sh smoke-errors.sh smoke-admin.sh; do
+for script in smoke.sh smoke-content.sh smoke-privacy.sh smoke-system.sh smoke-errors.sh smoke-admin.sh smoke-update.sh; do
   echo
   echo "==> ${script}"
   log="${LOG_DIR}/${script%.sh}.log"

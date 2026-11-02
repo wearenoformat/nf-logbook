@@ -68,6 +68,7 @@ wp-noformat-logger/
 │   ├── Admin/Menu.php           Tools → Noformat Logger: tabs Content log / System log / Status / Settings (D11), legacy redirects
 │   ├── Admin/ContentLogPage.php, SystemLogPage.php, StatusPage.php, SettingsPage.php, EventFilters.php, Resolver.php, Access.php   the tabs, JSON export
 │   ├── Admin/DashboardWidget.php   last 24 h per severity, latest critical/error
+│   ├── Update/                  Updater (WordPress update hooks), ReleaseClient (GitHub Releases / manifest, cache), Release, Changelog
 │   ├── Cli/Commands.php         wp nflog …
 │   └── Cron/Scheduler.php       prune, integrity check, nonce cleanup, health cache
 ├── tools/fetch-events.mjs       zero-dependency Node reference client that signs requests (for Controlroom devs and smoke tests)
@@ -296,7 +297,13 @@ tooling, optional object-cache backed nonce store.
   summaries whatever their key; CONTRACT §2 gained the bullet. Canary check in
   `tests/integration/smoke-privacy.sh`.
 
-- 2026-11-02: the admin UI moves from the top-level menu back under Tools,
-  as one page `tools.php?page=noformat-logger` with in-page tabs (Content log ·
-  System log · Status · Settings); access rules unchanged, a tab the user may
-  not open is hidden and answers 403; the 1.0 URLs redirect (301). D11 reworded.
+- 2026-11-02 (1.1.0): the admin UI moves from the top-level menu back under
+  Tools, as one page `tools.php?page=noformat-logger` with in-page tabs
+  (Content log · System log · Status · Settings); access rules unchanged, a tab
+  the user may not open is hidden and answers 403; the 1.0 URLs redirect (301).
+  D11 reworded. New `src/Update/`: the plugin updates like any other plugin
+  from GitHub Releases of `wearenoformat/wp-noformat-logger` (`Update URI`,
+  `update_plugins_github.com`, `plugins_api`, SHA-256 check of the package
+  against the release's `manifest.json`), no update server of our own;
+  `tools/release.sh` and `.github/workflows/release.yml` cut releases
+  (`docs/UPDATES.md`).

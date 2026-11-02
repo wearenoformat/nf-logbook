@@ -18,6 +18,7 @@ use Noformat\Logger\Rest\KeyStore;
 use Noformat\Logger\Severity;
 use Noformat\Logger\Storage\EventRepository;
 use Noformat\Logger\Storage\Meta;
+use Noformat\Logger\Update\Updater;
 use WP_CLI;
 
 defined( 'ABSPATH' ) || exit;
@@ -418,6 +419,50 @@ final class Commands {
 	public function health( array $args, array $assoc ): void {
 		unset( $args, $assoc );
 		WP_CLI::line( (string) wp_json_encode( $this->plugin->health()->snapshot(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+	}
+
+	/**
+	 * Check for a plugin update now and print the result (as on the Status tab).
+	 *
+	 * Forgets the cached release, asks GitHub (or NOFORMAT_LOGGER_UPDATE_MANIFEST)
+	 * once and refreshes WordPress' plugin update list. A failed check is a
+	 * warning, never an error: the site keeps working without updates.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--cached]
+	 * : Print the cached answer without checking.
+	 *
+	 * [--format=<format>]
+	 * : line or json.
+	 * ---
+	 * default: line
+	 * options:
+	 *   - line
+	 *   - json
+	 * ---
+	 *
+	 * @subcommand update-check
+	 *
+	 * @param list<string>               $args  Positional.
+	 * @param array<string, string|bool> $assoc Options.
+	 */
+	public function updateCheck( array $args, array $assoc ): void {
+		unset( $args );
+		$updater = new Updater( $this->plugin );
+		$client  = $updater->client();
+		$state   = ! empty( $assoc['cached'] ) ? ( $client->cached() ?? [] ) : $updater->checkNow();
+		$summary = Updater::summary( $state, NOFORMAT_LOGGER_VERSION, $client->sourceLabel() );
+		if ( 'json' === ( $assoc['format'] ?? 'line' ) ) {
+			WP_CLI::line( (string) wp_json_encode( $summary, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+			return;
+		}
+		WP_CLI::line( Updater::line( $summary, 0 === $summary['checked_at'] ? 'never' : gmdate( 'Y-m-d H:i:s', $summary['checked_at'] ) . ' UTC' ) );
+		if ( '' !== $summary['error'] ) {
+			WP_CLI::warning( 'Update check failed: ' . $summary['error'] );
+		} elseif ( $summary['update_available'] ) {
+			WP_CLI::log( 'Run `wp plugin update noformat-logger` to install ' . $summary['latest'] . '.' );
+		}
 	}
 
 	/**

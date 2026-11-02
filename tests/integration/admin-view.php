@@ -184,6 +184,7 @@ if ( 'admin' === $mode ) {
 
 	$status = $render( 'status', [], $admin );
 	$check( 'status page: cards, key management and verify button', str_contains( $status, 'nflog-status-card' ) && str_contains( $status, 'Plugin version' ) && str_contains( $status, 'data-nflog-verify' ) && str_contains( $status, 'Scheduled jobs' ) );
+	$check( 'status page: Updates card with source and Check now (administrator)', str_contains( $status, '>Updates</h2>' ) && str_contains( $status, 'GitHub wearenoformat/wp-noformat-logger' ) && str_contains( $status, 'name="nflog_update_check"' ) );
 	$settings = $render( 'settings', [], $admin );
 	$check( 'settings page: options.php form with both access settings and modules', str_contains( $settings, 'action="options.php"' ) && str_contains( $settings, '[events_visible_to]' ) && str_contains( $settings, '[system_log_visible_to]' ) && str_contains( $settings, '[modules][PostListener]' ) && str_contains( $settings, 'option_page' ) );
 	$check( 'settings page uses human labels, option names unchanged', str_contains( $settings, 'Retention (days)' ) && str_contains( $settings, 'Maximum stored events' ) && str_contains( $settings, 'Delete data on uninstall' ) && str_contains( $settings, '[max_rows]' ) && str_contains( $settings, 'inputmode="numeric"' ) );

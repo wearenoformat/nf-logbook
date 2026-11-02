@@ -18,6 +18,8 @@ require_once NOFORMAT_LOGGER_DIR . 'src/Autoloader.php';
 \Noformat\Logger\Autoloader::register( NOFORMAT_LOGGER_DIR . 'src/' );
 
 \Noformat\Logger\Cron\Scheduler::unschedule();
+// Cached release information of the updater (a cache, removed whatever the data setting).
+delete_transient( \Noformat\Logger\Update\ReleaseClient::TRANSIENT );
 
 $nflog_config = \Noformat\Logger\Config::fromEnvironment();
 if ( $nflog_config->bool( 'delete_data_on_uninstall' ) ) {

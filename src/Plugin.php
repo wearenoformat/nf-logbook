@@ -170,6 +170,7 @@ final class Plugin {
 
 		( new Controller( $this, $this->authenticator, new Responder( $this->repository, $this->authenticator ) ) )->hooks();
 		( new Scheduler( $this ) )->hooks();
+		( new Update\Updater( $this ) )->hooks();
 
 		if ( is_admin() ) {
 			( new Menu( $this ) )->hooks();

@@ -778,7 +778,7 @@ after 1 h; without a cache they are computed inline, except Site Health).
   "cache": { "generated_at": "…", "age_seconds": 23 },          // null when computed inline
   "versions": {
     "php": "8.3.12", "wordpress": "6.8.3", "db_engine": "mysql", // mysql | sqlite
-    "db_server": "8.0.38", "wp_db": 60421, "plugin": "1.0.1",
+    "db_server": "8.0.38", "wp_db": 60421, "plugin": "1.1.0",
     "schema": { "event": 1, "database": 1, "expected": 1 },
     "php_sapi": "fpm-fcgi", "php_memory": "256M"
   },

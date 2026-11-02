@@ -1,0 +1,45 @@
+# Builds and publishes a release when a v* tag is pushed (same steps as tools/release.sh).
+# When tools/release.sh already created the release, the last step finds it and stops.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Set up PHP 8.3
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite, sodium
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --no-progress --prefer-dist
+
+      - name: composer check
+        run: composer check
+
+      - name: Build and publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOFORMAT_LOGGER_UPDATE_REPO: ${{ github.repository }}
+        run: tools/release.sh --ci --skip-check "${GITHUB_REF_NAME}"

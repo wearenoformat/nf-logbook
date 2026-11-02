@@ -85,7 +85,7 @@ CONTRACT §2, enforced in code and asserted by the integration tests:
 
    Without constants the generated key stays in the database, encrypted with
    libsodium `secretbox` under a key derived from `wp_salt('auth')`; it can also
-   be generated under **Noformat Logger → Status**. The secret is shown once.
+   be generated under **Tools → Noformat Logger → Status**. The secret is shown once.
    When constants are set, `wp nflog key generate --print-config` prints a fresh
    pair without storing it (for rotation).
 4. Optional, recommended: install the MU loader so PHP errors raised while
@@ -102,6 +102,23 @@ CONTRACT §2, enforced in code and asserted by the integration tests:
 
 Every site and environment gets its own key; a cloned staging site must not keep
 the production constants.
+
+## Updates
+
+From 1.1.0 the plugin updates like any other plugin (Dashboard → Updates,
+*update now*, auto-update toggle, `wp plugin update noformat-logger`, *View
+details*) from the **GitHub Releases** of `wearenoformat/wp-noformat-logger`,
+with no update server of our own: the `Update URI` header routes WordPress to
+the `update_plugins_github.com` filter, the release's `manifest.json` carries
+the version, requirements, changelog and the SHA-256 of `noformat-logger.zip`,
+and a package whose digest differs is refused. Checks are cached for 6 hours
+(ETag reused) and never break the site; the result is on the Status tab
+(*Check now*) and in `wp nflog update-check`. Optional constants:
+`NOFORMAT_LOGGER_UPDATE_REPO`, `NOFORMAT_LOGGER_UPDATE_TOKEN` (private
+repositories; a public repository or a public releases-only mirror is
+recommended instead), `NOFORMAT_LOGGER_UPDATE_MANIFEST` (self-hosted manifest).
+Releases are cut with `tools/release.sh <version>` or by pushing a `v*` tag
+(`.github/workflows/release.yml`). Details: [docs/UPDATES.md](docs/UPDATES.md).
 
 ## How the Controlroom connects
 
@@ -148,8 +165,8 @@ shared fixtures in `tests/fixtures/`.
 **Content log** (who changed what, see [below](#reading-the-log-in-wp-admin)),
 **System log** (the developer console), **Status** (connection, key id and
 source, last pull, ack cursor, storage, chain head with an inline *Verify
-chain*, health, scheduled jobs; generate/rotate/revoke a database
-key) and **Settings** (administrators: the settings and module
+chain*, health, scheduled jobs, plugin updates; generate/rotate/revoke a
+database key) and **Settings** (administrators: the settings and module
 toggles below). URLs: `tools.php?page=noformat-logger&tab=content`
 (`system`, `status`, `settings`); without `tab` the first tab the user may
 open is shown, and a tab the user may not open is not in the bar and answers
@@ -355,6 +372,7 @@ wp nflog health                                 # health snapshot JSON (same as 
 wp nflog marker "Release 2.3" [--ref=v2.3.0]    # deploy marker
 wp nflog test-event [--severity=info]
 wp nflog install-mu-loader [--force]
+wp nflog update-check [--cached] [--format=json]  # check GitHub for a plugin update now (docs/UPDATES.md)
 ```
 
 `key rotate` keeps the previous key valid for 24 hours; `key revoke` ends the
@@ -465,7 +483,8 @@ NFLOG_WP_DIR=$PWD/.local/wp bash tests/integration/smoke-content.sh   # content 
 NFLOG_WP_DIR=$PWD/.local/wp bash tests/integration/smoke-privacy.sh   # privacy canary: profile, form-submission, comment and ACF values never leave in clear
 NFLOG_WP_DIR=$PWD/.local/wp bash tests/integration/smoke-system.sh    # settings, plugins/themes, users, auth, probes
 NFLOG_WP_DIR=$PWD/.local/wp bash tests/integration/smoke-errors.sh    # PHP/DB/HTTP/mail errors, MU loader, integrity, health, audit
-NFLOG_WP_DIR=$PWD/.local/wp bash tests/integration/smoke-admin.sh     # wp-admin viewer, export, widget, access setting, query budget
+NFLOG_WP_DIR=$PWD/.local/wp bash tests/integration/smoke-admin.sh     # Tools tabs, legacy redirects, viewer, export, widget, access setting, query budget
+NFLOG_WP_DIR=$PWD/.local/wp bash tests/integration/smoke-update.sh    # self-update from a locally served release (9.9.9), tampered zip refused
 ```
 
 `setup.sh` builds a throwaway WordPress on SQLite (`sqlite-database-integration`),
@@ -483,6 +502,6 @@ back to the bundled PSR-4 autoloader otherwise.
 ## Uninstall
 
 Deactivation clears cron and keeps all data. Deleting the plugin always clears
-cron; it drops the tables, options, the `nflog_known_clients` user meta, the
+cron and the updater's cached release (`noformat_logger_update` transient); it drops the tables, options, the `nflog_known_clients` user meta, the
 viewer's per-page screen option and the burst transients only when
 `delete_data_on_uninstall` is enabled.
