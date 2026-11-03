@@ -2,9 +2,7 @@
 
 All notable changes to this plugin. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
-
-1.3.0 (unreleased; the plugin header still says 1.2.0).
+## [1.3.0] - 2026-11-03
 
 ### Added (resolve issues)
 

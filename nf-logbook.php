@@ -3,7 +3,7 @@
  * Plugin Name:       Noformat Logbook
  * Plugin URI:        https://noformat.com
  * Description:       Tamper-evident, privacy-preserving log of content changes and error, security and stability signals.
- * Version:           1.2.0
+ * Version:           1.3.0
  * Requires at least: 6.4
  * Requires PHP:      8.1
  * Tested up to:      7.1
@@ -26,7 +26,7 @@ if ( defined( 'NOFORMAT_LOGGER_VERSION' ) ) {
 	return;
 }
 
-define( 'NOFORMAT_LOGGER_VERSION', '1.2.0' );
+define( 'NOFORMAT_LOGGER_VERSION', '1.3.0' );
 define( 'NOFORMAT_LOGGER_FILE', __FILE__ );
 define( 'NOFORMAT_LOGGER_DIR', plugin_dir_path( __FILE__ ) );
 
