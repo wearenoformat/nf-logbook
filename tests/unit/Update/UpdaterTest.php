@@ -321,6 +321,52 @@ final class UpdaterTest extends TestCase {
 		self::assertStringNotContainsString( 'tok_123', $secret->state( true, 700 )['error'], 'token redacted from messages' );
 	}
 
+	public function test_rate_limit_falls_back_to_the_download_link(): void {
+		$latest                    = 'https://github.com/wearenoformat/nf-logbook/releases/latest/download/manifest.json';
+		$limited                   = self::response( 403, '{}', [ 'x-ratelimit-remaining' => '0', 'x-ratelimit-reset' => '1793613600' ] );
+		$this->routes[ self::API ] = $limited;
+		$this->routes[ $latest ]   = function ( array $args ): array {
+			self::assertArrayNotHasKey( 'Authorization', $args['headers'] );
+			self::assertGreaterThan( 0, $args['redirection'], 'the download link redirects to storage' );
+			return self::response( 200, (string) json_encode( self::manifest( '1.3.0' ) ) );
+		};
+		$client = new ReleaseClient( self::REPO );
+		$state  = $client->recheck( 1000 );
+		self::assertSame( '', $state['error'], 'rate limited API, release found through the download link' );
+		self::assertSame( '1.3.0', $state['release']['version'] ?? null );
+		self::assertSame( self::ZIP, $state['release']['package'] ?? null );
+		self::assertSame( str_repeat( 'a', 64 ), $state['release']['sha256'] ?? null, 'the SHA-256 is still checked on download' );
+		self::assertSame( 'https://github.com/wearenoformat/nf-logbook/releases/tag/v1.3.0', $state['release']['url'] ?? null );
+		self::assertSame( '', $state['etag'], 'no ETag: the next check asks the API in full' );
+		self::assertSame( [ self::API, $latest ], array_column( $this->requests, 'url' ) );
+
+		$this->routes[ self::API ] = self::response( 429 );
+		self::assertSame( '', $client->state( true, 2000 )['error'], '429 falls back too' );
+
+		$this->routes[ self::API ] = self::response( 403, '{}', [ 'x-ratelimit-remaining' => '12' ] );
+		$this->requests            = [];
+		self::assertSame( 'GitHub answered 403: access denied', $client->state( true, 3000 )['error'], 'a plain 403 is not a rate limit: no fallback' );
+		self::assertCount( 1, $this->requests );
+
+		$evil                      = self::manifest( '1.3.0' );
+		$evil['download_url']      = 'https://evil.example/nf-logbook.zip';
+		$this->routes[ self::API ] = $limited;
+		$this->routes[ $latest ]   = self::response( 200, (string) json_encode( $evil ) );
+		$state                     = $client->state( true, 4000 );
+		self::assertStringContainsString( 'points outside wearenoformat/nf-logbook releases', $state['error'] );
+		self::assertSame( self::ZIP, $state['release']['package'] ?? null, 'the release known before is kept' );
+
+		$this->routes[ $latest ] = self::response( 404 );
+		$state                   = $client->state( true, 5000 );
+		self::assertStringStartsWith( 'GitHub answered 403: API rate limit exceeded until ', $state['error'] );
+		self::assertStringContainsString( 'the download link failed too: manifest.json could not be downloaded (HTTP 404)', $state['error'] );
+
+		$this->requests = [];
+		$tokened        = new ReleaseClient( self::REPO, 'github_pat_X' );
+		$tokened->state( true, 6000 );
+		self::assertSame( [ self::API ], array_column( $this->requests, 'url' ), 'with a token (private repo) there is no fallback' );
+	}
+
 	public function test_update_array_and_filter(): void {
 		$this->publicRelease();
 		$updater = new Updater( null, new ReleaseClient( self::REPO ) );

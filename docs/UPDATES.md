@@ -74,6 +74,15 @@ Updates: 1.1.0 installed · latest 1.1.0 · source GitHub wearenoformat/nf-logbo
 Updates: 1.1.0 installed · latest unknown · source GitHub wearenoformat/nf-logbook · last check … · error: GitHub answered 404: the repository is private or the name is wrong (or it has no published release yet)
 ```
 
+**Rate limit fallback (1.3.1).** GitHub's API allows 60 anonymous requests per
+hour per IP address, and shared hosts (WP Engine and the like) send many sites
+through one address. Without a token, when the API answers with its rate
+limit (403 with `x-ratelimit-remaining: 0`, or 429), the check reads
+`https://github.com/{repo}/releases/latest/download/manifest.json` instead: a
+plain download link, not counted against the API limit. Its `download_url`
+must start with `https://github.com/{repo}/releases/download/`, and the
+package's SHA-256 is verified as always. With a token there is no fallback.
+
 On 403, 429 and 404 (and network errors) the previously cached release is kept
 and the reason recorded. Administrators get a **Check now** button (nonce,
 `manage_options`) that clears the cache and WordPress' plugin update cache

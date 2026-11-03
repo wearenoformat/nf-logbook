@@ -2,6 +2,12 @@
 
 All notable changes to this plugin. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.1] - 2026-11-03
+
+### Fixed
+
+- **Update checks on shared hosting.** GitHub's API allows 60 anonymous requests per hour per IP address, and hosts such as WP Engine send many sites through one address, so "Check now" could fail with "API rate limit exceeded" for hours. Without a token, a rate-limited check now reads the latest release's `manifest.json` through the plain download link (`github.com/{repo}/releases/latest/download/manifest.json`), which is not counted against that limit. The package must be this repository's own release download, and its SHA-256 is verified as before. Private repositories (with a token) are unchanged.
+
 ## [1.3.0] - 2026-11-03
 
 ### Added (resolve issues)
