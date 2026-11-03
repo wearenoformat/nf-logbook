@@ -16,7 +16,7 @@ defined( 'ABSPATH' ) || exit;
 /**
  * "Recent activity": the 5 latest Content log stories (one save = one line)
  * with avatars and, for users who may read the System log, one line with the
- * critical and error count of the last 24 h. Queries run only when the
+ * critical and error count of the last 24 h (resolved issues excluded). Queries run only when the
  * dashboard renders the widget: the story keys, their events (plus count
  * hydration) and one grouped count.
  */
@@ -113,7 +113,7 @@ final class DashboardWidget {
 	private function systemLine(): void {
 		try {
 			// Open-window occurrence deltas are skipped ([]): the line counts stored events.
-			$counts = $this->plugin->repository()->countsBySeverity( ( time() - DAY_IN_SECONDS ) * 1000, [], Scope::system() );
+			$counts = $this->plugin->repository()->countsBySeverity( ( time() - DAY_IN_SECONDS ) * 1000, [], Scope::system(), true );
 		} catch ( \Throwable $e ) {
 			return;
 		}
@@ -134,8 +134,9 @@ final class DashboardWidget {
 			esc_url(
 				SystemLogPage::url(
 					[
-						'levels' => 'critical,error',
-						'window' => '24h',
+						'levels'   => 'critical,error',
+						'window'   => '24h',
+						'resolved' => 'hide',
 					]
 				)
 			),

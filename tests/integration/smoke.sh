@@ -68,7 +68,7 @@ ok "wp-cli writes"
 
 echo "==> Reading through the signed API"
 ${FETCH} --endpoint manifest > "${OUT}/manifest.json"
-assert "manifest 200 + producer"        "${OUT}/manifest.json" "r.status===200 && r.body.producer.name==='wp-noformat-logger' && r.body.schema.database===1"
+assert "manifest 200 + producer"        "${OUT}/manifest.json" "r.status===200 && r.body.producer.name==='wp-noformat-logger' && r.body.schema.database===2 && r.body.schema.expected===2 && r.body.schema.event===1"
 assert "manifest headers"               "${OUT}/manifest.json" "r.headers['cache-control'].includes('no-store') && r.headers['x-nf-schema']==='1' && /^\\d+:[0-9a-f]{64}\$/.test(r.headers['x-nf-chain-head'])"
 assert "manifest modules + storage"     "${OUT}/manifest.json" "r.body.storage.available===true && r.body.modules.PostListener.registered===true && r.body.key.authenticated_id===process.env.NFLOG_KEY_ID"
 

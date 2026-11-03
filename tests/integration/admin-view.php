@@ -223,6 +223,7 @@ if ( 'restricted' === $mode ) {
 	wp_set_current_user( $viewer );
 	$check( 'viewer has the capability', current_user_can( Plugin::CAP_VIEW_EVENTS ) && ! current_user_can( 'manage_options' ) );
 	$check( 'viewer tabs: Content log, System log, Status (no Settings)', [ Menu::CONTENT, Menu::SYSTEM, Menu::STATUS ] === Access::tabs( $plugin->config() ), implode( ',', Access::tabs( $plugin->config() ) ) );
+	$check( 'viewer with the capability reads the System log but cannot resolve issues (manage_options)', Access::canViewSystemLog( $plugin->config() ) && ! Access::canResolve( $plugin->config() ) );
 	$v = $content( [ 'window' => 'all' ], $viewer );
 	$check( 'user granted the capability sees the content log', count( $entries( $v ) ) >= 3 );
 	$va = $sentences( $content( [ 'person' => (string) $admin, 'window' => 'all' ], $viewer ) );

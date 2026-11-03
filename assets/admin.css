@@ -551,6 +551,11 @@
 .nflog-line--debug { border-left-color: #2a3440; }
 .nflog-line--debug .nflog-line__sev, .nflog-line--debug .nflog-line__msg { color: var(--c-debug); }
 .nflog-line.is-new { animation: nflog-new 2.4s ease-out; }
+.nflog-line.is-resolved { opacity: .5; background: transparent; }
+.nflog-line.is-resolved:hover, .nflog-line.is-resolved:focus-visible, .nflog-line.is-resolved[aria-expanded="true"] { opacity: .85; }
+.nflog-line.is-resolved .nflog-line__sev, .nflog-line.is-resolved .nflog-line__msg { color: var(--c-dim); }
+.nflog-line__chip { display: inline-block; margin-right: 8px; padding: 0 6px; border: 1px solid rgba(46, 160, 67, .55); border-radius: 999px; color: #7ee787; font-size: 10.5px; line-height: 15px; vertical-align: 1px; }
+.nflog-page .nflog-cbtn--resolve { border-color: rgba(46, 160, 67, .7); color: #7ee787; }
 @keyframes nflog-new { 0% { background: rgba(56, 139, 253, .28); } 100% { background: transparent; } }
 .nflog-console.is-wrap .nflog-line { white-space: normal; }
 .nflog-console.is-wrap .nflog-line > span { overflow: visible; overflow-wrap: anywhere; }

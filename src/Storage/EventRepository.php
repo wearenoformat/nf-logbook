@@ -410,7 +410,9 @@ final class EventRepository {
 	 * source, actor_id (int), object_type, object_id, request_id, fingerprint,
 	 * since_ms / until_ms (int), search (summary or action, substring); viewer
 	 * scopes: categories (list<string>), severities (list<Severity>), object_subtype,
-	 * exclude_object_subtype, actor_type, after_id / before_id (int cursors).
+	 * exclude_object_subtype, actor_type, after_id / before_id (int cursors);
+	 * max_priority (int: severity at least this crucial, 2 = warning or worse);
+	 * exclude_resolved (true: drop events of resolved issues, see Resolutions).
 	 * Values of the wrong type are ignored.
 	 *
 	 * @param array<string, mixed> $filters Filters.
@@ -487,6 +489,15 @@ final class EventRepository {
 				$clauses[] = $clause;
 				$args[]    = $filters[ $key ];
 			}
+		}
+		if ( isset( $filters['max_priority'] ) && is_int( $filters['max_priority'] ) ) {
+			$clauses[] = 'severity <= %d';
+			$args[]    = $filters['max_priority'];
+		}
+		if ( true === ( $filters['exclude_resolved'] ?? null ) && Resolutions::ready() ) {
+			[ $clause, $more ] = Resolutions::excludeClause();
+			$clauses[]         = $clause;
+			array_push( $args, ...$more );
 		}
 		return [ [] === $clauses ? '' : ' WHERE ' . implode( ' AND ', $clauses ), $args ];
 	}
@@ -728,19 +739,21 @@ final class EventRepository {
 	/**
 	 * Occurrences counted on open fingerprint rows but not yet on their events, for events since a time.
 	 *
-	 * @param int $sinceMs Unix time in milliseconds.
+	 * @param int  $sinceMs         Unix time in milliseconds.
+	 * @param bool $excludeResolved Skip events of resolved issues.
 	 * @return list<array{severity: int, category: string, fingerprint: string, delta: int}>
 	 */
-	private function openWindowDeltas( int $sinceMs ): array {
+	private function openWindowDeltas( int $sinceMs, bool $excludeResolved = false ): array {
 		$fps  = Db::getResults( Db::prepare( 'SELECT last_event_id, `count` FROM %i WHERE last_event_id > 0 AND `count` > 1 AND last_seen >= %d', Db::table( 'fingerprints' ), intdiv( $sinceMs, 1000 ) ) );
 		$live = [];
 		foreach ( $fps as $row ) {
 			$live[ (int) $row['last_event_id'] ] = (int) $row['count'];
 		}
-		$out = [];
+		$out                         = [];
+		[ $resolved, $resolvedArgs ] = $excludeResolved ? self::resolvedClause() : [ '', [] ];
 		foreach ( array_chunk( array_keys( $live ), 500 ) as $chunk ) {
 			$in   = implode( ',', array_fill( 0, count( $chunk ), '%d' ) );
-			$rows = Db::getResults( Db::prepare( "SELECT id, severity, category, fingerprint, `count` FROM %i WHERE occurred_ms >= %d AND id IN ({$in})", Db::table( 'events' ), $sinceMs, ...$chunk ) );
+			$rows = Db::getResults( Db::prepare( "SELECT id, severity, category, fingerprint, `count` FROM %i WHERE occurred_ms >= %d AND id IN ({$in}){$resolved}", Db::table( 'events' ), $sinceMs, ...[ ...$chunk, ...$resolvedArgs ] ) );
 			foreach ( $rows as $row ) {
 				$delta = ( $live[ (int) $row['id'] ] ?? 0 ) - (int) $row['count'];
 				if ( $delta > 0 ) {
@@ -754,6 +767,19 @@ final class EventRepository {
 			}
 		}
 		return $out;
+	}
+
+	/**
+	 * " AND <unresolved>" with its arguments, or nothing before the resolutions table exists.
+	 *
+	 * @return array{0: string, 1: list<string>}
+	 */
+	private static function resolvedClause(): array {
+		if ( ! Resolutions::ready() ) {
+			return [ '', [] ];
+		}
+		[ $clause, $args ] = Resolutions::excludeClause();
+		return [ ' AND ' . $clause, $args ];
 	}
 
 	/**
@@ -780,9 +806,11 @@ final class EventRepository {
 	 * @param int                                                                                $sinceMs Unix time in milliseconds (inclusive).
 	 * @param list<array{severity: int, category: string, fingerprint: string, delta: int}>|null $deltas  Precomputed open-window deltas.
 	 * @param list<string>                                                                       $categories Only these categories (empty: all).
+	 * @param bool                                                                               $excludeResolved Leave out events of resolved issues (wp-admin counts; the REST
+	 *                                                                                                            summary and health snapshot keep counting every stored event).
 	 * @return array<string, array{events: int, occurrences: int}>
 	 */
-	public function countsBySeverity( int $sinceMs, ?array $deltas = null, array $categories = [] ): array {
+	public function countsBySeverity( int $sinceMs, ?array $deltas = null, array $categories = [], bool $excludeResolved = false ): array {
 		$out = [];
 		foreach ( Severity::cases() as $severity ) {
 			$out[ $severity->value ] = [
@@ -790,16 +818,17 @@ final class EventRepository {
 				'occurrences' => 0,
 			];
 		}
-		$categories = array_values( array_filter( $categories, 'is_string' ) );
-		$in         = [] === $categories ? '' : ' AND category IN (' . implode( ',', array_fill( 0, count( $categories ), '%s' ) ) . ')';
-		$rows       = Db::getResults( Db::prepare( 'SELECT severity, COUNT(*) AS events, SUM(`count`) AS occurrences FROM %i WHERE occurred_ms >= %d' . $in . ' GROUP BY severity', Db::table( 'events' ), $sinceMs, ...$categories ) );
+		$categories                  = array_values( array_filter( $categories, 'is_string' ) );
+		$in                          = [] === $categories ? '' : ' AND category IN (' . implode( ',', array_fill( 0, count( $categories ), '%s' ) ) . ')';
+		[ $resolved, $resolvedArgs ] = $excludeResolved ? self::resolvedClause() : [ '', [] ];
+		$rows                        = Db::getResults( Db::prepare( 'SELECT severity, COUNT(*) AS events, SUM(`count`) AS occurrences FROM %i WHERE occurred_ms >= %d' . $in . $resolved . ' GROUP BY severity', Db::table( 'events' ), $sinceMs, ...[ ...$categories, ...$resolvedArgs ] ) );
 		foreach ( $rows as $row ) {
 			$out[ Severity::fromPriority( (int) $row['severity'] )->value ] = [
 				'events'      => (int) $row['events'],
 				'occurrences' => (int) $row['occurrences'],
 			];
 		}
-		foreach ( $deltas ?? $this->openWindowDeltas( $sinceMs ) as $delta ) {
+		foreach ( $deltas ?? $this->openWindowDeltas( $sinceMs, $excludeResolved ) as $delta ) {
 			if ( [] !== $categories && ! in_array( $delta['category'], $categories, true ) ) {
 				continue;
 			}
@@ -946,6 +975,13 @@ final class EventRepository {
 			$start = $end + 1;
 		}
 		Db::query( Db::prepare( 'DELETE FROM %i WHERE last_event_id <= %d', Db::table( 'fingerprints' ), $boundary ) );
+		if ( Resolutions::ready() ) {
+			try {
+				( new Resolutions() )->prune( $boundary );
+			} catch ( \Throwable $e ) { // phpcs:ignore Generic.CodeAnalysis.EmptyStatement.DetectedCatch -- resolutions are display state; the next prune retries.
+				unset( $e );
+			}
+		}
 		$this->meta->setJson(
 			Meta::PRUNED_THROUGH,
 			[

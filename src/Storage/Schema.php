@@ -22,10 +22,10 @@ defined( 'ABSPATH' ) || exit;
  */
 final class Schema {
 
-	public const VERSION = 1;
+	public const VERSION = 2;
 
 	/** Table names without prefix. */
-	public const TABLES = [ 'events', 'fingerprints', 'nonces', 'meta' ];
+	public const TABLES = [ 'events', 'fingerprints', 'nonces', 'meta', 'resolutions' ];
 
 	/** Autoloaded mirror of the installed version (the meta row stays the source of truth). */
 	public const CACHE_OPTION = 'nflog_schema_cache';
@@ -45,6 +45,7 @@ final class Schema {
 		$fps     = Db::table( 'fingerprints' );
 		$nonces  = Db::table( 'nonces' );
 		$meta    = Db::table( 'meta' );
+		$res     = Db::table( 'resolutions' );
 
 		return [
 			'events'       => "CREATE TABLE {$events} (
@@ -104,6 +105,18 @@ final class Schema {
   updated_at bigint(20) unsigned NOT NULL DEFAULT 0,
   PRIMARY KEY  (meta_key)
 ) {$charset};",
+			'resolutions'  => "CREATE TABLE {$res} (
+  issue_key varchar(64) NOT NULL,
+  fingerprint char(32) NULL,
+  event_id bigint(20) unsigned NULL,
+  through_id bigint(20) unsigned NOT NULL DEFAULT 0,
+  resolved_at bigint(20) unsigned NOT NULL DEFAULT 0,
+  resolved_by bigint(20) unsigned NULL,
+  PRIMARY KEY  (issue_key),
+  KEY fingerprint (fingerprint),
+  KEY event_id (event_id),
+  KEY through_id (through_id)
+) {$charset};",
 		];
 	}
 
@@ -156,6 +169,9 @@ final class Schema {
 		return [
 			1 => static function (): void {
 				// Initial schema: nothing beyond dbDelta.
+			},
+			2 => static function (): void {
+				// 1.3.0: {prefix}nflog_resolutions (resolved issues, see Storage\Resolutions); created by dbDelta.
 			},
 		];
 	}
