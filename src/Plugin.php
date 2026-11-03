@@ -27,6 +27,7 @@ use Noformat\Logger\Security\RateLimiter;
 use Noformat\Logger\Storage\EventRepository;
 use Noformat\Logger\Storage\FingerprintStore;
 use Noformat\Logger\Storage\Meta;
+use Noformat\Logger\Storage\Resolutions;
 use Noformat\Logger\Storage\Schema;
 
 defined( 'ABSPATH' ) || exit;
@@ -87,6 +88,7 @@ final class Plugin {
 	private NonceStore $nonces;
 	private RateLimiter $limiter;
 	private Authenticator $authenticator;
+	private ?Issues $issues = null;
 
 	/**
 	 * Listener instances by class.
@@ -562,6 +564,11 @@ final class Plugin {
 	/** Fingerprint store. */
 	public function fingerprints(): FingerprintStore {
 		return $this->fingerprints;
+	}
+
+	/** Resolve / reopen issues (lazily). */
+	public function issues(): Issues {
+		return $this->issues ??= new Issues( new Resolutions(), $this->fingerprints, $this->logger );
 	}
 
 	/** Key store. */

@@ -322,6 +322,20 @@ that severity), events / occurrences totals and the chain head above it.
   the tab is hidden, and stops after 30 minutes. *Load older* pages back 200
   lines at a time through the same endpoint. Every line, including the first
   page (JSON in the page), is rendered by one script, `assets/system-log.js`.
+- **Resolve issues**: once the cause of a warning, error or critical event is
+  fixed, *Resolve* (in the line detail) marks the issue resolved: every event
+  with the same fingerprint up to the newest one, or the single event when it
+  has no fingerprint. Resolved lines stay in the log, dimmed with a *Resolved*
+  chip (*Reopen* undoes it), *Hide resolved* filters them out (`resolved=hide`),
+  and they no longer count in the severity counters, the Content log's "Needs
+  attention" line or the dashboard widget. A later occurrence is a new event
+  and the issue is open again. *Resolve all open* resolves every open warning,
+  error and critical issue in the current filters (at most 200 per click).
+  Resolving needs `manage_options` plus System log access and a nonce; every
+  resolve and reopen is logged (`logger.issue_resolved` /
+  `logger.issue_reopened`). Events and the hash chain are never changed: the
+  state lives in `{prefix}nflog_resolutions` (docs/EVENTS.md, *Resolved
+  issues*). The REST API serves events and counts as before.
 
 ### Export, widget, access
 
@@ -333,7 +347,7 @@ that severity), events / occurrences totals and the chain head above it.
 - **Dashboard widget** (*Recent activity*): the 5 latest Content log stories,
   one line each (sentence and suffix, shortened with the full text as a
   tooltip), and, for users who may read the System log, "System: 3 critical,
-  4 errors in 24 h → System log" when there are any. Three small queries (a
+  4 errors in 24 h → System log" when there are any (resolved issues not counted). Three small queries (a
   fourth when an entry is aggregated or a login story needs attribution),
   only on the dashboard.
 
@@ -384,6 +398,9 @@ wp nflog integrity [--no-fail]                  # core/plugin checksums + recent
 wp nflog health                                 # health snapshot JSON (same as GET /health)
 wp nflog marker "Release 2.3" [--ref=v2.3.0]    # deploy marker
 wp nflog test-event [--severity=info]
+wp nflog resolve <fingerprint|event:ID>...      # mark issues resolved (warning/error/critical); logged
+wp nflog resolve --all-open [--window=7d]       # every open issue of the System log categories (default window: all)
+wp nflog reopen <fingerprint|event:ID>...       # undo a resolution; logged
 wp nflog install-mu-loader [--force]
 wp nflog update-check [--cached] [--format=json]  # check GitHub for a plugin update now (docs/UPDATES.md)
 ```

@@ -232,11 +232,15 @@ final class FlushBudgetTest extends TestCase {
 		foreach ( [ 4, 4, 2, 4, 4, 5 ] as $i => $severity ) {
 			$this->db->events[ $i + 1 ] = [ 'id' => $i + 1, 'severity' => $severity, 'occurred_ms' => $now - 1000, 'hash' => str_repeat( (string) $i, 64 ), 'count' => 1, 'action' => 'x' ];
 		}
+		Functions\when( 'get_option' )->justReturn( \Noformat\Logger\Storage\Schema::VERSION );
+		$this->db->resolutions['event:2'] = [ 'issue_key' => 'event:2', 'fingerprint' => null, 'event_id' => 2, 'through_id' => 2, 'resolved_at' => 1, 'resolved_by' => null ];
+		$this->db->resolutions['event:3'] = [ 'issue_key' => 'event:3', 'fingerprint' => null, 'event_id' => 3, 'through_id' => 3, 'resolved_at' => 1, 'resolved_by' => null ];
 		$repo   = new EventRepository( new Meta() );
 		$result = $repo->prune( 90, 180, 2, 1, false, $now );
 		self::assertSame( 2, $result['boundary_id'], 'acked row 1 and unacked info row 2; stops before the warning (3)' );
 		self::assertTrue( $result['max_rows_capped'] ?? false );
 		self::assertSame( [ 3, 4, 5, 6 ], array_keys( $this->db->events ) );
+		self::assertSame( [ 'event:3' ], array_keys( $this->db->resolutions ), 'resolutions of pruned events go with them' );
 
 		$old = $repo->prune( 90, 180, 2, 1, false, $now + 200 * 86400000 );
 		self::assertSame( 6, $old['boundary_id'], 'hard_max_days still removes everything older' );

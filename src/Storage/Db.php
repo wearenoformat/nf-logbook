@@ -38,7 +38,7 @@ final class Db {
 	/**
 	 * Full table name.
 	 *
-	 * @param string $name events|fingerprints|nonces|meta.
+	 * @param string $name events|fingerprints|nonces|meta|resolutions.
 	 */
 	public static function table( string $name ): string {
 		return self::wpdb()->prefix . self::PREFIX . $name;

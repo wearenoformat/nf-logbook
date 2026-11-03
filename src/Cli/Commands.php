@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace Noformat\Logger\Cli;
 
+use Noformat\Logger\Admin\EventFilters;
+use Noformat\Logger\Admin\Scope;
 use Noformat\Logger\Category;
 use Noformat\Logger\Cron\Scheduler;
 use Noformat\Logger\Event;
@@ -487,6 +489,121 @@ final class Commands {
 		$ref    = isset( $assoc['ref'] ) ? substr( sanitize_text_field( (string) $assoc['ref'] ), 0, 64 ) : null;
 		$stored = $this->plugin->logger()->logNow( Controller::markerEvent( $label, $ref ) );
 		$this->reportStored( $stored );
+	}
+
+	/**
+	 * Mark issues resolved (warning, error and critical only).
+	 *
+	 * An issue is a fingerprint, or event:<id> for an event without one. It is
+	 * resolved through its newest event; a later occurrence opens it again.
+	 * Each resolution is logged as logger.issue_resolved. Events are not changed.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [<issue>...]
+	 * : Fingerprint (32 hex) or event:<id>.
+	 *
+	 * [--all-open]
+	 * : Resolve every open warning/error/critical issue of the System log categories.
+	 *
+	 * [--window=<window>]
+	 * : With --all-open: only issues with events in this window (1h, 24h, 7d, 30d, all or <n>m|h|d).
+	 * ---
+	 * default: all
+	 * ---
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp nflog resolve 3f2a9c0d4e5b6a7f8091a2b3c4d5e6f7
+	 *     wp nflog resolve event:1234
+	 *     wp nflog resolve --all-open --window=7d
+	 *
+	 * @param list<string>               $args  Positional.
+	 * @param array<string, string|bool> $assoc Options.
+	 */
+	public function resolve( array $args, array $assoc ): void {
+		$issues = $this->plugin->issues();
+		$userId = get_current_user_id();
+		if ( WP_CLI\Utils\get_flag_value( $assoc, 'all-open', false ) ) {
+			$clean   = EventFilters::clean( [ 'window' => (string) ( $assoc['window'] ?? 'all' ) ] );
+			$filters = EventFilters::scoped( EventFilters::toRepository( $clean, wp_timezone() ), Scope::system() );
+			$total   = 0;
+			$failed  = 0;
+			for ( $batch = 0; $batch < 25; $batch++ ) {
+				$result  = $issues->resolveAllOpen( $filters, $userId );
+				$total  += $result['resolved'];
+				$failed += $result['failed'];
+				if ( ! $result['more'] || 0 === $result['resolved'] ) {
+					break;
+				}
+			}
+			$this->plugin->logger()->flush();
+			WP_CLI::success( sprintf( 'Resolved %d issue(s)%s.', $total, $failed > 0 ? sprintf( ', %d skipped', $failed ) : '' ) );
+			return;
+		}
+		if ( [] === $args ) {
+			WP_CLI::error( 'Name an issue (fingerprint or event:<id>) or use --all-open.' );
+		}
+		$errors = 0;
+		foreach ( $args as $reference ) {
+			try {
+				$result = $issues->resolve( $reference, $userId );
+				WP_CLI::log( sprintf( '%s %s through event #%d.', $result['key'], $result['changed'] ? 'resolved' : 'already resolved', $result['through_id'] ) );
+			} catch ( \DomainException $e ) {
+				++$errors;
+				WP_CLI::warning( sprintf( '%s: %s', $reference, self::issueError( $e->getMessage() ) ) );
+			}
+		}
+		$this->plugin->logger()->flush();
+		if ( $errors > 0 ) {
+			WP_CLI::error( sprintf( '%d of %d issue(s) not resolved.', $errors, count( $args ) ) );
+		}
+		WP_CLI::success( 'Done.' );
+	}
+
+	/**
+	 * Reopen resolved issues (logged as logger.issue_reopened).
+	 *
+	 * ## OPTIONS
+	 *
+	 * <issue>...
+	 * : Fingerprint (32 hex) or event:<id>.
+	 *
+	 * @param list<string>               $args  Positional.
+	 * @param array<string, string|bool> $assoc Options.
+	 */
+	public function reopen( array $args, array $assoc ): void {
+		unset( $assoc );
+		$errors = 0;
+		foreach ( $args as $reference ) {
+			try {
+				$result = $this->plugin->issues()->reopen( $reference );
+				WP_CLI::log( sprintf( '%s reopened.', $result['key'] ) );
+			} catch ( \DomainException $e ) {
+				++$errors;
+				WP_CLI::warning( sprintf( '%s: %s', $reference, self::issueError( $e->getMessage() ) ) );
+			}
+		}
+		$this->plugin->logger()->flush();
+		if ( $errors > 0 ) {
+			WP_CLI::error( sprintf( '%d of %d issue(s) not reopened.', $errors, count( $args ) ) );
+		}
+		WP_CLI::success( 'Done.' );
+	}
+
+	/**
+	 * Plain text for an Issues error code.
+	 *
+	 * @param string $code Code.
+	 */
+	public static function issueError( string $code ): string {
+		return match ( $code ) {
+			'invalid_reference' => 'not a fingerprint (32 hex) or event:<id>',
+			'not_found'         => 'no stored event belongs to this issue',
+			'not_an_issue'      => 'only warning, error and critical events can be resolved',
+			'not_resolved'      => 'not resolved',
+			default             => $code,
+		};
 	}
 
 	/**

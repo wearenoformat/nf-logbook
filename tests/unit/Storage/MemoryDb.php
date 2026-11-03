@@ -24,6 +24,9 @@ final class MemoryDb {
 	/** @var array<int, array<string, mixed>> */
 	public array $events = [];
 
+	/** @var array<string, array{issue_key: string, fingerprint: ?string, event_id: ?int, through_id: int, resolved_at: int, resolved_by: ?int}> */
+	public array $resolutions = [];
+
 	private int $nextId = 1;
 
 	/** Statements that touched nflog tables (or transaction control). */
@@ -118,6 +121,36 @@ final class MemoryDb {
 			}
 			return $n;
 		}
+		if ( preg_match( "/^REPLACE INTO `\\w+nflog_resolutions` \\(issue_key, fingerprint, event_id, through_id, resolved_at, resolved_by\\) VALUES \\((.*)\\)$/s", $sql, $m ) ) {
+			[ $key, $fp, $eid, $through, $at, $by ] = self::values( $m[1] );
+			$this->resolutions[ (string) $key ] = [ 'issue_key' => (string) $key, 'fingerprint' => $fp, 'event_id' => $eid, 'through_id' => (int) $through, 'resolved_at' => (int) $at, 'resolved_by' => $by ];
+			return 1;
+		}
+		if ( preg_match( "/^DELETE FROM `\\w+nflog_resolutions` WHERE issue_key = '(.*)'$/", $sql, $m ) ) {
+			$k = stripslashes( $m[1] );
+			if ( ! isset( $this->resolutions[ $k ] ) ) {
+				return 0;
+			}
+			unset( $this->resolutions[ $k ] );
+			return 1;
+		}
+		if ( preg_match( '/^DELETE FROM `\w+nflog_resolutions` WHERE through_id <= (\d+)$/', $sql, $m ) ) {
+			$n = 0;
+			foreach ( $this->resolutions as $k => $row ) {
+				if ( $row['through_id'] <= (int) $m[1] ) {
+					unset( $this->resolutions[ $k ] );
+					++$n;
+				}
+			}
+			return $n;
+		}
+		if ( preg_match( "/^UPDATE `\\w+nflog_fingerprints` SET window_start = 0 WHERE fingerprint = '(\\w+)' AND window_start > 0$/", $sql, $m ) ) {
+			if ( ! isset( $this->fingerprints[ $m[1] ] ) || $this->fingerprints[ $m[1] ]['window_start'] <= 0 ) {
+				return 0;
+			}
+			$this->fingerprints[ $m[1] ]['window_start'] = 0;
+			return 1;
+		}
 		throw new \LogicException( 'MemoryDb: unhandled query ' . $sql );
 	}
 
@@ -161,6 +194,16 @@ final class MemoryDb {
 		if ( preg_match( '/^SELECT \* FROM `\w+nflog_events` WHERE id = (\d+)$/', $sql, $m ) ) {
 			return $this->events[ (int) $m[1] ] ?? null;
 		}
+		if ( preg_match( '/^SELECT id, (?:severity, )?fingerprint FROM `\w+nflog_events` WHERE id = (\d+)$/', $sql, $m ) ) {
+			return $this->events[ (int) $m[1] ] ?? null;
+		}
+		if ( preg_match( "/^SELECT MAX\\(id\\) AS through_id, MIN\\(severity\\) AS top FROM `\\w+nflog_events` WHERE fingerprint = '(\\w+)'$/", $sql, $m ) ) {
+			$hit = array_filter( $this->events, static fn( $r ) => ( $r['fingerprint'] ?? null ) === $m[1] );
+			return [ 'through_id' => [] === $hit ? null : max( array_keys( $hit ) ), 'top' => [] === $hit ? null : min( array_map( static fn( $r ) => (int) $r['severity'], $hit ) ) ];
+		}
+		if ( preg_match( "/^SELECT \\* FROM `\\w+nflog_resolutions` WHERE issue_key = '(.*)'$/", $sql, $m ) ) {
+			return $this->resolutions[ stripslashes( $m[1] ) ] ?? null;
+		}
 		throw new \LogicException( 'MemoryDb: unhandled get_row ' . $sql );
 	}
 
@@ -186,6 +229,10 @@ final class MemoryDb {
 		if ( preg_match( '/^SELECT \* FROM `\w+nflog_events` WHERE id > (\d+) ORDER BY id ASC LIMIT (\d+)$/', $sql, $m ) ) {
 			$rows = array_values( array_filter( $this->events, static fn( $r ) => $r['id'] > (int) $m[1] ) );
 			return array_slice( $rows, 0, (int) $m[2] );
+		}
+		if ( preg_match( '/^SELECT \* FROM `\w+nflog_resolutions` WHERE issue_key IN \((.*)\)$/', $sql, $m ) ) {
+			$keys = self::values( $m[1] );
+			return array_values( array_filter( $this->resolutions, static fn( $r ) => in_array( $r['issue_key'], $keys, true ) ) );
 		}
 		throw new \LogicException( 'MemoryDb: unhandled get_results ' . $sql );
 	}

@@ -2,7 +2,25 @@
 
 All notable changes to this plugin. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.3.0] - 2026-11-03
+
+### Added (resolve issues)
+
+- **Resolve / Reopen** in the System log line detail for warning, error and critical events, **Resolve all open** (every open warning/error/critical issue in the current filters, at most 200 per call) and a **Hide resolved** toggle (`resolved=hide`, also honoured by the live tail and the export). Resolved lines are shown dimmed with a *Resolved* chip.
+- An issue is the event's fingerprint, or the single event (`event:<id>`) when it has none. Resolving records "resolved through event id N" (N = the newest event with that fingerprint at that moment), `resolved_at` and `resolved_by` (user id only). An event counts as resolved iff its id ≤ N, so a later occurrence opens the issue again; resolving also closes the fingerprint's aggregation window so the recurrence is stored as a new event instead of raising the resolved event's count.
+- Resolved issues are excluded from the System log severity counters, the Content log "Needs attention" line and the dashboard widget's system line (whose links now open the System log with `resolved=hide`).
+- New events `logger.issue_resolved` and `logger.issue_reopened` (system, notice, object `issue / <fingerprint|event:id>`, context `{fingerprint, event_id, through_id}` / `{fingerprint, event_id}`), one per issue, also for *Resolve all open*. The Controlroom mirrors resolutions from them.
+- `wp nflog resolve <fingerprint|event:ID>... | --all-open [--window=…]` and `wp nflog reopen <fingerprint|event:ID>...`.
+- Admin AJAX `nflog_resolve` / `nflog_resolve_all` (POST, nonce, `manage_options` plus System log access).
+
+### Storage
+
+- Schema version 2: new table `{prefix}nflog_resolutions` (`issue_key` PK, `fingerprint`, `event_id`, `through_id`, `resolved_at`, `resolved_by`), created by the existing dbDelta upgrade (`Schema::maybeUpgrade()`, admin and WP-CLI). Prune removes resolutions whose events are all gone (`through_id` ≤ the prune boundary); uninstall drops the table with the others. Events, the hash chain and `{prefix}nflog_fingerprints` rows are not changed.
+- Until the upgrade has run, views simply show nothing as resolved.
+
+### Unchanged
+
+- REST API and `docs/CONTRACT.md`: events are served as stored; `GET /summary` and `GET /health` keep counting every event. The manifest reports database schema 2.
 
 ## [1.2.0] - 2026-11-02
 

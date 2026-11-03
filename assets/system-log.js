@@ -5,6 +5,10 @@
  * #nflog-console-data), follow mode (admin-ajax nflog_tail with `after`) and
  * "Load older" (`before`). Builds DOM nodes only (textContent), never HTML
  * strings, so event data cannot inject markup. Vanilla JS, no dependencies.
+ *
+ * Resolved issues: lines carry `_resolved` (null or {key, fingerprint,
+ * event_id, through, at, by}); Resolve / Reopen post to admin-ajax
+ * nflog_resolve and update every loaded line of the issue in place.
  */
 ( function () {
 	'use strict';
@@ -38,6 +42,9 @@
 	var timer = null;
 	var followStarted = 0;
 	var busy = false;
+	var resolveCfg = data.resolve || {};
+	var registry = [];
+	var resolveAllBtn = root.querySelector( '[data-nflog-resolve-all]' );
 
 	// ---------- helpers ----------
 	function el( tag, cls, text ) {
@@ -219,6 +226,11 @@
 		if ( line.count > 1 ) {
 			row( i18n.count, '×' + line.count );
 		}
+		if ( line._resolved ) {
+			var res = line._resolved;
+			var when = res.by ? String( i18n.resolvedBy || '' ).replace( '%1$s', res.at ).replace( '%2$s', res.by ) : String( i18n.resolvedAt || '' ).replace( '%s', res.at );
+			row( i18n.resolution, when + ' · ' + fmt( i18n.resolvedThrough, res.through ) );
+		}
 		row( i18n.hash, line.hash );
 		row( i18n.prevHash, line.prev_hash );
 		right.appendChild( dl );
@@ -240,6 +252,23 @@
 			}
 		} );
 		actions.appendChild( copy );
+		if ( resolveCfg.can && ( line._resolved || line._issuable ) ) {
+			var reopen = !! line._resolved;
+			var act = el( 'button', 'nflog-cbtn' + ( reopen ? '' : ' nflog-cbtn--resolve' ), reopen ? i18n.reopen : i18n.resolve );
+			act.type = 'button';
+			act.addEventListener( 'click', function ( event ) {
+				event.stopPropagation();
+				act.disabled = true;
+				post( 'nflog_resolve', { issue: reopen ? line._resolved.key : line._issue, op: reopen ? 'reopen' : 'resolve' } ).then( function ( result ) {
+					applyResolution( result );
+					setStatus( 'reopen' === result.op ? i18n.reopenDone : i18n.resolveDone );
+				} ).catch( function ( error ) {
+					act.disabled = false;
+					setStatus( i18n.error + ': ' + error.message );
+				} );
+			} );
+			actions.appendChild( act );
+		}
 		if ( line._content && data.urls.content && req.id ) {
 			var open = el( 'a', 'nflog-cbtn', i18n.openContent );
 			var url = new URL( data.urls.content, window.location.href );
@@ -257,7 +286,7 @@
 
 	function lineNode( line, isNew ) {
 		var sev = line.severity || 'info';
-		var node = el( 'div', 'nflog-line nflog-line--' + sev + ( isNew ? ' is-new' : '' ) );
+		var node = el( 'div', 'nflog-line nflog-line--' + sev + ( isNew ? ' is-new' : '' ) + ( line._resolved ? ' is-resolved' : '' ) );
 		node.setAttribute( 'role', 'listitem' );
 		node.tabIndex = 0;
 		node.setAttribute( 'aria-expanded', 'false' );
@@ -271,21 +300,27 @@
 		loc.title = line._loc || '';
 		loc.appendChild( bdi );
 		node.appendChild( loc );
-		node.appendChild( el( 'span', 'nflog-line__msg', line._msg ) );
+		var msg = el( 'span', 'nflog-line__msg' );
+		if ( line._resolved ) {
+			msg.appendChild( el( 'span', 'nflog-line__chip', i18n.resolved ) );
+		}
+		msg.appendChild( document.createTextNode( line._msg || '' ) );
+		node.appendChild( msg );
 		var cnt = el( 'span', '', line.count > 1 ? '×' + line.count : '' );
 		if ( line.count > 1 ) {
 			cnt.className = 'nflog-line__count';
 		}
 		node.appendChild( cnt );
-		var box = null;
+		var entry = { line: line, node: node, box: null };
+		registry.push( entry );
 		var toggle = function () {
-			if ( ! box ) {
-				box = detail( line );
-				node.parentNode.insertBefore( box, node.nextSibling );
+			if ( ! entry.box ) {
+				entry.box = detail( line );
+				node.parentNode.insertBefore( entry.box, node.nextSibling );
 			}
 			var open = 'true' !== node.getAttribute( 'aria-expanded' );
 			node.setAttribute( 'aria-expanded', open ? 'true' : 'false' );
-			box.hidden = ! open;
+			entry.box.hidden = ! open;
 		};
 		node.addEventListener( 'click', function ( event ) {
 			if ( window.getSelection && String( window.getSelection() ).length > 0 && event.detail < 2 ) {
@@ -390,6 +425,92 @@
 					throw new Error( json && json.data && json.data.message ? json.data.message : String( response.status ) );
 				}
 				return json.data;
+			} );
+		} );
+	}
+
+	function post( action, params ) {
+		var body = new URLSearchParams();
+		body.set( 'action', action );
+		body.set( '_ajax_nonce', ( data.ajax && data.ajax.resolveNonce ) || '' );
+		Object.keys( params ).forEach( function ( key ) {
+			body.set( key, params[ key ] );
+		} );
+		return fetch( data.ajax.url, { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' }, body: body } ).then( function ( response ) {
+			return response.json().then( function ( json ) {
+				if ( ! response.ok || ! json || ! json.success ) {
+					throw new Error( json && json.data && json.data.message ? json.data.message : String( response.status ) );
+				}
+				return json.data;
+			} );
+		} );
+	}
+
+	// Same rule as Storage\Resolutions::covers().
+	function covers( res, line ) {
+		var id = Number( line.id );
+		if ( res.fingerprint ) {
+			return line.fingerprint === res.fingerprint && id <= Number( res.through );
+		}
+		return ! line.fingerprint && id === Number( res.event_id );
+	}
+
+	// Re-render the line (chip, dimming) and, when it was built, its detail.
+	function refresh( entry ) {
+		var line = entry.line;
+		entry.node.classList.toggle( 'is-resolved', !! line._resolved );
+		var msg = entry.node.querySelector( '.nflog-line__msg' );
+		var chip = msg ? msg.querySelector( '.nflog-line__chip' ) : null;
+		if ( line._resolved && msg && ! chip ) {
+			msg.insertBefore( el( 'span', 'nflog-line__chip', i18n.resolved ), msg.firstChild );
+		} else if ( ! line._resolved && chip ) {
+			chip.parentNode.removeChild( chip );
+		}
+		if ( entry.box ) {
+			var box = detail( line );
+			box.hidden = entry.box.hidden;
+			entry.box.parentNode.replaceChild( box, entry.box );
+			entry.box = box;
+		}
+		if ( line._resolved && resolveCfg.hide ) {
+			[ entry.box, entry.node ].forEach( function ( node ) {
+				if ( node && node.parentNode ) {
+					node.parentNode.removeChild( node );
+				}
+			} );
+		}
+	}
+
+	function applyResolution( result ) {
+		registry.forEach( function ( entry ) {
+			var line = entry.line;
+			if ( 'reopen' === result.op ) {
+				if ( line._resolved && line._resolved.key === result.key ) {
+					line._resolved = null;
+					refresh( entry );
+				}
+			} else if ( result.resolved && covers( result.resolved, line ) ) {
+				line._resolved = result.resolved;
+				refresh( entry );
+			}
+		} );
+	}
+
+	if ( resolveAllBtn ) {
+		resolveAllBtn.addEventListener( 'click', function () {
+			if ( ! window.confirm( i18n.resolveAllConfirm ) ) {
+				return;
+			}
+			resolveAllBtn.disabled = true;
+			setStatus( i18n.loading );
+			post( 'nflog_resolve_all', data.filters || {} ).then( function ( result ) {
+				setStatus( result.message || '' );
+				window.setTimeout( function () {
+					window.location.reload();
+				}, 900 );
+			} ).catch( function ( error ) {
+				resolveAllBtn.disabled = false;
+				setStatus( i18n.error + ': ' + error.message );
 			} );
 		} );
 	}

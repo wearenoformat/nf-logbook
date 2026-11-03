@@ -52,6 +52,7 @@ final class EventFilters {
 		'actor_type',
 		'type',
 		'important',
+		'resolved',
 	];
 
 	/** Named windows (query arg `window`, `since:` in the console filter); any `<n>m|h|d` works too. */
@@ -169,6 +170,9 @@ final class EventFilters {
 		}
 		if ( '1' === $raw( 'important' ) ) {
 			$out['important'] = '1';
+		}
+		if ( 'hide' === $raw( 'resolved' ) ) {
+			$out['resolved'] = 'hide';
 		}
 		return $out;
 	}
@@ -461,6 +465,9 @@ final class EventFilters {
 		if ( isset( $clean['actor_type'] ) ) {
 			$filters['actor_type'] = $clean['actor_type'];
 		}
+		if ( 'hide' === ( $clean['resolved'] ?? '' ) ) {
+			$filters['exclude_resolved'] = true;
+		}
 		if ( isset( $clean['important'] ) && ! isset( $filters['severity'] ) ) {
 			$filters['severity']      = Severity::NOTICE;
 			$filters['severity_mode'] = 'min';
@@ -599,6 +606,9 @@ final class EventFilters {
 				$value = in_array( $key, [ 'from', 'to' ], true ) ? str_replace( 'T', ' ', $clean[ $key ] ) : $clean[ $key ];
 				$out[] = sprintf( $format, $value );
 			}
+		}
+		if ( 'hide' === ( $clean['resolved'] ?? '' ) ) {
+			$out[] = __( 'resolved issues hidden', 'nf-logbook' );
 		}
 		return $out;
 	}

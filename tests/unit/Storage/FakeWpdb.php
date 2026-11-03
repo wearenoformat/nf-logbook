@@ -82,6 +82,10 @@ class wpdb {
 		return null === $this->handler ? null : $this->handler->getRow( (string) $query );
 	}
 
+	public function get_charset_collate() {
+		return '';
+	}
+
 	public function esc_like( $text ) {
 		return addcslashes( (string) $text, '_%\\' );
 	}

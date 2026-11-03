@@ -13,6 +13,7 @@ use Noformat\Logger\Plugin;
 use Noformat\Logger\Severity;
 use Noformat\Logger\Source;
 use Noformat\Logger\Storage\EventRepository;
+use Noformat\Logger\Storage\Resolutions;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -23,6 +24,11 @@ defined( 'ABSPATH' ) || exit;
  * The server renders the page chrome and the first 200 lines as JSON in a
  * <script type="application/json">; assets/system-log.js renders every line
  * from JSON (initial page, follow mode, "Load older") so there is one renderer.
+ *
+ * Resolved issues (Storage\Resolutions) are shown dimmed with a "Resolved"
+ * chip ("Hide resolved" filters them out) and never counted in the stat bar.
+ * Users with Access::canResolve() get Resolve / Reopen in the line detail and
+ * "Resolve all open" for the warnings, errors and critical events in view.
  */
 final class SystemLogPage {
 
@@ -124,13 +130,19 @@ final class SystemLogPage {
 		$rows     = array_slice( $rows, 0, self::LINES );
 		$resolver = new Resolver();
 		$resolver->prime( $rows );
-		$payload = [
+		$canResolve = Access::canResolve( $this->plugin->config() );
+		$payload    = [
 			'lines'   => self::lines( $repo, $resolver, $rows ),
 			'hasMore' => $more,
 			'filters' => (object) $clean,
 			'ajax'    => [
-				'url'   => admin_url( 'admin-ajax.php' ),
-				'nonce' => wp_create_nonce( Ajax::TAIL_NONCE ),
+				'url'          => admin_url( 'admin-ajax.php' ),
+				'nonce'        => wp_create_nonce( Ajax::TAIL_NONCE ),
+				'resolveNonce' => $canResolve ? wp_create_nonce( Ajax::RESOLVE_NONCE ) : '',
+			],
+			'resolve' => [
+				'can'  => $canResolve && Resolutions::ready(),
+				'hide' => 'hide' === ( $clean['resolved'] ?? '' ),
 			],
 			'urls'    => [
 				'self'    => self::url(),
@@ -161,7 +173,7 @@ final class SystemLogPage {
 		if ( isset( $clean['from'] ) ) {
 			$sinceMs = EventFilters::dateToMs( $clean['from'], wp_timezone(), false );
 		}
-		$counts = $repo->countsBySeverity( $sinceMs ?? 0, null, Scope::system() );
+		$counts = $repo->countsBySeverity( $sinceMs ?? 0, null, Scope::system(), true );
 		$head   = $repo->chainHead();
 		$active = isset( $clean['levels'] ) ? explode( ',', $clean['levels'] ) : [];
 		$events = 0;
@@ -225,12 +237,25 @@ final class SystemLogPage {
 		echo '<span class="nflog-console__tools">';
 		echo '<button type="button" class="nflog-cbtn" data-nflog-follow aria-pressed="false">' . esc_html__( 'Follow', 'nf-logbook' ) . '</button>';
 		echo '<button type="button" class="nflog-cbtn" data-nflog-wrap aria-pressed="false">' . esc_html__( 'Wrap', 'nf-logbook' ) . '</button>';
+		$hide   = 'hide' === ( $clean['resolved'] ?? '' );
+		$toggle = $clean;
+		unset( $toggle['resolved'] );
+		if ( ! $hide ) {
+			$toggle['resolved'] = 'hide';
+		}
+		echo '<a class="nflog-cbtn" href="' . esc_url( self::url( $toggle ) ) . '" role="button" aria-pressed="' . ( $hide ? 'true' : 'false' ) . '">' . esc_html__( 'Hide resolved', 'nf-logbook' ) . '</a>';
+		if ( Access::canResolve( $this->plugin->config() ) && Resolutions::ready() ) {
+			echo '<button type="button" class="nflog-cbtn" data-nflog-resolve-all>' . esc_html__( 'Resolve all open', 'nf-logbook' ) . '</button>';
+		}
 		echo '<a class="nflog-cbtn" href="' . esc_url( Export::url( Scope::SYSTEM, $clean ) ) . '">' . esc_html__( 'Export JSON', 'nf-logbook' ) . '</a>';
 		echo '<a class="nflog-cbtn" href="' . esc_url( self::url() ) . '">' . esc_html__( 'Clear filters', 'nf-logbook' ) . '</a>';
 		echo '</span></div>';
 
 		echo '<form class="nflog-console__filters" method="get" action="' . esc_url( Menu::formAction() ) . '" data-nflog-console-form>';
 		echo Menu::formFields( Menu::SYSTEM ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- escaped in formFields().
+		if ( $hide ) {
+			echo '<input type="hidden" name="resolved" value="hide">';
+		}
 		echo '<div class="nflog-console__query"><span class="nflog-console__prompt" aria-hidden="true">$</span><label class="screen-reader-text" for="nflog-q">' . esc_html__( 'Filter the system log', 'nf-logbook' ) . '</label>';
 		printf(
 			'<input type="text" id="nflog-q" name="q" value="%1$s" placeholder="%2$s" autocomplete="off" spellcheck="false" aria-describedby="nflog-q-help"><kbd class="nflog-console__kbd" title="%3$s">/</kbd>',
@@ -319,22 +344,59 @@ final class SystemLogPage {
 		} catch ( \Throwable $e ) {
 			$withContent = [];
 		}
+		$resolved = [];
+		if ( Resolutions::ready() ) {
+			try {
+				$resolved = ( new Resolutions() )->forRows( $rows );
+			} catch ( \Throwable $e ) {
+				$resolved = [];
+			}
+		}
 		$out = [];
 		foreach ( $rows as $row ) {
-			$out[] = self::line( $row, $resolver, isset( $withContent[ (string) ( $row['request_id'] ?? '' ) ] ) );
+			$out[] = self::line( $row, $resolver, isset( $withContent[ (string) ( $row['request_id'] ?? '' ) ] ), $resolved[ (int) ( $row['id'] ?? 0 ) ] ?? null );
 		}
 		return $out;
 	}
 
 	/**
+	 * Display form of a resolution (console JSON `_resolved`): issue key, through id,
+	 * local time and the resolving user's display name (Resolver rules; stored as an id only).
+	 *
+	 * @param array{issue_key: string, fingerprint: string|null, event_id: int|null, through_id: int, resolved_at: int, resolved_by: int|null} $resolution Resolution.
+	 * @param Resolver                                                                                                                         $resolver   Resolver.
+	 * @return array{key: string, fingerprint: string|null, event_id: int|null, through: int, at: string, by: string}
+	 */
+	public static function resolvedInfo( array $resolution, Resolver $resolver ): array {
+		$by = '';
+		if ( null !== $resolution['resolved_by'] ) {
+			$by = $resolver->actorInfo(
+				[
+					'actor_type' => 'user',
+					'actor_id'   => $resolution['resolved_by'],
+				]
+			)['name'];
+		}
+		return [
+			'key'         => $resolution['issue_key'],
+			'fingerprint' => $resolution['fingerprint'],
+			'event_id'    => $resolution['event_id'],
+			'through'     => $resolution['through_id'],
+			'at'          => $resolution['resolved_at'] > 0 ? Ui::localTime( $resolution['resolved_at'] * 1000, 'Y-m-d H:i' ) : '',
+			'by'          => $by,
+		];
+	}
+
+	/**
 	 * One console line.
 	 *
-	 * @param array<string, mixed> $row        Row.
-	 * @param Resolver             $resolver   Resolver.
-	 * @param bool                 $hasContent The request also produced Content log events.
+	 * @param array<string, mixed>                                                                                                                  $row        Row.
+	 * @param Resolver                                                                                                                              $resolver   Resolver.
+	 * @param bool                                                                                                                                  $hasContent The request also produced Content log events.
+	 * @param array{issue_key: string, fingerprint: string|null, event_id: int|null, through_id: int, resolved_at: int, resolved_by: int|null}|null $resolution Resolution covering this event.
 	 * @return array<string, mixed>
 	 */
-	public static function line( array $row, Resolver $resolver, bool $hasContent ): array {
+	public static function line( array $row, Resolver $resolver, bool $hasContent, ?array $resolution = null ): array {
 		$event = EventRepository::rowToArray( $row );
 		unset( $event['site'], $event['producer'] );
 		$ms      = (int) ( $row['occurred_ms'] ?? 0 );
@@ -350,14 +412,17 @@ final class SystemLogPage {
 		if ( ( str_starts_with( $action, 'php.' ) || str_starts_with( $action, 'doing_it_wrong' ) || str_starts_with( $action, 'deprecated.' ) || 'db.error' === $action ) && is_string( $context['message'] ?? null ) && '' !== $context['message'] ) {
 			$message = $context['message'];
 		}
-		$actor             = $resolver->actorInfo( $row );
-		$event['_ms']      = $ms;
-		$event['_time']    = Ui::localTime( $ms, 'H:i:s' ) . sprintf( '.%03d', $ms % 1000 );
-		$event['_date']    = Ui::localTime( $ms, 'Y-m-d' );
-		$event['_loc']     = $loc;
-		$event['_msg']     = $message;
-		$event['_actor']   = $actor['name'];
-		$event['_content'] = $hasContent;
+		$actor              = $resolver->actorInfo( $row );
+		$event['_ms']       = $ms;
+		$event['_time']     = Ui::localTime( $ms, 'H:i:s' ) . sprintf( '.%03d', $ms % 1000 );
+		$event['_date']     = Ui::localTime( $ms, 'Y-m-d' );
+		$event['_loc']      = $loc;
+		$event['_msg']      = $message;
+		$event['_actor']    = $actor['name'];
+		$event['_content']  = $hasContent;
+		$event['_issue']    = Resolutions::keyForRow( $row );
+		$event['_issuable'] = (int) ( $row['severity'] ?? 4 ) <= Severity::WARNING->priority();
+		$event['_resolved'] = null === $resolution ? null : self::resolvedInfo( $resolution, $resolver );
 		return $event;
 	}
 
@@ -394,35 +459,48 @@ final class SystemLogPage {
 	 */
 	private static function i18n(): array {
 		return [
-			'empty'       => __( '$ nothing matches — try widening the window or clearing filters', 'nf-logbook' ),
-			'loading'     => __( 'loading…', 'nf-logbook' ),
-			'older'       => __( 'Load older', 'nf-logbook' ),
-			'noMore'      => __( 'beginning of the selected window', 'nf-logbook' ),
-			'error'       => __( 'could not load events', 'nf-logbook' ),
-			'copy'        => __( 'Copy as JSON', 'nf-logbook' ),
-			'copied'      => __( 'Copied', 'nf-logbook' ),
-			'openContent' => __( 'Open in Content log', 'nf-logbook' ),
-			'changes'     => __( 'changes', 'nf-logbook' ),
-			'context'     => __( 'context', 'nf-logbook' ),
-			'trace'       => __( 'stack', 'nf-logbook' ),
-			'event'       => __( 'event', 'nf-logbook' ),
-			'fingerprint' => __( 'fingerprint', 'nf-logbook' ),
-			'request'     => __( 'request', 'nf-logbook' ),
-			'actor'       => __( 'actor', 'nf-logbook' ),
-			'source'      => __( 'source', 'nf-logbook' ),
-			'route'       => __( 'route', 'nf-logbook' ),
-			'category'    => __( 'category', 'nf-logbook' ),
-			'count'       => __( 'count', 'nf-logbook' ),
-			'time'        => __( 'time (UTC)', 'nf-logbook' ),
-			'hash'        => __( 'hash', 'nf-logbook' ),
-			'prevHash'    => __( 'prev hash', 'nf-logbook' ),
-			'filterBy'    => __( 'filter by this', 'nf-logbook' ),
-			'live'        => __( 'live', 'nf-logbook' ),
-			'stopped'     => __( 'follow stopped after 30 minutes', 'nf-logbook' ),
+			'empty'             => __( '$ nothing matches — try widening the window or clearing filters', 'nf-logbook' ),
+			'loading'           => __( 'loading…', 'nf-logbook' ),
+			'older'             => __( 'Load older', 'nf-logbook' ),
+			'noMore'            => __( 'beginning of the selected window', 'nf-logbook' ),
+			'error'             => __( 'could not load events', 'nf-logbook' ),
+			'copy'              => __( 'Copy as JSON', 'nf-logbook' ),
+			'copied'            => __( 'Copied', 'nf-logbook' ),
+			'openContent'       => __( 'Open in Content log', 'nf-logbook' ),
+			'changes'           => __( 'changes', 'nf-logbook' ),
+			'context'           => __( 'context', 'nf-logbook' ),
+			'trace'             => __( 'stack', 'nf-logbook' ),
+			'event'             => __( 'event', 'nf-logbook' ),
+			'fingerprint'       => __( 'fingerprint', 'nf-logbook' ),
+			'request'           => __( 'request', 'nf-logbook' ),
+			'actor'             => __( 'actor', 'nf-logbook' ),
+			'source'            => __( 'source', 'nf-logbook' ),
+			'route'             => __( 'route', 'nf-logbook' ),
+			'category'          => __( 'category', 'nf-logbook' ),
+			'count'             => __( 'count', 'nf-logbook' ),
+			'time'              => __( 'time (UTC)', 'nf-logbook' ),
+			'hash'              => __( 'hash', 'nf-logbook' ),
+			'prevHash'          => __( 'prev hash', 'nf-logbook' ),
+			'filterBy'          => __( 'filter by this', 'nf-logbook' ),
+			'resolve'           => __( 'Resolve', 'nf-logbook' ),
+			'reopen'            => __( 'Reopen', 'nf-logbook' ),
+			'resolved'          => __( 'Resolved', 'nf-logbook' ),
+			/* translators: 1: local date and time, 2: user display name */
+			'resolvedBy'        => __( 'resolved %1$s by %2$s', 'nf-logbook' ),
+			/* translators: %s: local date and time */
+			'resolvedAt'        => __( 'resolved %s', 'nf-logbook' ),
+			/* translators: %d: event id */
+			'resolvedThrough'   => __( 'through event #%d; a later occurrence reopens it', 'nf-logbook' ),
+			'resolution'        => __( 'resolution', 'nf-logbook' ),
+			'resolveAllConfirm' => __( 'Resolve every open warning, error and critical issue in this view? Each one is logged; a later occurrence reopens it.', 'nf-logbook' ),
+			'resolveDone'       => __( 'Resolved. Counts update on reload.', 'nf-logbook' ),
+			'reopenDone'        => __( 'Reopened. Counts update on reload.', 'nf-logbook' ),
+			'live'              => __( 'live', 'nf-logbook' ),
+			'stopped'           => __( 'follow stopped after 30 minutes', 'nf-logbook' ),
 			/* translators: %d: number of new lines */
-			'newLines'    => __( '%d new', 'nf-logbook' ),
+			'newLines'          => __( '%d new', 'nf-logbook' ),
 			/* translators: %d: number of lines shown */
-			'lines'       => __( '%d lines', 'nf-logbook' ),
+			'lines'             => __( '%d lines', 'nf-logbook' ),
 		];
 	}
 }

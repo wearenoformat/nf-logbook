@@ -93,6 +93,8 @@ console). The split is display only (filter `noformat_logger/content_categories`
 | `logger.key_unreadable` | security | error | `api_key / <key id>` | — (at most once per hour) | KeyStore via Plugin |
 | `logger.events_exported` | system | notice | `plugin / nf-logbook` | — | wp-admin Content log / System log (Export JSON) |
 | `logger.events_viewed` | system | debug (dropped unless `log_debug`) | `plugin / nf-logbook` | — | wp-admin Content log / System log |
+| `logger.issue_resolved` | system | notice | `issue / <fingerprint>` or `issue / event:<id>` | — | wp-admin System log (Resolve, Resolve all open), `wp nflog resolve` |
+| `logger.issue_reopened` | system | notice | `issue / <fingerprint>` or `issue / event:<id>` | — | wp-admin System log (Reopen), `wp nflog reopen` |
 | `system.buffer_overflow` | system | warning | — | — | Logger |
 | `system.flood` | security | warning | — | `system.flood` (60 s window) | Logger |
 | `api.auth_failed` | security | warning (rate limited: notice) | `api_key / <key id>` when the key is known, else `api_key / null` | reason + ip hash (+ key id when known) | Authenticator |
@@ -218,6 +220,8 @@ exceptions, database errors, core/plugin integrity mismatch, hash chain break.
 | `logger.key_generated` / `logger.key_rotated` / `logger.key_revoked` | `key_id`; rotate: `previous_key_id`; `revoke --all`: `all: true` and `previous_key_id` (the other revoked key). Never secrets. `key generate --print-config` with constants stores nothing and logs nothing |
 | `logger.events_exported` | `count` (events written, ≤ 5 000), `truncated` (more matched the filter), `scope` (`content` or `system`: the wp-admin screen, see `Admin\Scope`), `filters` (names of the filters in use, e.g. `["severity", "severity_mode", "from"]`; never their values), `format` (`json`). Actor: the user who downloaded |
 | `logger.events_viewed` | `filters` (names only), `scope`. Reading the log is not logged by default: this is a `debug` event, dropped before buffering unless `log_debug` is on |
+| `logger.issue_resolved` | Exactly `{"fingerprint": "<32 hex>" \| null, "event_id": <id> \| null, "through_id": <id>}`: `fingerprint` for a fingerprinted issue (then `event_id` is null), else `event_id` of the single event (then `through_id` = `event_id`); `through_id` is the newest event id of the issue when it was resolved. One event per issue, also for *Resolve all open*. Actor: the resolving user (`cli` from WP-CLI). The Controlroom collector mirrors resolutions from these keys: do not rename them. See [resolved issues](#resolved-issues) |
+| `logger.issue_reopened` | Exactly `{"fingerprint": "<32 hex>" \| null, "event_id": <id> \| null}` (same rule as above). Logged when a resolution is removed by hand; a recurrence reopens an issue without any event |
 | `logger.key_unreadable` | `key_id`: a request named the stored (database) key but its secret cannot be decrypted, normally because the WordPress salts were rotated; generate a new key or move it to wp-config constants |
 | `system.buffer_overflow` | `dropped`, `buffer_max`. Only when storage failed in this request: a full buffer (`buffer_max`, default 200) is written immediately and logging continues, so long imports and CLI runs keep every event |
 | `system.flood` | `dropped` (occurrences folded into this event by the first request of the window), `per_minute` (the cap), `top_actions` (`[{action, count}]`, at most 5). `count` is the total folded in the window. See [flood cap](#anonymous-flood-cap) |
@@ -977,6 +981,42 @@ Cron hooks (actions, not filters): `noformat_logger/cron/prune` (daily),
 (weekly), `noformat_logger/cron/config_audit` (daily),
 `noformat_logger/cron/health_cache` (every 15 minutes).
 
+## Resolved issues
+
+The site owner can mark an issue resolved once its cause is fixed (System log,
+`wp nflog resolve`). Events are append-only and hash-chained, so they are never
+changed; the state lives in `{prefix}nflog_resolutions` (schema 2):
+
+| Column | |
+| --- | --- |
+| `issue_key` (PK) | the fingerprint, or `event:<id>` |
+| `fingerprint` | 32 hex, or NULL for a single event |
+| `event_id` | the single event's id, or NULL for a fingerprint |
+| `through_id` | resolved through this event id |
+| `resolved_at` | Unix time |
+| `resolved_by` | user id (NULL from WP-CLI without `--user`); never a name or e-mail |
+
+- **Issue**: the event's `fingerprint` when set (PHP errors, deprecations,
+  `doing_it_wrong`, `db.error`, `http.request_failed`, `mail.failed`, fatal
+  errors, cron and probe signals, …); a warning/error/critical event without a
+  fingerprint is resolved on its own (`event:<id>`). Only issues whose worst
+  event is `warning` or more crucial can be resolved.
+- **Rule**: an event counts as resolved iff a resolution covers it: same
+  fingerprint and `id <= through_id`, or the single event's id. `through_id` is
+  the newest event of the fingerprint at the moment of resolving, so a later
+  occurrence (a new, higher id) is open again with no job involved. Resolving
+  closes the fingerprint's aggregation window, so a recurrence within the
+  window is stored as a new event rather than counted on the resolved one.
+- **Reopen** removes the row. Re-resolving after a recurrence moves `through_id` up.
+- **Where it applies**: wp-admin only. The System log severity counters, the
+  Content log "Needs attention" line and the dashboard widget's system line
+  leave resolved events out; the System log shows them dimmed (`resolved=hide`
+  filters them out). The REST API is unchanged: `GET /events` serves events as
+  stored, `GET /summary` and `GET /health` count every event; the Controlroom
+  learns about resolutions from `logger.issue_resolved` / `logger.issue_reopened`.
+- **Lifetime**: prune deletes resolutions with `through_id` at or below the
+  prune boundary (every event they cover is gone); uninstall drops the table.
+
 ## Internal storage keys
 
 Meta keys in `{prefix}nflog_meta` used by the health, audit and integrity
@@ -988,7 +1028,8 @@ services: `config_audit_state`, `integrity_core_checksums`, `integrity_progress`
 (throttle of `logger.key_unreadable`), `rl:<bucket>:<minute>` rate-limit and
 anonymous-cap buckets (`rl:anon:<minute>`).
 
-Other storage: `{prefix}nflog_meta` also holds the chain head, site salt, ack
+Other storage: `{prefix}nflog_resolutions` holds resolved issues (see
+[resolved issues](#resolved-issues)). `{prefix}nflog_meta` also holds the chain head, site salt, ack
 cursor, last pull, schema version and failure counters. Options:
 `nflog_settings` (autoloaded), `nflog_schema_cache` (autoloaded mirror of the
 schema version, so admin pages check it without a query), `nflog_key`

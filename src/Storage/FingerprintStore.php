@@ -241,6 +241,18 @@ final class FingerprintStore {
 	}
 
 	/**
+	 * Close one fingerprint's window (the issue was resolved): the next
+	 * occurrence becomes a new event, with an id above the resolution, instead
+	 * of raising the count of a resolved event.
+	 *
+	 * @param string $fingerprint Fingerprint.
+	 */
+	public function close( string $fingerprint ): int {
+		$this->forget();
+		return Db::query( Db::prepare( 'UPDATE %i SET window_start = 0 WHERE fingerprint = %s AND window_start > 0', Db::table( 'fingerprints' ), $fingerprint ) );
+	}
+
+	/**
 	 * Remove fingerprints not seen for a while (cron), writing their final count back to the event first.
 	 *
 	 * @param int $before Unix time.

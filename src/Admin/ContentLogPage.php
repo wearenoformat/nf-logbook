@@ -258,7 +258,7 @@ final class ContentLogPage {
 	 * "3 critical and 4 errors in the last 24 hours → System log" (only when there is something).
 	 */
 	private function attention(): void {
-		$counts   = $this->plugin->repository()->countsBySeverity( ( time() - DAY_IN_SECONDS ) * 1000, null, Scope::system() );
+		$counts   = $this->plugin->repository()->countsBySeverity( ( time() - DAY_IN_SECONDS ) * 1000, null, Scope::system(), true );
 		$critical = (int) ( $counts['critical']['events'] ?? 0 );
 		$errors   = (int) ( $counts['error']['events'] ?? 0 );
 		if ( 0 === $critical + $errors ) {
@@ -275,8 +275,9 @@ final class ContentLogPage {
 		}
 		$url = SystemLogPage::url(
 			[
-				'levels' => 'critical,error',
-				'window' => '24h',
+				'levels'   => 'critical,error',
+				'window'   => '24h',
+				'resolved' => 'hide',
 			]
 		);
 		printf(

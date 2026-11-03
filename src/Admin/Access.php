@@ -69,6 +69,16 @@ final class Access {
 	}
 
 	/**
+	 * Whether the current user may resolve and reopen issues in the System log
+	 * (a write: manage_options, plus read access to the System log).
+	 *
+	 * @param Config $config Config.
+	 */
+	public static function canResolve( Config $config ): bool {
+		return current_user_can( 'manage_options' ) && self::canViewSystemLog( $config );
+	}
+
+	/**
 	 * Capability for Tools → Noformat Logbook (the Status tab stays reachable for administrators).
 	 */
 	public static function menuCapability(): string {
