@@ -16,7 +16,8 @@ defined( 'ABSPATH' ) || exit;
  *
  * GitHub mode: one `GET /repos/{repo}/releases/latest` per check (ETag reused,
  * a 304 keeps the cached answer), then the release's manifest.json, read only
- * when the release changed. With NOFORMAT_LOGGER_UPDATE_TOKEN (private repos)
+ * when the release changed. Without a token, an API rate limit falls back to
+ * the latest release's manifest.json through the plain download link. With NOFORMAT_LOGGER_UPDATE_TOKEN (private repos)
  * every request carries `Authorization: Bearer` and assets are read through
  * the asset API with `Accept: application/octet-stream`.
  *
@@ -254,7 +255,11 @@ final class ReleaseClient {
 			return $this->ok( $cached['release'], $cached['etag'], $now );
 		}
 		if ( 200 !== $code ) {
-			return $this->failed( $cached, $now, self::githubReason( $code, $this->hasToken(), $response ) );
+			$reason = self::githubReason( $code, $this->hasToken(), $response );
+			if ( ! $this->hasToken() && self::isRateLimited( $code, $response ) ) {
+				return $this->checkDownloadLink( $cached, $now, $reason );
+			}
+			return $this->failed( $cached, $now, $reason );
 		}
 		try {
 			$release  = Release::parseGitHubRelease( json_decode( (string) wp_remote_retrieve_body( $response ), true ), $this->hasToken() );
@@ -270,6 +275,48 @@ final class ReleaseClient {
 			$parsed['released_at'] = $release['published_at'];
 		}
 		return $this->ok( $parsed, (string) wp_remote_retrieve_header( $response, 'etag' ), $now );
+	}
+
+	/**
+	 * Whether a GitHub answer is the API rate limit (403 with no requests left, or 429).
+	 *
+	 * @param int                  $code     HTTP status.
+	 * @param array<string, mixed> $response Response.
+	 */
+	public static function isRateLimited( int $code, array $response ): bool {
+		if ( 429 === $code ) {
+			return true;
+		}
+		return 403 === $code && function_exists( 'wp_remote_retrieve_header' ) && '0' === (string) wp_remote_retrieve_header( $response, 'x-ratelimit-remaining' );
+	}
+
+	/**
+	 * Public repositories only: the latest release's manifest.json through the
+	 * plain download link (github.com/{repo}/releases/latest/download/…), used
+	 * when the API is rate limited. The API allows 60 anonymous requests per
+	 * hour per IP address, and shared hosts (WP Engine and the like) send many
+	 * sites through one address; the download link is not counted against it.
+	 * The package must be this repository's own release download, and its
+	 * SHA-256 is verified as always.
+	 *
+	 * @param array<string, mixed>|null $cached Previous state.
+	 * @param int                       $now    Clock.
+	 * @param string                    $reason Why the API was not used.
+	 * @return array{source: string, checked_at: int, etag: string, release: array<string, string>|null, error: string}
+	 */
+	private function checkDownloadLink( ?array $cached, int $now, string $reason ): array {
+		$base = 'https://github.com/' . $this->repo . '/releases/';
+		try {
+			$parsed = Release::parseManifest( $this->fetchManifest( $base . 'latest/download/' . Release::MANIFEST ) );
+		} catch ( \UnexpectedValueException $e ) {
+			return $this->failed( $cached, $now, $reason . '; the download link failed too: ' . $e->getMessage() );
+		}
+		if ( ! str_starts_with( $parsed['package'], $base . 'download/' ) ) {
+			return $this->failed( $cached, $now, $reason . '; the download link\'s manifest.json points outside ' . $this->repo . ' releases.' );
+		}
+		$parsed['url'] = $base . 'tag/' . rawurlencode( $parsed['tag'] );
+		// No ETag: the next check asks the API again with a full request.
+		return $this->ok( $parsed, '', $now );
 	}
 
 	/**
