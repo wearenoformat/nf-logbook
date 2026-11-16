@@ -159,7 +159,7 @@ rm -f "${STATE_MU}"
 ${WP} option update nfltest_state_x "cli-${RANDOM}" --quiet
 since "${CS}" "${OUT}/state.json"
 assert "GET page loads: no option.updated for the state key" "${OUT}/state.json" "find('option.updated', e => id(e, 'nfltest_state_x') && e.request.method==='GET').length===0 && find('option.added', e => id(e, 'nfltest_state_x') && e.request.method==='GET').length===0"
-assert "same write on POST is logged (info, not technical)"  "${OUT}/state.json" "[...find('option.updated'), ...find('option.added')].filter(e => id(e, 'nfltest_state_x') && e.request.method==='POST' && e.severity==='info' && !(e.context && e.context.technical)).length===1"
+assert "same write on a visitor's POST: not recorded (no person)" "${OUT}/state.json" "[...find('option.updated'), ...find('option.added')].filter(e => id(e, 'nfltest_state_x') && e.request.method==='POST').length===0"
 assert "same write via WP-CLI is logged"                       "${OUT}/state.json" "one('option.updated', e => id(e, 'nfltest_state_x') && e.request.source==='cli' && e.severity==='info' && String(ch(e,'nfltest_state_x').new).startsWith('cli-'))"
 ${WP} option delete nfltest_state_x --quiet > /dev/null 2>&1 || true
 

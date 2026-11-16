@@ -132,6 +132,7 @@ final class Config {
 			'hard_max_days'            => 180,
 			'max_rows'                 => 500000,
 			'log_debug'                => false,
+			'record_machine_writes'    => false,
 			'full_content_diff'        => false,
 			'allow_http'               => false,
 			'ip_allowlist'             => [],
@@ -463,9 +464,11 @@ final class Config {
 	 * caches, batch cursors, locks, telemetry). Entries starting with `/` are
 	 * regular expressions, other entries are `*` globs, entries starting with `!`
 	 * are exemptions (a glob or regex that is never technical, checked first).
-	 * Kept to state-like words and vendor state prefixes on purpose: settings an
-	 * admin saves from a settings screen (POST) must stay `info`; writes during
-	 * reads are handled by the write-on-read rule (RequestContext::machineWriteReason()).
+	 * Kept to state-like words, vendor state prefixes and exact vendor state keys
+	 * on purpose: settings an admin saves from a settings screen (POST) must stay
+	 * recorded; writes during reads are handled by the write-on-read rule
+	 * (RequestContext::machineWriteReason()). Matching writes are not recorded,
+	 * whoever the actor is (with record_machine_writes: debug + context.technical).
 	 *
 	 * @return list<string>
 	 */
@@ -485,6 +488,36 @@ final class Config {
 			'rg_gforms_message',
 			'_site_transient_*',
 			'_transient_*',
+			// WPML background state (ATE pull delivery, single-URL resolution worker,
+			// reconnect/retranslation/config import state, outage and check timestamps).
+			// WPML settings (icl_sitepress_settings, wpml_*_settings) are not matched.
+			'/^_?(wpml|icl)[_-].*[_-](state|status)$/i',
+			'wpml_single_url_resolution_generation',
+			'wpml_single_url_resolution_rebuild',
+			'wpml_ate_unreachable_since',
+			'wpml_translations_api_unreachable_since',
+			'wpml_config_index_updated',
+			'wpml-stats-last-sent',
+			'wpml-stats-last-translation-completed',
+			'wpml_ate_retranslation_last_call',
+			'wpml_ate_retranslation_last_undelivered_check',
+			'wpml_meta_settings_last_check',
+			'wpml_capability_index_backfill_position',
+			'wpml_restore_term_status_rows_position',
+			'wpml_ate_download_process_counter',
+			'wpml_tm_last_compressed_job_id',
+			// WP Engine mu-plugin housekeeping (remote notices and feature flags with
+			// their expiry, update caches, Site Health copy, secure updater cache,
+			// cache-cleared timestamps). wpe_cache_config (its settings) is not matched.
+			'wpe_notices_expiration',
+			'wpe_notices_ttl',
+			'wpe_feature_flags',
+			'wpe_feature_flags_expiration',
+			'wpe_site_transient_update_*',
+			'wpe-health-check-site-status-result',
+			'wpesu-*',
+			'wpe_cache_last_cleared',
+			'wpe_cache_last_cleared_error',
 		];
 	}
 
@@ -498,8 +531,9 @@ final class Config {
 			$list = self::defaultTechnicalKeyPatterns();
 			if ( function_exists( 'apply_filters' ) ) {
 				/**
-				 * Filter the technical key patterns (option names and meta keys logged at debug
-				 * with context.technical). `/regex/flags`, `*` globs, `!` prefix for exemptions.
+				 * Filter the technical key patterns (option names and meta keys that are not
+				 * recorded; with record_machine_writes, logged at debug with context.technical).
+				 * `/regex/flags`, `*` globs, `!` prefix for exemptions.
 				 *
 				 * @param list<string> $list Patterns.
 				 */

@@ -108,9 +108,9 @@ console). The split is display only (filter `noformat_logger/content_categories`
 | `post.restored` | content | notice | `post / id` (post type) | — | PostListener |
 | `post.deleted` | content | notice | `post / id` (post type) | — | PostListener |
 | `post.revision_restored` | content | info | `post / id` (post type) | — | PostListener |
-| `meta.added` | fields | info (internal `_` keys, technical keys and machine state: debug) | `post`/`term`/`user`/`comment` `/ id` (meta key) | — | MetaListener |
-| `meta.updated` | fields | info (internal `_` keys, technical keys and machine state: debug) | as above | — | MetaListener |
-| `meta.deleted` | fields | info (internal `_` keys, technical keys and machine state: debug) | as above | — | MetaListener |
+| `meta.added` | fields | info (internal `_` keys: debug; technical keys, machine state and user meta without a person: not recorded) | `post`/`term`/`user`/`comment` `/ id` (meta key) | — | MetaListener |
+| `meta.updated` | fields | info (internal `_` keys: debug; technical keys, machine state and user meta without a person: not recorded) | as above | — | MetaListener |
+| `meta.deleted` | fields | info (internal `_` keys: debug; technical keys, machine state and user meta without a person: not recorded) | as above | — | MetaListener |
 | `term.created` | taxonomy | info | `term / id` (taxonomy) | — | TermListener |
 | `term.updated` | taxonomy | info | `term / id` (taxonomy) | — | TermListener |
 | `term.deleted` | taxonomy | info | `term / id` (taxonomy) | — | TermListener |
@@ -141,9 +141,9 @@ console). The split is display only (filter `noformat_logger/content_categories`
 | `privacy.import_finished` | privacy | notice | — | — | PrivacyListener |
 | `privacy.personal_data_exported` | privacy | notice | `user / id` or `user_request / id` | — | PrivacyListener |
 | `privacy.personal_data_erased` | privacy | notice | `user / id` or `user_request / id` | — | PrivacyListener |
-| `option.added` | settings | info / notice / critical (severity map); machine state: debug | `option / name` | — | OptionListener |
-| `option.updated` | settings | info / notice / critical (severity map); machine state: debug | `option / name` | — | OptionListener |
-| `option.deleted` | settings | info / notice / critical (severity map); machine state: debug | `option / name` | — | OptionListener |
+| `option.added` | settings | info / notice / critical (severity map); machine state and info writes without a person: not recorded | `option / name` | — | OptionListener |
+| `option.updated` | settings | info / notice / critical (severity map); machine state and info writes without a person: not recorded | `option / name` | — | OptionListener |
+| `option.deleted` | settings | info / notice / critical (severity map); machine state and info writes without a person: not recorded | `option / name` | — | OptionListener |
 | `plugin.installed` | plugin | notice (failed: error) | `plugin / slug` | — | PluginThemeListener |
 | `plugin.activated` | plugin | notice | `plugin / slug` | — | PluginThemeListener |
 | `plugin.deactivated` | plugin | notice | `plugin / slug` | — | PluginThemeListener |
@@ -277,7 +277,7 @@ sensitive keys, redaction markers ([personal values](#conventions)).
 
 | Action | Severity | Changes | Context |
 | --- | --- | --- | --- |
-| `meta.added` | info; debug for internal and technical keys | `{meta_key}` null → value; no event for an empty value (`''`) | `meta_key`, `post_type` (post meta), `technical: true` for technical keys |
+| `meta.added` | info; debug for internal keys; technical keys and machine state are not recorded (with `record_machine_writes`: debug) | `{meta_key}` null → value; no event for an empty value (`''`) | `meta_key`, `post_type` (post meta), `technical: true` for technical keys (with `record_machine_writes`) |
 | `meta.updated` | as above | per-key diff old → new; no event when equal | `meta_key`, `post_type`, `old_unknown: true` when no old value was captured |
 | `meta.deleted` | as above | old → null | `meta_key`, `post_type`, `rows`, `all_objects: true` for `delete_metadata( ..., $delete_all = true )` |
 
@@ -301,11 +301,17 @@ sensitive keys, redaction markers ([personal values](#conventions)).
   `wpseo_inclusive_language_analysis_disable`, `screen_layout_*`,
   `edit_*_per_page`, `managenav-menuscolumnshidden`, plus every key matching
   the shared state-key patterns (see [machine state](#machine-state-technical-writes);
-  the meaningful Yoast fields above are exempt from the patterns). They are
-  `debug` with `context.technical: true`, so they are dropped unless
-  `log_debug` is on.
+  the meaningful Yoast fields above are exempt from the patterns), and the
+  WP 2FA per-login bookkeeping `wp_2fa_last_totp_step`, `wp_2fa_nonce`,
+  `wp_2fa_email_token`, `wp_2fa_passkey_challenge`,
+  `wp_2fa_email-login-attempts`, `wp_2fa_backup-login-attempts`,
+  `wp_2fa_api-login-attempts`, `wp_2fa_api-reset-password-attempts`,
+  `wp_2fa_global_settings_hash` and `login_date`. They are not recorded (with
+  `record_machine_writes`: `debug` with `context.technical: true`, stored only
+  when `log_debug` is on).
 - Writes during a read request, cron or heartbeat are machine state on every
-  meta type (see [machine state](#machine-state-technical-writes)).
+  meta type, and user meta with no logged-in user behind it is not recorded
+  unless it is security-relevant (see [machine state](#machine-state-technical-writes)).
   Pure noise (`_edit_lock`, `session_tokens`, `closedpostboxes_*`, `_wp_old_slug`,
   `last_update`, `dismissed_wp_pointers`, …) stays on the ignored list and is
   never stored.
@@ -505,18 +511,39 @@ Severity map (`OptionRules`):
 Exact names win over glob patterns; among matching globs the most severe wins.
 
 An `info` option write that is machine state (state-key pattern, or a write
-during a read request, cron or heartbeat) is logged at `debug` with
-`context.technical: true` (see [machine state](#machine-state-technical-writes)).
-Options the map puts above `info` (every notice and critical option) are never
-downgraded.
+during a read request, cron or heartbeat) or that has no logged-in user behind
+it is not recorded (see [machine state](#machine-state-technical-writes)).
+Options the map puts above `info` (every notice and critical option) are
+always recorded, whoever writes them.
 
 #### Machine state (technical writes)
 
-Plugins write state on page loads (notification queues, version caches, batch
-cursors). None of it is a change a person made, so `option.*` and `meta.*`
-writes are logged at `debug` with `context.technical: true` and
-`context.technical_reason` (dropped unless `log_debug` is on) when either rule
-holds. Notice and critical options are exempt from both.
+Plugins and the host write state on page loads, in background workers and
+during logins (notification queues, version caches, batch cursors, worker
+status, per-login counters). None of it is a change a person made, so since
+1.3.2 these `option.*` and `meta.*` writes are **not recorded at all** (not even
+at `debug`; `Listeners\Support\MachineWrites::skipReason()`). Notice and
+critical options are exempt from every rule below: they are recorded whoever
+writes them (a visitor, cron or code changing `siteurl` is exactly the
+tampering signal).
+
+0. **No person** (reason `no_person`), applied to `option.*` and to user meta:
+   the write has no logged-in user behind it (a visitor, WP-Cron,
+   unauthenticated REST/AJAX, or code running before `init`, when WordPress has
+   not authenticated anyone and no request handler has run). WP-CLI counts as
+   a person. Security-relevant user meta (`MetaListener::SECURITY_USER_KEYS`,
+   filter `noformat_logger/security_meta_keys`: `wp_2fa_enabled_methods`,
+   `wp_2fa_totp_key`, `wp_2fa_backup_codes`, `wp_2fa_2fa_status`,
+   `wp_2fa_is_locked`, `wp_2fa_user_enforced_instantly`,
+   `wp_2fa_nominated_email_address`, `wp_2fa_backup_email_address`) is
+   recorded whoever writes it (without a person, from cron, during a read
+   request: it is exempt from all three rules, like critical options); roles and capabilities belong to `user.*`
+   (UserListener), which records them whoever the actor is. Post, term and
+   comment meta written by a visitor (guest checkout, form and comment
+   submissions) is still recorded: it belongs to something the visitor did.
+
+The two rules below (reason `machine_state`) apply whoever the actor is, also
+with an administrator logged in (rule 1 never applies to WP-CLI, rule 2 does):
 
 1. **Write-on-read** (`RequestContext::machineWriteReason()`), applied to
    `option.added|updated|deleted` and `meta.*` on posts, terms, users and
@@ -539,6 +566,26 @@ holds. Notice and critical options are exempt from both.
    - prefixes `wp_yoast_*`, `_yoast_*`, `imagify_*`, `gsmtp_*`,
      `gform_version*`, `_transient_*`, `_site_transient_*`, and
      `rg_gforms_message`;
+   - WPML background state: regex `/^_?(wpml|icl)[_-].*[_-](state|status)$/i`
+     (`wpml_pull_delivery_state`, `wpml_single_url_resolution_worker_status`,
+     `wpml_ate_reconnect_state`, `wpml_ate_retranslation_state`,
+     `wpml_config_import_state`, `wpml_word_count_requested_types_status`, …)
+     and `wpml_single_url_resolution_generation`,
+     `wpml_single_url_resolution_rebuild`, `wpml_ate_unreachable_since`,
+     `wpml_translations_api_unreachable_since`, `wpml_config_index_updated`,
+     `wpml-stats-last-sent`, `wpml-stats-last-translation-completed`,
+     `wpml_ate_retranslation_last_call`,
+     `wpml_ate_retranslation_last_undelivered_check`,
+     `wpml_meta_settings_last_check`, `wpml_capability_index_backfill_position`,
+     `wpml_restore_term_status_rows_position`,
+     `wpml_ate_download_process_counter`, `wpml_tm_last_compressed_job_id`.
+     WPML settings (`icl_sitepress_settings`, `wpml_*_settings`) stay recorded;
+   - WP Engine mu-plugin housekeeping: `wpe_notices` (via the `notices` rule),
+     `wpe_notices_expiration`, `wpe_notices_ttl`, `wpe_feature_flags`,
+     `wpe_feature_flags_expiration`, `wpe_site_transient_update_*`,
+     `wpe-health-check-site-status-result`, `wpesu-*` (secure updater cache),
+     `wpe_cache_last_cleared`, `wpe_cache_last_cleared_error`. The cache
+     settings `wpe_cache_config` stay recorded;
    - exemptions (checked first): `!*_settings`, `!*_options`, so a settings
      screen save such as `imagify_settings` stays `info`. `rg_gforms_*` as a
      whole, `aiowps_*` options and `wpseo*` options are deliberately not
@@ -551,6 +598,13 @@ holds. Notice and critical options are exempt from both.
    entry an exemption. Example: `$list[] = 'acme_cache_*';` or
    `$list[] = '!gsmtp_version_info';`. Meta keys additionally use
    `MetaListener::TECHNICAL_KEYS` (`noformat_logger/technical_meta_keys`).
+
+**Opting back in.** The setting `record_machine_writes` (constant
+`NOFORMAT_LOGGER_RECORD_MACHINE_WRITES`, option or `noformat_logger/settings`
+filter; default `false`) restores the 1.3.1 behaviour: writes without a person
+are recorded as before, and machine state is logged at `debug` with
+`context.technical: true` and `context.technical_reason` (`key_pattern`,
+`read_request`, `cron`, `heartbeat`), stored only when `log_debug` is on.
 
 Skipped (never logged by this listener):
 
@@ -961,7 +1015,8 @@ strings; a non-array return falls back to the default.
 | `noformat_logger/is_https` | `bool` whether the API request counts as HTTPS (default `is_ssl()`; TLS terminated at a trusted proxy) | Authenticator |
 | `noformat_logger/critical_options` | `list<string>` option names / globs logged as critical (`siteurl`, `home`, `admin_email`, `{prefix}user_roles`) | OptionListener |
 | `noformat_logger/option_severity` | `array<string, string>` option name / glob → severity | OptionListener |
-| `noformat_logger/technical_key_patterns` | `list<string>` state-key patterns: `/regex/`, `*` globs, `!` exemptions (`Config::defaultTechnicalKeyPatterns()`); matching option names and meta keys are `debug` + `context.technical` | OptionListener, MetaListener |
+| `noformat_logger/technical_key_patterns` | `list<string>` state-key patterns: `/regex/`, `*` globs, `!` exemptions (`Config::defaultTechnicalKeyPatterns()`); matching option names and meta keys are not recorded (with `record_machine_writes`: `debug` + `context.technical`) | OptionListener, MetaListener |
+| `noformat_logger/security_meta_keys` | `list<string>` user meta globs recorded even with no logged-in user (`MetaListener::SECURITY_USER_KEYS`: WP 2FA enablement, secrets, lock state) | MetaListener |
 | `noformat_logger/privileged_roles` | `list<string>` roles whose grant is critical (`administrator`) | UserListener, AuthListener |
 | `noformat_logger/login_burst` | `array{threshold: int, window: int}` (10 / 300 s) | AuthListener, XmlRpcListener |
 | `noformat_logger/probe_patterns` | `array<string, string>` pattern name → regex body | ProbeListener |

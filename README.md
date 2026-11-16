@@ -197,7 +197,8 @@ Settings resolve as wp-config constants > option `nflog_settings` (status page)
 | `retention_days` | 90 | `NOFORMAT_LOGGER_RETENTION_DAYS` |
 | `hard_max_days` | 180 | `NOFORMAT_LOGGER_HARD_MAX_DAYS` |
 | `max_rows` | 500 000 | `NOFORMAT_LOGGER_MAX_ROWS` |
-| `log_debug` | false (*Debug events*: also store debug-severity events, which includes technical meta fields such as `aiowps_last_login_time`, screen options and editor preferences) | `NOFORMAT_LOGGER_LOG_DEBUG` |
+| `log_debug` | false (*Debug events*: also store debug-severity events, such as internal `_` meta fields; with `record_machine_writes` also technical fields such as `aiowps_last_login_time`, screen options and editor preferences) | `NOFORMAT_LOGGER_LOG_DEBUG` |
+| `record_machine_writes` | false: option and meta writes that are machine state (vendor state keys, writes during page views, cron, heartbeat) and option / user meta writes with no logged-in user behind them (visitors, cron, unauthenticated REST/AJAX) are not recorded; notice and critical options (`siteurl`, `home`, `admin_email`, roles, `users_can_register`, `default_role`, …), 2FA enablement and WP-CLI writes of ordinary keys always are. `true` records them as in 1.3.1 (machine state at `debug`). See EVENTS.md, *Machine state* | `NOFORMAT_LOGGER_RECORD_MACHINE_WRITES` |
 | `full_content_diff` | false | `NOFORMAT_LOGGER_FULL_CONTENT_DIFF` |
 | `rate_limit_per_minute` | 120 | `NOFORMAT_LOGGER_RATE_LIMIT_PER_MINUTE` |
 | `ip_allowlist` | empty (exact IPs or CIDR) | `NOFORMAT_LOGGER_IP_ALLOWLIST` (comma separated) |

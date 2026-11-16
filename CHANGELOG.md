@@ -2,6 +2,28 @@
 
 All notable changes to this plugin. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.2] - 2026-11-16
+
+### Fixed (machine writes in the Content log)
+
+On a WP Engine site with WPML and WP 2FA the Content log was full of lines no person caused: "changed the option wpml_pull_delivery_state", "A visitor changed the option wpml_single_url_resolution_worker_status", "A visitor changed the field wp_2fa_last_totp_step on the user …", "A visitor changed the option wpe_notices_expiration and 1 other change". They were `info` because the writes came from POST requests (admin-ajax, a WPML REST worker, the login form) and the keys matched none of the 1.1.1 state-key patterns. Such writes are now **not recorded at all** (not at `debug` either), so they no longer reach the log or the Controlroom. Events already stored are unchanged.
+
+- **No person, not recorded.** An option write or a user meta write with no logged-in user behind it (a visitor, WP-Cron, unauthenticated REST/AJAX, code running before `init`) is not recorded. WP-CLI counts as a person. Post, term and comment meta written by a visitor (guest checkout, forms, comments) is still recorded.
+- **Machine state, not recorded, whoever the actor is.** Writes that 1.1.1 logged at `debug` with `context.technical` (state-key patterns, writes during a read request, cron or heartbeat) are now dropped, also with an administrator logged in.
+- **New vendor state keys** (`Config::defaultTechnicalKeyPatterns()`): WPML background state (`/^_?(wpml|icl)[_-].*[_-](state|status)$/i`, covering `wpml_pull_delivery_state`, `wpml_single_url_resolution_worker_status`, `wpml_ate_reconnect_state`, `wpml_config_import_state`, …, plus `wpml_single_url_resolution_generation`, `wpml_single_url_resolution_rebuild`, `wpml_ate_unreachable_since`, `wpml_translations_api_unreachable_since`, `wpml_config_index_updated`, `wpml-stats-last-sent`, `wpml-stats-last-translation-completed`, `wpml_ate_retranslation_last_call`, `wpml_ate_retranslation_last_undelivered_check`, `wpml_meta_settings_last_check`, `wpml_capability_index_backfill_position`, `wpml_restore_term_status_rows_position`, `wpml_ate_download_process_counter`, `wpml_tm_last_compressed_job_id`) and WP Engine housekeeping (`wpe_notices_expiration`, `wpe_notices_ttl`, `wpe_feature_flags`, `wpe_feature_flags_expiration`, `wpe_site_transient_update_*`, `wpe-health-check-site-status-result`, `wpesu-*`, `wpe_cache_last_cleared`, `wpe_cache_last_cleared_error`; `wpe_notices` was already covered). WPML settings (`icl_sitepress_settings`, `wpml_*_settings`) and `wpe_cache_config` stay recorded.
+- **WP 2FA per-login bookkeeping** (`MetaListener::TECHNICAL_KEYS`): `wp_2fa_last_totp_step`, `wp_2fa_nonce`, `wp_2fa_email_token`, `wp_2fa_passkey_challenge`, `wp_2fa_email-login-attempts`, `wp_2fa_backup-login-attempts`, `wp_2fa_api-login-attempts`, `wp_2fa_api-reset-password-attempts`, `wp_2fa_global_settings_hash`, `login_date`.
+
+### Unchanged (always recorded)
+
+- Notice and critical options, whoever writes them: `siteurl`, `home`, `admin_email`, `{prefix}user_roles`, `users_can_register`, `default_role`, `permalink_structure`, `blog_public`, `WPLANG`, `blogname`, `*_email`, `active_plugins` outside the plugins screen, `theme_mods_*`, … and anything the `noformat_logger/option_severity` / `critical_options` filters raise above `info`. A visitor, cron or code changing them is the tampering signal.
+- Security-relevant user meta, whoever writes it (no person, cron or a read request; new list `MetaListener::SECURITY_USER_KEYS`, filter `noformat_logger/security_meta_keys`): `wp_2fa_enabled_methods`, `wp_2fa_totp_key`, `wp_2fa_backup_codes`, `wp_2fa_2fa_status`, `wp_2fa_is_locked`, `wp_2fa_user_enforced_instantly`, `wp_2fa_nominated_email_address`, `wp_2fa_backup_email_address`. Roles and capabilities stay with `user.*` events, which are recorded whoever the actor is.
+- WP-CLI writes of ordinary keys, and settings an administrator saves.
+- The filters `noformat_logger/ignored_options`, `ignored_meta_keys`, `technical_key_patterns` (a `!` exemption makes a vendor key recordable again) and `technical_meta_keys`; the REST API, the wire format and the hash chain.
+
+### Added
+
+- Setting `record_machine_writes` (constant `NOFORMAT_LOGGER_RECORD_MACHINE_WRITES`, option or `noformat_logger/settings`; default `false`): `true` restores the 1.3.1 behaviour (writes without a person recorded, machine state at `debug` with `context.technical`, stored only with `log_debug`).
+
 ## [1.3.1] - 2026-11-03
 
 ### Fixed

@@ -28,6 +28,8 @@ final class RequestContext {
 
 	private ?string $sourceOverride = null;
 
+	private bool $resolvingPerson = false;
+
 	/**
 	 * Constructor.
 	 *
@@ -153,6 +155,26 @@ final class RequestContext {
 	 */
 	public function actorResolvable(): bool {
 		return function_exists( 'did_action' ) && did_action( 'init' ) > 0;
+	}
+
+	/**
+	 * Whether a logged-in user is behind this request. False before `init`:
+	 * WordPress has not authenticated anyone yet, and no request handler (forms,
+	 * options.php, admin-ajax, REST dispatch, wp-login.php) has run, so a write
+	 * that early is bootstrap code, not a person. Also false when re-entered: a
+	 * write made while WordPress is still determining the current user (a
+	 * `determine_current_user` callback) must not start that determination again.
+	 */
+	public function hasPerson(): bool {
+		if ( $this->resolvingPerson || ! $this->actorResolvable() ) {
+			return false;
+		}
+		$this->resolvingPerson = true;
+		try {
+			return 'user' === $this->actor()['type'];
+		} finally {
+			$this->resolvingPerson = false;
+		}
 	}
 
 	/**

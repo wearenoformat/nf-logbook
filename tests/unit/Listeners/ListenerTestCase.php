@@ -76,6 +76,24 @@ abstract class ListenerTestCase extends TestCase {
 	}
 
 	/**
+	 * Simulate a request by a logged-in user (after init). Without this the
+	 * request has no person: a visitor, cron or code running before init.
+	 *
+	 * @param int    $id   User id.
+	 * @param string $role Role.
+	 */
+	protected function loggedIn( int $id = 1, string $role = 'administrator' ): void {
+		if ( ! class_exists( 'WP_User', false ) ) {
+			eval( 'class WP_User { public $ID = 0; public $roles = []; public $data; }' ); // phpcs:ignore Squiz.PHP.Eval.Discouraged
+		}
+		$user        = new \WP_User();
+		$user->ID    = $id;
+		$user->roles = [ $role ];
+		Functions\when( 'did_action' )->alias( static fn( $hook ) => 'init' === $hook ? 1 : 0 );
+		Functions\when( 'wp_get_current_user' )->justReturn( $user );
+	}
+
+	/**
 	 * Recorded action names.
 	 *
 	 * @return list<string>
