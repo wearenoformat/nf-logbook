@@ -1,6 +1,8 @@
 <?php
 /**
- * Machine-written state is debug + technical: write-on-read rule and state-key patterns.
+ * Machine-state classification with record_machine_writes on (the 1.3 treatment):
+ * debug + technical for the write-on-read rule and state-key patterns. The
+ * default (not recorded at all) is covered by MachineWritesTest.
  *
  * @package Noformat\Logger
  */
@@ -26,6 +28,8 @@ final class NoiseRulesTest extends ListenerTestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		Functions\when( 'sanitize_key' )->alias( static fn( $key ) => preg_replace( '/[^a-z0-9_\-]/', '', strtolower( (string) $key ) ) );
+		$this->useSettings( [ 'record_machine_writes' => true ] );
+		$this->loggedIn();
 		$this->options = new OptionListener();
 		$this->options->register( $this->logger, $this->config );
 		$this->meta = ( new MetaListener() )->bind( $this->logger, $this->config );

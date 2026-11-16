@@ -27,6 +27,7 @@ final class MetaListenerTest extends ListenerTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
+		$this->loggedIn();
 		Functions\when( 'get_post_type' )->alias( fn( $id ) => $this->types[ (int) $id ] ?? 'post' );
 		$this->listener = ( new MetaListener() )->bind( $this->logger, $this->config );
 	}
@@ -57,12 +58,20 @@ final class MetaListenerTest extends ListenerTestCase {
 		self::assertSame( Severity::DEBUG, $this->listener->severityFor( '_yoast_wpseo_estimated-reading-time-minutes' ) );
 	}
 
-	public function test_technical_keys_are_debug_and_flagged(): void {
-		foreach ( [ 'aiowps_last_login_time', 'wc_last_login', 'wpseo_keyword_analysis_disable', 'screen_layout_post', 'edit_post_per_page', '_yoast_wpseo_estimated-reading-time-minutes', 'imagify_data', 'managenav-menuscolumnshidden' ] as $key ) {
+	public function test_technical_keys_are_not_recorded(): void {
+		$this->listener->added( 'user', 4, 'aiowps_last_login_time', '1700000000' );
+		$this->listener->updated( 'user', 4, 'wp_2fa_last_totp_step', '56789012' );
+		self::assertSame( [], $this->actions(), 'a logged-in user does not make machine state recordable' );
+	}
+
+	public function test_technical_keys_are_debug_and_flagged_with_record_machine_writes(): void {
+		$this->useSettings( [ 'record_machine_writes' => true ] );
+		$this->listener = ( new MetaListener() )->bind( $this->logger, $this->config );
+		foreach ( [ 'aiowps_last_login_time', 'wc_last_login', 'wpseo_keyword_analysis_disable', 'screen_layout_post', 'edit_post_per_page', '_yoast_wpseo_estimated-reading-time-minutes', 'imagify_data', 'managenav-menuscolumnshidden', 'wp_2fa_last_totp_step', 'wp_2fa_email-login-attempts', 'login_date' ] as $key ) {
 			self::assertTrue( $this->listener->isTechnical( $key ), $key );
 			self::assertSame( Severity::DEBUG, $this->listener->severityFor( $key ), $key );
 		}
-		foreach ( [ 'wpseo_title', 'wpseo_metadesc', 'description', '_yoast_wpseo_title', 'last_login_note', 'gform_1_unique_id' ] as $key ) {
+		foreach ( [ 'wpseo_title', 'wpseo_metadesc', 'description', '_yoast_wpseo_title', 'last_login_note', 'gform_1_unique_id', 'wp_2fa_enabled_methods', 'wp_2fa_2fa_status' ] as $key ) {
 			self::assertFalse( $this->listener->isTechnical( $key ), $key );
 		}
 		self::assertSame( Severity::INFO, $this->listener->severityFor( 'wpseo_title' ) );

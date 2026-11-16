@@ -18,6 +18,7 @@ final class OptionListenerTest extends ListenerTestCase {
 
 	protected function setUp(): void {
 		parent::setUp();
+		$this->loggedIn();
 		$this->listener = new OptionListener();
 		$this->listener->register( $this->logger, $this->config );
 	}

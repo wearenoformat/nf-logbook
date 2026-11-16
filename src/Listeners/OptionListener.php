@@ -13,9 +13,11 @@ use Noformat\Logger\Category;
 use Noformat\Logger\Config;
 use Noformat\Logger\Event;
 use Noformat\Logger\Listener;
+use Noformat\Logger\Listeners\Support\MachineWrites;
 use Noformat\Logger\Listeners\Support\System\OptionRules;
 use Noformat\Logger\Logger;
 use Noformat\Logger\Severity;
+use Noformat\Logger\Source;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -30,10 +32,14 @@ defined( 'ABSPATH' ) || exit;
  * ACF option page fields ({page}_{field}, _{page}_{field}) are skipped while
  * AcfListener saves that page (acf.options_saved).
  *
- * Machine state is logged at debug with context.technical (dropped unless
- * log_debug is on): option names matching Config::isTechnicalKey() and any write
- * during a read request, cron or heartbeat (RequestContext::machineWriteReason()).
- * Notice and critical options are exempt.
+ * Not recorded (MachineWrites::skipReason()): machine state (option names
+ * matching Config::isTechnicalKey() and any write during a read request, cron
+ * or heartbeat, RequestContext::machineWriteReason()) and any write with no
+ * logged-in user behind it (visitor, cron, unauthenticated REST/AJAX, before
+ * init) unless it comes from WP-CLI. Notice and critical options are exempt
+ * from both: they are recorded whoever writes them. With record_machine_writes
+ * on, machine state is logged at debug with context.technical (stored only
+ * with log_debug) and writes without a person are recorded, as in 1.3.
  */
 final class OptionListener implements Listener {
 
@@ -165,10 +171,15 @@ final class OptionListener implements Listener {
 		}
 
 		$severity  = OptionRules::severity( $name, $newValue );
+		$request   = $this->logger->context();
 		$technical = null;
-		if ( $severity->priority() >= Severity::INFO->priority() ) {
+		$always    = $severity->priority() < Severity::INFO->priority();
+		if ( ! $always ) {
 			// Notice and critical options (siteurl, home, admin_email, default_role, …) are always exempt.
-			$technical = $this->config->isTechnicalKey( $name ) ? 'key_pattern' : $this->logger->context()->machineWriteReason();
+			$technical = $this->config->isTechnicalKey( $name ) ? 'key_pattern' : $request->machineWriteReason();
+		}
+		if ( null !== MachineWrites::skipReason( $technical, ! $always, $request->hasPerson(), Source::CLI === $request->source(), $this->config->bool( 'record_machine_writes' ) ) ) {
+			return; // Machine state or nobody behind the write: not recorded.
 		}
 		if ( null !== $technical ) {
 			$severity                    = Severity::DEBUG;

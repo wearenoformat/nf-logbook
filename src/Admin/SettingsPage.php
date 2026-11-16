@@ -160,7 +160,7 @@ final class SettingsPage {
 					);
 				}
 				echo '</div>';
-				$this->toggle( 'log_debug', __( 'Debug events', 'nf-logbook' ), __( 'Also store debug-severity events, including technical fields such as login timestamps and screen preferences (noisy).', 'nf-logbook' ) );
+				$this->toggle( 'log_debug', __( 'Debug events', 'nf-logbook' ), __( 'Also store debug-severity events, such as internal fields plugins keep on posts (noisy).', 'nf-logbook' ) );
 				$this->toggle( 'delete_data_on_uninstall', __( 'Delete data on uninstall', 'nf-logbook' ), __( 'Drop the log tables, settings and key when the plugin is deleted.', 'nf-logbook' ) );
 			}
 		);

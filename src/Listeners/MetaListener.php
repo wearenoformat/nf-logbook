@@ -14,9 +14,11 @@ use Noformat\Logger\Config;
 use Noformat\Logger\Event;
 use Noformat\Logger\Listener;
 use Noformat\Logger\Listeners\Support\Hooks;
+use Noformat\Logger\Listeners\Support\MachineWrites;
 use Noformat\Logger\Listeners\Support\PersonalValues;
 use Noformat\Logger\Logger;
 use Noformat\Logger\Severity;
+use Noformat\Logger\Source;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -27,10 +29,14 @@ defined( 'ABSPATH' ) || exit;
  * unchanged, so the write proceeds). Values on users (except preference keys),
  * comments and posts of non-viewable post types are content summaries
  * (PersonalValues); term meta and viewable post meta are diffed. Underscore-prefixed (internal) keys are
- * logged at debug severity unless listed as meaningful; technical keys
- * (TECHNICAL_KEYS and Config::isTechnicalKey()) and every write during a read
- * request, cron or heartbeat (RequestContext::machineWriteReason()) at debug
- * with context.technical.
+ * logged at debug severity unless listed as meaningful. Not recorded
+ * (MachineWrites::skipReason()): technical keys (TECHNICAL_KEYS and
+ * Config::isTechnicalKey()), every write during a read request, cron or
+ * heartbeat (RequestContext::machineWriteReason()), and user meta with no
+ * logged-in user behind the write unless from WP-CLI. SECURITY_USER_KEYS are
+ * exempt from all of these (recorded whoever writes them). Post, term and comment meta written by a visitor (guest checkout, form
+ * and comment submissions) is still recorded. With record_machine_writes on,
+ * technical writes are logged at debug with context.technical, as in 1.3.
  */
 final class MetaListener implements Listener {
 
@@ -103,8 +109,8 @@ final class MetaListener implements Listener {
 
 	/**
 	 * Technical keys: machine-written, never content (login timestamps, screen
-	 * preferences, caches). Logged at debug severity with context.technical, so
-	 * they are dropped unless log_debug is on. Exact names or `*` globs; keys
+	 * preferences, caches). Not recorded (with record_machine_writes: debug with
+	 * context.technical, stored only with log_debug). Exact names or `*` globs; keys
 	 * already in Config::defaultIgnoredMetaKeys() (never stored) are not repeated.
 	 * Filter: noformat_logger/technical_meta_keys.
 	 *
@@ -128,6 +134,39 @@ final class MetaListener implements Listener {
 		'screen_layout_*',
 		'edit_*_per_page',
 		'managenav-menuscolumnshidden',
+		// WP 2FA per-login bookkeeping (replay step, login nonce, one-time e-mail
+		// code, passkey challenge, attempt counters, last login date, settings hash).
+		'wp_2fa_last_totp_step',
+		'wp_2fa_nonce',
+		'wp_2fa_email_token',
+		'wp_2fa_passkey_challenge',
+		'wp_2fa_email-login-attempts',
+		'wp_2fa_backup-login-attempts',
+		'wp_2fa_api-login-attempts',
+		'wp_2fa_api-reset-password-attempts',
+		'wp_2fa_global_settings_hash',
+		'login_date',
+	];
+
+	/**
+	 * User meta that is security-relevant (2FA enablement, secrets, lock state):
+	 * recorded whoever writes it, also with no logged-in user, from cron or
+	 * during a read request (the WP 2FA login wizard, a grace-period cron, code).
+	 * Roles and capabilities belong to
+	 * UserListener, which records them whoever the actor is.
+	 * Filter: noformat_logger/security_meta_keys.
+	 *
+	 * @var list<string>
+	 */
+	public const SECURITY_USER_KEYS = [
+		'wp_2fa_enabled_methods',
+		'wp_2fa_totp_key',
+		'wp_2fa_backup_codes',
+		'wp_2fa_2fa_status',
+		'wp_2fa_is_locked',
+		'wp_2fa_user_enforced_instantly',
+		'wp_2fa_nominated_email_address',
+		'wp_2fa_backup_email_address',
 	];
 
 	/** Max captured old values / consumed slots kept (FIFO), for long CLI and cron runs. */
@@ -182,6 +221,13 @@ final class MetaListener implements Listener {
 	 * @var list<string>|null
 	 */
 	private ?array $meaningful = null;
+
+	/**
+	 * Resolved security list.
+	 *
+	 * @var list<string>|null
+	 */
+	private ?array $security = null;
 
 	/**
 	 * Availability.
@@ -326,6 +372,18 @@ final class MetaListener implements Listener {
 		}
 		// Shared state-key patterns (Config::isTechnicalKey()); fields an editor types stay visible.
 		return null !== $this->config && $this->config->isTechnicalKey( $key ) && ! in_array( $key, $this->meaningfulKeys(), true );
+	}
+
+	/**
+	 * Whether a user meta key is security-relevant (SECURITY_USER_KEYS after the filter).
+	 *
+	 * @param string $key Meta key.
+	 */
+	public function isSecurityKey( string $key ): bool {
+		if ( null === $this->security ) {
+			$this->security = self::filteredList( 'noformat_logger/security_meta_keys', self::SECURITY_USER_KEYS );
+		}
+		return Config::matchesGlob( $key, $this->security );
 	}
 
 	/**
@@ -496,7 +554,17 @@ final class MetaListener implements Listener {
 		}
 		$context['meta_key'] = $key; // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key -- context key, not a query.
 		$severity            = $this->severityFor( $key );
-		$technical           = $this->isTechnical( $key ) ? 'key_pattern' : $this->logger->context()->machineWriteReason();
+		$request             = $this->logger->context();
+		$security            = 'user' === $type && $this->isSecurityKey( $key );
+		$technical           = null;
+		if ( ! $security ) {
+			// Security user meta (2FA enablement, lock state) is recorded whoever writes it, like critical options.
+			$technical = $this->isTechnical( $key ) ? 'key_pattern' : $request->machineWriteReason();
+		}
+		$personRequired = 'user' === $type && ! $security;
+		if ( null !== MachineWrites::skipReason( $technical, $personRequired, $request->hasPerson(), Source::CLI === $request->source(), null !== $this->config && $this->config->bool( 'record_machine_writes' ) ) ) {
+			return; // Machine state, or user meta with nobody behind the write: not recorded.
+		}
 		if ( null !== $technical ) {
 			$severity                    = Severity::DEBUG;
 			$context['technical']        = true;
