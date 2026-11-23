@@ -2,6 +2,15 @@
 
 All notable changes to this plugin. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.5] - 2026-11-23
+
+### Fixed (developer notices from the Controlroom's own pulls)
+
+1.3.4's hourly window did not reduce the noise on a connected site: serving events to the Controlroom closes their aggregation windows (so it never misses a count), and every pull, which loads the whole site, raised the same notices again (Gravity Forms' bundled MCP Adapter deprecation, WP 2FA's early textdomain load). Each pull, every ~5.5 minutes, therefore opened new events; on bcgbrighthouse.com that was 277 of 392 deprecation rows in 24 hours.
+
+- `deprecated.*` and `doing_it_wrong` notices are no longer recorded during the Controlroom's signed requests to `noformat-logger/v1` (all four `X-NF-*` headers present on that namespace, `Authenticator::isCurrentSignedNamespaceRequest()`). WordPress' `wp_trigger_error()` follow-up is still swallowed, so the notice does not reappear as `php.deprecated`.
+- The same notices are still recorded from every other request (frontend, admin, cron, other REST routes), hourly-aggregated as in 1.3.4. PHP warnings/errors, database errors and all other events during pulls are unchanged.
+
 ## [1.3.4] - 2026-11-23
 
 ### Changed (deprecation notices aggregated hourly)

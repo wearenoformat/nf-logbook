@@ -16,6 +16,7 @@ use Noformat\Logger\Errors\Support\Text;
 use Noformat\Logger\Event;
 use Noformat\Logger\Listener;
 use Noformat\Logger\Logger;
+use Noformat\Logger\Rest\Authenticator;
 use Noformat\Logger\Severity;
 
 defined( 'ABSPATH' ) || exit;
@@ -244,10 +245,19 @@ final class DeprecationListener implements Listener {
 		if ( null === $logger ) {
 			return;
 		}
+		// Set first: when the notice is skipped below, WordPress' wp_trigger_error()
+		// follow-up must still be swallowed instead of logged as php.deprecated.
 		self::$triggerPending = true;
 		$logger->guard(
 			'deprecation.' . $action,
 			function () use ( $logger, $action, $objectType, $name, $replacement, $version, $message ): void {
+				// The Controlroom's signed pulls (every few minutes) load the whole
+				// site and so repeat every plugin's developer notices; each pull
+				// would open a new event, because serving closes the aggregation
+				// window. The same notices are still logged from other requests.
+				if ( Authenticator::isCurrentSignedNamespaceRequest() ) {
+					return;
+				}
 				$key = $action . "\x1f" . $name;
 				if ( isset( $this->seen[ $key ] ) && null === $this->seen[ $key ]->getId() ) {
 					$this->seen[ $key ]->count( $this->seen[ $key ]->getCount() + 1 );
