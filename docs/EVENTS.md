@@ -1010,6 +1010,7 @@ strings; a non-array return falls back to the default.
 | `noformat_logger/safe_keys` | `list<string>` keys never redacted (`Config::defaultSafeKeys()`) | Redactor |
 | `noformat_logger/ignored_options` | `list<string>` option globs never logged (`Config::defaultIgnoredOptions()`) | OptionListener, WidgetListener |
 | `noformat_logger/ignored_meta_keys` | `list<string>` meta key globs never logged (`Config::defaultIgnoredMetaKeys()`, includes `nflog_*`) | MetaListener |
+| `noformat_logger/ignored_db_errors` | `list<string>` `/regex/` or `*` glob entries matched against `<error> [query] <query>` (as stored: literals stripped); matching database errors are not logged (`Config::defaultIgnoredDbErrors()`: wpdb's "Processing the value for the following field failed" when the query names a `wpr_*` table — WP Rocket refusing a scanner's URL) | DbErrorListener |
 | `noformat_logger/fingerprint_window` | `int` seconds; args `Severity $severity`, `string $action` | FingerprintStore |
 | `noformat_logger/client_ip` | `string` client IP used for `ip_hash` and the API allowlist (default `REMOTE_ADDR`; set it from a trusted proxy header) | RequestContext |
 | `noformat_logger/is_https` | `bool` whether the API request counts as HTTPS (default `is_ssl()`; TLS terminated at a trusted proxy) | Authenticator |
