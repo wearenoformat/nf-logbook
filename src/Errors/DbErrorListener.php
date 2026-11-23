@@ -31,6 +31,9 @@ defined( 'ABSPATH' ) || exit;
  * seen, and only one database error per request is reported. Hooking the
  * `query` filter would catch all of them but costs a callback per query.
  *
+ * Errors on Config's ignored_db_errors list (filter noformat_logger/ignored_db_errors;
+ * by default WP Rocket refusing a visitor-supplied URL) are not logged.
+ *
  * The query is reported with every literal replaced by "?"; when the last query
  * is one of the logger's own (its storage restores the previous error text but
  * not the query), the query is omitted.
@@ -48,6 +51,8 @@ final class DbErrorListener implements Listener {
 
 	private ?Logger $logger = null;
 
+	private ?Config $config = null;
+
 	private string $reported = '';
 
 	/**
@@ -64,8 +69,8 @@ final class DbErrorListener implements Listener {
 	 * @param Config $config Config.
 	 */
 	public function register( Logger $logger, Config $config ): void {
-		unset( $config );
 		$this->logger = $logger;
+		$this->config = $config;
 		add_action( 'shutdown', [ $this, 'check' ], 1, 0 );
 		foreach ( self::DIE_FILTERS as $filter ) {
 			add_filter( $filter, [ $this, 'observeDie' ], PHP_INT_MAX, 1 );
@@ -105,7 +110,10 @@ final class DbErrorListener implements Listener {
 				}
 				$this->reported = $error;
 				$own            = '' !== $query && str_contains( $query, $wpdb->prefix . Db::PREFIX );
-				$caller         = self::caller( isset( $wpdb->func_call ) ? (string) $wpdb->func_call : '', is_array( $wpdb->queries ?? null ) ? $wpdb->queries : [] );
+				if ( null !== $this->config && $this->config->isIgnoredDbError( SqlNormalizer::stripError( $error ), $own || '' === $query ? '' : SqlNormalizer::strip( $query ) ) ) {
+					return;
+				}
+				$caller = self::caller( isset( $wpdb->func_call ) ? (string) $wpdb->func_call : '', is_array( $wpdb->queries ?? null ) ? $wpdb->queries : [] );
 				$logger->log( self::buildEvent( $error, $own ? '' : $query, $caller, PathMapper::shared() ) );
 			}
 		);

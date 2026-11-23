@@ -2,6 +2,19 @@
 
 All notable changes to this plugin. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.3] - 2026-11-23
+
+### Fixed (scanner noise as critical database errors)
+
+On a WP Engine site with WP Rocket, every weekly vulnerability scan (Tenable) produced a **critical** `db.error` — "Processing the value for the following field failed: url. The supplied value may be too long or contains invalid data." on `SHOW FULL COLUMNS FROM wp_wpr_preconnect_external_domains` — and a Controlroom alert. WP Rocket stores the page URLs that visitors' beacons report (and its preload queue) in `wpr_*` tables; the scanner requests URLs with long or binary injection payloads, and wpdb refuses to store them. That refusal is the database doing its job, so it is no longer logged.
+
+- **New list `ignored_db_errors`** (setting, option or `noformat_logger/settings`; filter `noformat_logger/ignored_db_errors`; default `Config::defaultIgnoredDbErrors()`): `/regex/flags` or `*` glob entries matched against `<error> [query] <query>`, both as a `db.error` event stores them (literals stripped). A matching database error is not recorded. Default entry: `*Processing the value for the following field failed: *[query] *`*wpr_*`*` — only that wpdb refusal, only when the last query names a `wpr_*` table.
+- The default matches WordPress's English message. A site whose admin language translates core messages needs its own entry through the filter.
+
+### Unchanged
+
+- Every other database error, including SQL errors on WP Rocket's tables and values refused by core or other plugins' tables, is still recorded as critical. Events already stored are unchanged.
+
 ## [1.3.2] - 2026-11-16
 
 ### Fixed (machine writes in the Content log)

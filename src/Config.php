@@ -150,6 +150,7 @@ final class Config {
 			'safe_keys'                => self::defaultSafeKeys(),
 			'ignored_options'          => self::defaultIgnoredOptions(),
 			'ignored_meta_keys'        => self::defaultIgnoredMetaKeys(),
+			'ignored_db_errors'        => self::defaultIgnoredDbErrors(),
 		];
 	}
 
@@ -299,6 +300,27 @@ final class Config {
 	}
 
 	/**
+	 * Database errors never logged. Each entry is a `/regex/flags` or a `*` glob
+	 * matched against `<error> [query] <query>`, both as they appear in a db.error
+	 * event (literals stripped, the query '' when unavailable).
+	 *
+	 * WP Rocket stores page URLs that anonymous visitors' beacons report (and its
+	 * preload queue) in `wpr_*` tables. Vulnerability scanners request URLs with
+	 * long or binary injection payloads, and wpdb refuses to store them
+	 * ("Processing the value for the following field failed: url"). That is the
+	 * database doing its job, not a stability problem, and it came in as a
+	 * critical event on every scan. The text is matched in English: a site whose
+	 * admin language translates WordPress core messages needs its own entry.
+	 *
+	 * @return list<string>
+	 */
+	public static function defaultIgnoredDbErrors(): array {
+		return [
+			'*Processing the value for the following field failed: *[query] *`*wpr_*`*',
+		];
+	}
+
+	/**
 	 * Meta keys never logged (glob patterns with *).
 	 *
 	 * @return list<string>
@@ -438,6 +460,31 @@ final class Config {
 	 */
 	public function ignoredMetaKeys(): array {
 		return $this->filteredList( 'ignored_meta_keys', 'noformat_logger/ignored_meta_keys' );
+	}
+
+	/**
+	 * Ignored database error patterns after the noformat_logger/ignored_db_errors filter.
+	 *
+	 * @return list<string>
+	 */
+	public function ignoredDbErrors(): array {
+		return $this->filteredList( 'ignored_db_errors', 'noformat_logger/ignored_db_errors' );
+	}
+
+	/**
+	 * Whether a database error is on the ignore list.
+	 *
+	 * @param string $error Error text as stored (SqlNormalizer::stripError()).
+	 * @param string $query Query as stored (SqlNormalizer::strip()), '' when unavailable.
+	 */
+	public function isIgnoredDbError( string $error, string $query ): bool {
+		$subject = $error . ' [query] ' . $query;
+		foreach ( $this->ignoredDbErrors() as $pattern ) {
+			if ( self::matchesPattern( $subject, $pattern ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**

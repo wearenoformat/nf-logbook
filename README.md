@@ -232,6 +232,7 @@ Filters for site code (full list in [EVENTS.md](docs/EVENTS.md#filters)):
 | `noformat_logger/event` | Inspect or change an `Event` before it is buffered; return `null` to drop it |
 | `noformat_logger/sensitive_keys`, `noformat_logger/safe_keys` | Extend or narrow redaction |
 | `noformat_logger/ignored_options`, `noformat_logger/ignored_meta_keys` | Silence noisy options / meta keys (`*` globs) |
+| `noformat_logger/ignored_db_errors` | Silence known-benign database errors (`/regex/` or `*` globs on `<error> [query] <query>`; default: WP Rocket refusing a visitor-supplied URL) |
 | `noformat_logger/critical_options`, `noformat_logger/option_severity` | Change option severities (e.g. lower `wp_user_roles`) |
 | `noformat_logger/fingerprint_window` | Aggregation window per severity and action |
 | `noformat_logger/client_ip`, `noformat_logger/is_https` | Trusted proxies (see troubleshooting) |
