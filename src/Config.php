@@ -159,6 +159,9 @@ final class Config {
 	 *
 	 * Slow scans and probes are aggregated over longer windows so one client
 	 * probing for an hour is one stored event with a count, not 60.
+	 * Deprecation and doing-it-wrong notices are facts about installed code, not
+	 * incidents: they repeat on every request that loads the code (a plugin's
+	 * bundled library on every REST call), so they are aggregated hourly too.
 	 *
 	 * @return array<string, int>
 	 */
@@ -167,6 +170,11 @@ final class Config {
 			'probe.suspicious_404' => 3600,
 			'rest.users_probe'     => 900,
 			'xmlrpc.call'          => 900,
+			'deprecated.function'  => 3600,
+			'deprecated.argument'  => 3600,
+			'deprecated.hook'      => 3600,
+			'deprecated.file'      => 3600,
+			'doing_it_wrong'       => 3600,
 		];
 	}
 

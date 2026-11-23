@@ -2,6 +2,15 @@
 
 All notable changes to this plugin. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.3.4] - 2026-11-23
+
+### Changed (deprecation notices aggregated hourly)
+
+On a site with Gravity Forms 3.2, the bundled MCP Adapter library raises "Deprecated function WP\\MCP\\Core\\McpAdapter" on every REST request, including the Controlroom's own pulls every few minutes: 392 stored warning events in 24 hours, three quarters of the System log. A deprecation is a fact about installed code, not an incident, so one stored event per hour with a count is enough.
+
+- `deprecated.function`, `deprecated.argument`, `deprecated.hook`, `deprecated.file` and `doing_it_wrong` now use a 3600 s aggregation window (was the 60 s default), like `probe.suspicious_404` (`Config::defaultFingerprintWindows()`). Occurrences within the hour are counted on the first event; the next hour stores a new event.
+- Unchanged: severities, fingerprints, the wire format, resolve/reopen (resolving still closes the window, so a recurrence after a resolve is a new event). A site that stores its own `fingerprint_windows` setting keeps its map; the `noformat_logger/fingerprint_window` filter still has the last word.
+
 ## [1.3.3] - 2026-11-23
 
 ### Fixed (scanner noise as critical database errors)

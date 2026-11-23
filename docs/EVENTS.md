@@ -953,6 +953,7 @@ while the fingerprint's window is open; the window is chosen per event:
 | `probe.suspicious_404` | 3600 s (hourly, PLAN §4) |
 | `rest.users_probe` | 900 s |
 | `xmlrpc.call` | 900 s |
+| `deprecated.function`, `deprecated.argument`, `deprecated.hook`, `deprecated.file`, `doing_it_wrong` | 3600 s (hourly) |
 | any other fingerprinted event | 60 s (`debug`: 3600 s) |
 
 Within one request, repeats of a fingerprint are merged in memory regardless

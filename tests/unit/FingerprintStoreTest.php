@@ -58,6 +58,10 @@ final class FingerprintStoreTest extends TestCase {
 		self::assertSame( 900, $store->window( Severity::WARNING, 'rest.users_probe' ) );
 		self::assertSame( 900, $store->window( Severity::WARNING, 'xmlrpc.call' ) );
 		self::assertSame( 60, $store->window( Severity::WARNING, 'auth.login_failed' ), 'other warnings keep 60 s' );
+		foreach ( [ 'deprecated.function', 'deprecated.argument', 'deprecated.hook', 'deprecated.file', 'doing_it_wrong' ] as $action ) {
+			self::assertSame( 3600, $store->window( Severity::WARNING, $action ), $action . ' is aggregated hourly' );
+		}
+		self::assertSame( 3600, $store->window( Severity::INFO, 'doing_it_wrong' ), 'info-level doing_it_wrong too' );
 		$row = [
 			'last_event_id' => 10,
 			'window_start'  => 1000,
