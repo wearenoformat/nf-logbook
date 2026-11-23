@@ -796,6 +796,10 @@ Conventions for every error event:
   `Uncaught <Class>: <message> in <file>:<line>` fatal is parsed instead,
   including its `Stack trace:` (call names only). When another plugin
   installed a handler before ours, ours wraps it and still calls it.
+- **deprecated.\* / doing_it_wrong** are not recorded during the Controlroom's
+  signed requests to `noformat-logger/v1` (all four `X-NF-*` headers present on
+  that namespace): each pull loads the whole site and would repeat every
+  plugin's notices as a new event. The same notices are recorded from other requests.
 - **db.error** only sees `$wpdb->last_error`, which is the error of the LAST
   query: an error followed by a successful query is missed, and one database
   error per request (per distinct text) is reported. Checked on `shutdown`

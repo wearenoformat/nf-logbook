@@ -250,6 +250,14 @@ final class Authenticator {
 	}
 
 	/**
+	 * Whether the current request is a signed request to this namespace (the
+	 * Controlroom pulling). Header presence and route only, not verified.
+	 */
+	public static function isCurrentSignedNamespaceRequest(): bool {
+		return self::isSignedNamespaceRequest( $_SERVER, self::currentRestRoute() ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- only header presence and the route are checked.
+	}
+
+	/**
 	 * REST route of the current request from the parsed query vars or ?rest_route=.
 	 */
 	private static function currentRestRoute(): ?string {
