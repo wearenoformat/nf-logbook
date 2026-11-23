@@ -21,7 +21,8 @@ defined( 'ABSPATH' ) || exit;
  * is stored; further occurrences within the window are counted on the
  * fingerprint row instead of inserting a new event. Window: 60 s, 3600 s for
  * debug, per-action overrides from the `fingerprint_windows` setting (defaults:
- * probe.suspicious_404 3600 s, rest.users_probe and xmlrpc.call 900 s); all of
+ * probe.suspicious_404 and the deprecated.* / doing_it_wrong notices 3600 s,
+ * rest.users_probe and xmlrpc.call 900 s); all of
  * it filterable through noformat_logger/fingerprint_window.
  *
  * Write budget (docs/EVENTS.md, "Aggregation windows"): a recurring
